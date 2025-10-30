@@ -1,32 +1,20 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { eq, desc, sql } from "drizzle-orm";
-import { insertInvoiceSchema, invoices } from "@shared/schema";
+import { storage } from "./storage";
+import { insertInvoiceSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
-export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle>): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new invoice
   app.post("/api/invoices", async (req, res) => {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);
-      
-      // Generate invoice number
-      const now = new Date();
-      const dateKey = now.toISOString().split('T')[0].replace(/-/g, '');
-      const count = await db.select().from(invoices)
-        .where(sql`DATE(created_at) = CURRENT_DATE`);
-      const invoiceNumber = `INV-${dateKey}-${String(count.length + 1).padStart(3, '0')}`;
-      
-      const [invoice] = await db.insert(invoices)
-        .values({
-          ...validatedData,
-          invoiceNumber,
-          items: JSON.stringify(validatedData.items)
-        })
-        .returning();
-      
+      const invoiceNumber = storage.generateInvoiceNumber();
+      const invoice = await storage.createInvoice({
+        ...validatedData,
+        invoiceNumber
+      });
       res.json(invoice);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -44,8 +32,7 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
   // Get all invoices
   app.get("/api/invoices", async (req, res) => {
     try {
-      const allInvoices = await db.select().from(invoices)
-        .orderBy(desc(invoices.createdAt));
+      const allInvoices = await storage.getAllInvoices();
       res.json(allInvoices);
     } catch (error) {
       console.error("Error fetching invoices:", error);
@@ -57,8 +44,7 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
   app.get("/api/invoices/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const [invoice] = await db.select().from(invoices)
-        .where(eq(invoices.id, id));
+      const invoice = await storage.getInvoice(id);
       
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
@@ -75,11 +61,9 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
   app.delete("/api/invoices/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const deleted = await db.delete(invoices)
-        .where(eq(invoices.id, id))
-        .returning();
+      const deleted = await storage.deleteInvoice(id);
       
-      if (!deleted.length) {
+      if (!deleted) {
         return res.status(404).json({ error: "Invoice not found" });
       }
       
@@ -90,19 +74,16 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
     }
   });
 
-  // Generate PDF for an invoice
+  // PDF generation endpoint
   app.post("/api/invoices/:id/pdf", async (req, res) => {
     try {
       const { id } = req.params;
-      const [invoice] = await db.select().from(invoices)
-        .where(eq(invoices.id, id));
+      const invoice = await storage.getInvoice(id);
       
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
       
-      // PDF generation will be handled on the frontend using jsPDF
-      // This endpoint returns the invoice data for PDF generation
       res.json(invoice);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -110,21 +91,18 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
     }
   });
 
-  // Generate CSV for an invoice
+  // CSV generation endpoint
   app.post("/api/invoices/:id/csv", async (req, res) => {
     try {
       const { id } = req.params;
-      const [invoice] = await db.select().from(invoices)
-        .where(eq(invoices.id, id));
+      const invoice = await storage.getInvoice(id);
       
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
       
-      // Parse items from JSON string
       const items = JSON.parse(invoice.items);
       
-      // Generate CSV content
       let csv = "Invoice Number,Date,Company,Customer,Category,Currency\n";
       csv += `${invoice.invoiceNumber},${invoice.date},${invoice.companyName},${invoice.customerName},${invoice.category},${invoice.currency}\n\n`;
       
@@ -142,7 +120,6 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
       }
       csv += `Grand Total,${invoice.grandTotal}\n`;
       
-      // Set headers for CSV download
       res.setHeader("Content-Type", "text/csv");
       res.setHeader(
         "Content-Disposition",
