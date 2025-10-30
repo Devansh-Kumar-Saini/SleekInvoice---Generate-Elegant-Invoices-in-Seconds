@@ -1,8 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes.db";
 import { setupVite, serveStatic, log } from "./vite";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import { invoices } from "@shared/schema";
 
 const app = express();
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+const db = drizzle(pool);
 
 declare module 'http' {
   interface IncomingMessage {
@@ -47,7 +56,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  const server = await registerRoutes(app, db);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

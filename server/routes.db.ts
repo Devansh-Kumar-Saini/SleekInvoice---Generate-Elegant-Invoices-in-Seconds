@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
     }
   });
 
-  // Generate PDF for an invoice
+  // PDF generation endpoint
   app.post("/api/invoices/:id/pdf", async (req, res) => {
     try {
       const { id } = req.params;
@@ -101,8 +101,6 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
         return res.status(404).json({ error: "Invoice not found" });
       }
       
-      // PDF generation will be handled on the frontend using jsPDF
-      // This endpoint returns the invoice data for PDF generation
       res.json(invoice);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -110,7 +108,7 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
     }
   });
 
-  // Generate CSV for an invoice
+  // CSV generation endpoint
   app.post("/api/invoices/:id/csv", async (req, res) => {
     try {
       const { id } = req.params;
@@ -121,10 +119,8 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
         return res.status(404).json({ error: "Invoice not found" });
       }
       
-      // Parse items from JSON string
       const items = JSON.parse(invoice.items);
       
-      // Generate CSV content
       let csv = "Invoice Number,Date,Company,Customer,Category,Currency\n";
       csv += `${invoice.invoiceNumber},${invoice.date},${invoice.companyName},${invoice.customerName},${invoice.category},${invoice.currency}\n\n`;
       
@@ -142,7 +138,6 @@ export async function registerRoutes(app: Express, db: ReturnType<typeof drizzle
       }
       csv += `Grand Total,${invoice.grandTotal}\n`;
       
-      // Set headers for CSV download
       res.setHeader("Content-Type", "text/csv");
       res.setHeader(
         "Content-Disposition",
