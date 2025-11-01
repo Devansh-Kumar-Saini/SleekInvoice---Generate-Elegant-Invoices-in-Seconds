@@ -16,7 +16,7 @@ import {
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileText, Loader2 } from "lucide-react";
 import { jsPDF } from "jspdf";
-import { type InvoiceItem } from "@shared/schema";
+import { type InvoiceItem } from "@/types/invoice";
 
 const categories = [
   "Electronics",

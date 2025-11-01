@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { type Invoice } from "@shared/schema";
+import { type Invoice, type InvoiceItem } from "@/types/invoice";
 
 const currencies: Record<string, string> = {
   USD: "$",
@@ -122,10 +122,9 @@ export async function generateInvoicePDF(invoice: Invoice) {
   yPos += 10;
 
   // Items
-  const items = JSON.parse(invoice.items);
   doc.setFont("helvetica", "normal");
 
-  items.forEach((item: any) => {
+  invoice.items.forEach((item: InvoiceItem) => {
     if (yPos > 250) {
       doc.addPage();
       yPos = 20;

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { FileText } from "lucide-react";
-import { type InvoiceItem } from "@shared/schema";
+import { type InvoiceItem } from "@/types/invoice";
 
 interface InvoicePreviewProps {
   companyName: string;
