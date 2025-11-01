@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileText, Loader2 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { type InvoiceItem } from "@shared/schema";
 
 const categories = [
@@ -41,34 +37,30 @@ const currencies = [
   { code: "INR", symbol: "₹", name: "Indian Rupee" },
 ];
 
-const formSchema = z.object({
-  companyName: z.string().min(1, "Company name is required"),
-  companyLogo: z.string().optional(),
-  date: z.string().min(1, "Date is required"),
-  customerName: z.string().min(1, "Customer name is required"),
-  customerEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  customerPhone: z.string().optional(),
-  customerAddress: z.string().optional(),
-  category: z.string().min(1, "Category is required"),
-  currency: z.string().min(1, "Currency is required"),
-  taxPercentage: z.number().min(0).max(100),
-  discountType: z.enum(["flat", "percentage", "none"]),
-  discountValue: z.number().min(0),
-});
-
-type FormData = z.infer<typeof formSchema>;
+type FormValues = {
+  companyName: string
+  companyLogo: string
+  date: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  customerAddress: string
+  category: string
+  currency: string
+  taxPercentage: number
+  discountType: "none" | "flat" | "percentage"
+  discountValue: number
+}
 
 export default function CreateInvoice() {
   const [items, setItems] = useState<InvoiceItem[]>([
     { name: "", quantity: 1, price: 0, details: "" },
   ]);
   const [logoPreview, setLogoPreview] = useState<string>("");
-  const queryClient = useQueryClient();
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormValues>({
     defaultValues: {
       companyName: "",
       companyLogo: "",
@@ -85,31 +77,83 @@ export default function CreateInvoice() {
     },
   });
 
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (invoiceData: any) => {
-      return apiRequest("POST", "/api/invoices", invoiceData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      toast({
-        title: "Invoice created successfully",
-        description: "Your invoice has been saved and is ready to download.",
-      });
-      // Reset form
-      form.reset();
-      setItems([{ name: "", quantity: 1, price: 0, details: "" }]);
-      setLogoPreview("");
-      // Navigate to receipts
-      setLocation("/receipts");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating invoice",
-        description: error.message || "Failed to create invoice. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const generatePDF = async (invoiceData: any) => {
+    const doc = new jsPDF();
+    
+    // Add company info
+    doc.setFontSize(20);
+    doc.text(invoiceData.companyName, 20, 20);
+    
+    if (invoiceData.companyLogo) {
+      try {
+        const img = new Image();
+        img.src = invoiceData.companyLogo;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = () => {
+            console.error("Failed to load logo");
+            resolve(null);
+          };
+        });
+        
+        if (img.complete && img.naturalWidth !== 0) {
+          doc.addImage(img, 'JPEG', 160, 10, 30, 30);
+        }
+      } catch (e) {
+        console.error("Error adding logo:", e);
+      }
+    }
+    
+    // Add invoice details
+    doc.setFontSize(12);
+    doc.text(`Invoice Date: ${invoiceData.date}`, 20, 40);
+    doc.text(`Customer: ${invoiceData.customerName}`, 20, 50);
+    
+    // Add items table
+    doc.setFontSize(14);
+    doc.text("Items", 20, 70);
+    
+    doc.setFontSize(10);
+    doc.text("Item", 20, 80);
+    doc.text("Qty", 80, 80);
+    doc.text("Price", 100, 80);
+    doc.text("Total", 140, 80);
+    
+    const items = JSON.parse(invoiceData.items);
+    let y = 90;
+    items.forEach((item: any) => {
+      doc.text(item.name, 20, y);
+      doc.text(item.quantity.toString(), 80, y);
+      doc.text(`${invoiceData.currency}${item.price.toFixed(2)}`, 100, y);
+      doc.text(
+        `${invoiceData.currency}${(item.quantity * item.price).toFixed(2)}`, 
+        140, 
+        y
+      );
+      y += 7;
+    });
+    
+    // Add totals
+    doc.setFontSize(12);
+    doc.text("Subtotal:", 120, y + 10);
+    doc.text(`${invoiceData.currency}${invoiceData.subtotal}`, 160, y + 10);
+    
+    doc.text(`Tax (${invoiceData.taxPercentage}%):`, 120, y + 20);
+    doc.text(`${invoiceData.currency}${invoiceData.tax}`, 160, y + 20);
+    
+    if (invoiceData.discount) {
+      doc.text("Discount:", 120, y + 30);
+      doc.text(`-${invoiceData.currency}${invoiceData.discount}`, 160, y + 30);
+      y += 10;
+    }
+    
+    doc.setFontSize(14);
+    doc.text("Grand Total:", 120, y + 40);
+    doc.text(`${invoiceData.currency}${invoiceData.grandTotal}`, 160, y + 40);
+    
+    // Save the PDF
+    doc.save(`invoice_${invoiceData.date}_${invoiceData.customerName}.pdf`);
+  };
 
   const addItem = () => {
     setItems([...items, { name: "", quantity: 1, price: 0, details: "" }]);
@@ -121,7 +165,7 @@ export default function CreateInvoice() {
     }
   };
 
-  const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
+  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     setItems(newItems);
@@ -163,28 +207,47 @@ export default function CreateInvoice() {
       return;
     }
 
-    // Prepare invoice data
-    const invoiceData = {
-      companyName: data.companyName,
-      companyLogo: logoPreview || "",
-      date: data.date,
-      customerName: data.customerName,
-      customerEmail: data.customerEmail || "",
-      customerPhone: data.customerPhone || "",
-      customerAddress: data.customerAddress || "",
-      category: data.category,
-      currency: data.currency,
-      items: JSON.stringify(validItems),
-      subtotal: subtotal.toString(),
-      taxPercentage: data.taxPercentage.toString(),
-      tax: tax.toString(),
-      discountType: data.discountType === "none" ? null : data.discountType,
-      discountValue: data.discountType === "none" ? null : data.discountValue.toString(),
-      discount: data.discountType === "none" ? null : discount.toString(),
-      grandTotal: grandTotal.toString(),
-    };
+    setIsGenerating(true);
+    
+    try {
+      // Prepare invoice data
+      const invoiceData = {
+        companyName: data.companyName,
+        companyLogo: logoPreview || "",
+        date: data.date,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail || "",
+        customerPhone: data.customerPhone || "",
+        customerAddress: data.customerAddress || "",
+        category: data.category,
+        currency: selectedCurrency?.symbol || "$",
+        items: JSON.stringify(validItems),
+        subtotal: subtotal.toFixed(2),
+        taxPercentage: data.taxPercentage.toString(),
+        tax: tax.toFixed(2),
+        discountType: data.discountType === "none" ? null : data.discountType,
+        discountValue: data.discountType === "none" ? null : discountValue.toString(),
+        discount: data.discountType === "none" ? null : discount.toFixed(2),
+        grandTotal: grandTotal.toFixed(2),
+      };
 
-    createInvoiceMutation.mutate(invoiceData);
+      await generatePDF(invoiceData);
+      
+      toast({
+        title: "Invoice generated successfully",
+        description: "Your invoice has been downloaded.",
+      });
+      
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error generating invoice",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   });
 
   const handleClearForm = () => {
@@ -223,11 +286,6 @@ export default function CreateInvoice() {
                     {...form.register("companyName")}
                     className="h-12"
                   />
-                  {form.formState.errors.companyName && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.companyName.message}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -394,12 +452,12 @@ export default function CreateInvoice() {
             <Card className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Items</h2>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
                   onClick={addItem}
                   data-testid="button-add-item"
+                  disabled={false}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Item
@@ -465,10 +523,9 @@ export default function CreateInvoice() {
                     </div>
 
                     <div className="col-span-2 md:col-span-1 flex items-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
                         onClick={() => removeItem(index)}
                         disabled={items.length === 1}
                         data-testid={`button-remove-item-${index}`}
@@ -589,13 +646,15 @@ export default function CreateInvoice() {
             {/* Action Buttons */}
             <Card className="p-8">
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button
+                <Button 
+                  variant="primary" 
+                  size="lg" 
                   onClick={handleSubmit}
-                  disabled={createInvoiceMutation.isPending}
+                  disabled={isGenerating}
                   className="flex-1 h-12"
                   data-testid="button-generate-invoice"
                 >
-                  {createInvoiceMutation.isPending ? (
+                  {isGenerating ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Generating...
@@ -607,11 +666,12 @@ export default function CreateInvoice() {
                     </>
                   )}
                 </Button>
-                <Button
+                <Button 
+                  variant="outline" 
+                  size="lg" 
                   type="button"
-                  variant="outline"
                   onClick={handleClearForm}
-                  disabled={createInvoiceMutation.isPending}
+                  disabled={isGenerating}
                   className="h-12"
                   data-testid="button-clear-form"
                 >
