@@ -37,13 +37,13 @@ export default {
           border: "var(--secondary-border)",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
-          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
+          DEFAULT: "hsl(var(--muted) / 1)",
+          foreground: "hsl(var(--muted-foreground) / 1)",
           border: "var(--muted-border)",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
-          foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
+          DEFAULT: "hsl(var(--accent) / 1)",
+          foreground: "hsl(var(--accent-foreground) / 1)",
           border: "var(--accent-border)",
         },
         destructive: {

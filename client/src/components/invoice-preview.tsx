@@ -62,7 +62,7 @@ export function InvoicePreview({
   };
 
   return (
-    <Card className="p-8 bg-card shadow-lg" data-testid="invoice-preview">
+    <Card className="p-6 bg-card shadow-lg w-full" data-testid="invoice-preview">
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -127,12 +127,12 @@ export function InvoicePreview({
 
         {/* Items Table */}
         <div>
-          <div className="border-t border-b border-border">
-            <div className="grid grid-cols-12 gap-2 py-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              <div className="col-span-6">Item</div>
+          <div className="border-t border-b border-border overflow-x-auto">
+            <div className="grid grid-cols-12 gap-3 py-3 text-sm font-medium uppercase tracking-wide text-muted-foreground min-w-[500px]">
+              <div className="col-span-4">Item</div>
               <div className="col-span-2 text-right">Qty</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-2 text-right">Total</div>
+              <div className="col-span-3 text-right">Price</div>
+              <div className="col-span-3 text-right">Total</div>
             </div>
 
             {items.length > 0 && items.some((item) => item.name) ? (
@@ -141,24 +141,24 @@ export function InvoicePreview({
                 .map((item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-12 gap-2 py-3 border-t border-border"
+                    className="grid grid-cols-12 gap-3 py-3 border-t border-border min-w-[500px]"
                     data-testid={`preview-item-${index}`}
                   >
-                    <div className="col-span-6">
-                      <div className="font-medium text-foreground">{item.name}</div>
+                    <div className="col-span-4">
+                      <div className="font-medium text-foreground break-words">{item.name}</div>
                       {item.details && (
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mt-1 break-words">
                           {item.details}
                         </div>
                       )}
                     </div>
-                    <div className="col-span-2 text-right font-mono text-foreground">
+                    <div className="col-span-2 text-right font-mono text-foreground whitespace-nowrap">
                       {item.quantity}
                     </div>
-                    <div className="col-span-2 text-right font-mono text-foreground">
+                    <div className="col-span-3 text-right font-mono text-foreground whitespace-nowrap">
                       {formatCurrency(item.price)}
                     </div>
-                    <div className="col-span-2 text-right font-mono font-semibold text-foreground">
+                    <div className="col-span-3 text-right font-mono font-semibold text-foreground whitespace-nowrap">
                       {formatCurrency(item.quantity * item.price)}
                     </div>
                   </div>

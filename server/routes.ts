@@ -4,8 +4,35 @@ import { storage } from "./storage";
 import { insertInvoiceSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register new user
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      res.json({ uid: userCredential.user.uid });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ error: "Registration failed" });
+    }
+  });
+
+  // Login user
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      res.json({ uid: userCredential.user.uid });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(401).json({ error: "Login failed" });
+    }
+  });
+
   // Create a new invoice
   app.post("/api/invoices", async (req, res) => {
     try {

@@ -195,9 +195,9 @@ export default function CreateInvoice() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-foreground mb-2" data-testid="text-page-title">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2" data-testid="text-page-title">
             Create Invoice
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -205,9 +205,9 @@ export default function CreateInvoice() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="flex flex-col xl:flex-row gap-6">
           {/* Form Section */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="xl:w-2/3 space-y-6">
             {/* Company Information */}
             <Card className="p-8">
               <h2 className="text-xl font-semibold mb-6">Company Information</h2>
@@ -622,26 +622,24 @@ export default function CreateInvoice() {
           </div>
 
           {/* Preview Section */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-8">
-              <InvoicePreview
-                companyName={form.watch("companyName")}
-                companyLogo={logoPreview}
-                date={form.watch("date")}
-                customerName={form.watch("customerName")}
-                customerEmail={form.watch("customerEmail")}
-                customerPhone={form.watch("customerPhone")}
-                customerAddress={form.watch("customerAddress")}
-                category={form.watch("category")}
-                currency={form.watch("currency")}
-                items={items}
-                subtotal={subtotal}
-                taxPercentage={taxPercentage}
-                tax={tax}
-                discount={discount}
-                grandTotal={grandTotal}
-              />
-            </div>
+          <div className="w-full xl:w-1/3 xl:sticky xl:top-4 xl:h-[calc(100vh-4rem)] overflow-y-auto">
+            <InvoicePreview
+              companyName={form.watch("companyName")}
+              companyLogo={logoPreview}
+              date={form.watch("date")}
+              customerName={form.watch("customerName")}
+              customerEmail={form.watch("customerEmail")}
+              customerPhone={form.watch("customerPhone")}
+              customerAddress={form.watch("customerAddress")}
+              category={form.watch("category")}
+              currency={form.watch("currency")}
+              items={items}
+              subtotal={subtotal}
+              taxPercentage={taxPercentage}
+              tax={tax}
+              discount={discount}
+              grandTotal={grandTotal}
+            />
           </div>
         </div>
       </div>
