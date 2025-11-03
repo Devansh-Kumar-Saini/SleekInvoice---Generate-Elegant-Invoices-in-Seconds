@@ -48,7 +48,7 @@ export function InvoicePreview({
   const currencySymbol = currencies[currency] || "$";
 
   const formatCurrency = (amount: number) => {
-    return `${currencySymbol}${amount.toFixed(2)}`;
+    return `${currencySymbol}${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
   };
 
   const formatDate = (dateStr: string) => {
@@ -62,36 +62,36 @@ export function InvoicePreview({
   };
 
   return (
-    <Card className="p-6 bg-card shadow-lg w-full" data-testid="invoice-preview">
+    <Card className="p-8 bg-background shadow-sm w-full max-w-4xl" data-testid="invoice-preview">
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between border-b pb-6">
           <div>
             {companyLogo ? (
               <img
                 src={companyLogo}
                 alt={companyName}
-                className="max-h-12 w-auto object-contain mb-2"
+                className="max-h-16 w-auto object-contain mb-3"
                 data-testid="preview-company-logo"
               />
             ) : (
-              <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center mb-2">
-                <FileText className="w-6 h-6 text-muted-foreground" />
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-3">
+                <FileText className="w-8 h-8 text-muted-foreground" />
               </div>
             )}
-            <h3 className="text-2xl font-bold text-foreground" data-testid="preview-company-name">
+            <h3 className="text-3xl font-bold text-foreground" data-testid="preview-company-name">
               {companyName || "Company Name"}
             </h3>
           </div>
           <div className="text-right">
-            <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-1">
+            <div className="text-lg font-medium uppercase tracking-wider text-primary mb-1">
               Invoice
             </div>
             <div className="text-sm text-foreground" data-testid="preview-date">
               {date ? formatDate(date) : "Date"}
             </div>
             {category && (
-              <div className="text-xs text-muted-foreground mt-1" data-testid="preview-category">
+              <div className="text-xs text-muted-foreground mt-2" data-testid="preview-category">
                 {category}
               </div>
             )}
@@ -99,12 +99,12 @@ export function InvoicePreview({
         </div>
 
         {/* Customer Info */}
-        <div>
-          <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-2">
+        <div className="border-b pb-6">
+          <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
             Bill To
           </div>
-          <div className="text-foreground">
-            <div className="font-semibold mb-1" data-testid="preview-customer-name">
+          <div className="space-y-2">
+            <div className="text-lg font-semibold text-foreground" data-testid="preview-customer-name">
               {customerName || "Customer Name"}
             </div>
             {customerEmail && (
@@ -118,7 +118,10 @@ export function InvoicePreview({
               </div>
             )}
             {customerAddress && (
-              <div className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap" data-testid="preview-customer-address">
+              <div 
+                className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap" 
+                data-testid="preview-customer-address"
+              >
                 {customerAddress}
               </div>
             )}
@@ -127,12 +130,12 @@ export function InvoicePreview({
 
         {/* Items Table */}
         <div>
-          <div className="border-t border-b border-border overflow-x-auto">
-            <div className="grid grid-cols-12 gap-3 py-3 text-sm font-medium uppercase tracking-wide text-muted-foreground min-w-[500px]">
-              <div className="col-span-4">Item</div>
+          <div className="border rounded-lg overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium uppercase tracking-wider text-muted-foreground min-w-[600px]">
+              <div className="col-span-6">Item</div>
               <div className="col-span-2 text-right">Qty</div>
-              <div className="col-span-3 text-right">Price</div>
-              <div className="col-span-3 text-right">Total</div>
+              <div className="col-span-2 text-right">Price</div>
+              <div className="col-span-2 text-right">Total</div>
             </div>
 
             {items.length > 0 && items.some((item) => item.name) ? (
@@ -141,10 +144,10 @@ export function InvoicePreview({
                 .map((item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-12 gap-3 py-3 border-t border-border min-w-[500px]"
+                    className="grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[600px] hover:bg-muted/10"
                     data-testid={`preview-item-${index}`}
                   >
-                    <div className="col-span-4">
+                    <div className="col-span-6">
                       <div className="font-medium text-foreground break-words">{item.name}</div>
                       {item.details && (
                         <div className="text-xs text-muted-foreground mt-1 break-words">
@@ -152,13 +155,13 @@ export function InvoicePreview({
                         </div>
                       )}
                     </div>
-                    <div className="col-span-2 text-right font-mono text-foreground whitespace-nowrap">
+                    <div className="col-span-2 text-right font-mono text-foreground">
                       {item.quantity}
                     </div>
-                    <div className="col-span-3 text-right font-mono text-foreground whitespace-nowrap">
+                    <div className="col-span-2 text-right font-mono text-foreground">
                       {formatCurrency(item.price)}
                     </div>
-                    <div className="col-span-3 text-right font-mono font-semibold text-foreground whitespace-nowrap">
+                    <div className="col-span-2 text-right font-mono font-semibold text-foreground">
                       {formatCurrency(item.quantity * item.price)}
                     </div>
                   </div>
@@ -172,7 +175,7 @@ export function InvoicePreview({
         </div>
 
         {/* Calculations */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Subtotal</span>
             <span className="font-mono font-semibold text-foreground" data-testid="preview-subtotal">
@@ -195,8 +198,8 @@ export function InvoicePreview({
               </span>
             </div>
           )}
-          <div className="flex justify-between items-center pt-3 border-t border-border">
-            <span className="text-lg font-semibold text-foreground">Total</span>
+          <div className="flex justify-between items-center pt-4 border-t border-border">
+            <span className="text-lg font-semibold text-foreground">Total Due</span>
             <span className="text-2xl font-mono font-bold text-primary" data-testid="preview-total">
               {formatCurrency(grandTotal)}
             </span>
@@ -206,7 +209,7 @@ export function InvoicePreview({
         {/* Footer */}
         <div className="pt-6 border-t border-border">
           <div className="text-xs text-muted-foreground text-center">
-            This is a preview of your invoice
+            Thank you for your business!
           </div>
         </div>
       </div>
