@@ -24,6 +24,7 @@ yarn-error.log*
 
 # Local development
 .server/
+.local/
 
 # Replit specific files
 .replit
