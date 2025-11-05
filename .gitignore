@@ -1,6 +1,39 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
+
+# Environment files
+.env
+.env.local
+
+# IDE and editor files
 .DS_Store
-server/public
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.server/
+
+# Replit specific files
+.replit
+replit.nix
+.replit.nix
+replit.md
+
+# Vite
 vite.config.ts.*
 *.tar.gz
+
+# Server
+server/public
