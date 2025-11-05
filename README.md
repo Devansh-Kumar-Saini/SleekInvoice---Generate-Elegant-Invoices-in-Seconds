@@ -1,6 +1,6 @@
 # InvoiceForge - Modern Invoice Generation Tool
 
-![InvoiceForge Banner](https://via.placeholder.com/1200x400/3b82f6/ffffff?text=InvoiceForge+%E2%80%94+Generate+Professional+Invoices+Instantly)
+![InvoiceForge Banner]([https://via.placeholder.com/1200x400/3b82f6/ffffff?text=InvoiceForge+%E2%80%94+Generate+Professional+Invoices+Instantly](https://via.placeholder.com/1200x400/3b82f6/ffffff?text=InvoiceForge+%E2%80%94+Generate+Professional+Invoices+Instantly))
 
 ## 🚀 Overview
 
