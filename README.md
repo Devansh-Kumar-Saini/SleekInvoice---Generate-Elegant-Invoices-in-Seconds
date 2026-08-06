@@ -44,8 +44,8 @@ InvoiceForge is a modern, responsive, and user-friendly invoice generation appli
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/InvoiceForge.git
-   cd InvoiceForge
+   git clone https://github.com/Devansh-Kumar-Saini/SleekInvoice---Generate-Elegant-Invoices-in-Seconds.git
+   cd SleekInvoice---Generate-Elegant-Invoices-in-Seconds
    ```
 
 2. **Install dependencies**
