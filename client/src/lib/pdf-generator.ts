@@ -5,9 +5,13 @@ import {
   NOTO_SANS_BLACK_BASE64,
   NOTO_SANS_BOLD_BASE64,
   NOTO_SANS_REGULAR_BASE64,
+  SPACE_MONO_BOLD_BASE64,
+  SPACE_MONO_REGULAR_BASE64,
 } from "./pdf-fonts";
+import { amountToWords, formatCurrencyAmount } from "./invoice-format";
 
 const FONT_FAMILY = "NotoSans";
+const FONT_FAMILY_MONO = "SpaceMono";
 
 export type InvoiceTemplate = "classic" | "clean" | "modern";
 
@@ -36,6 +40,12 @@ function registerFonts(doc: jsPDF) {
   doc.addFileToVFS("NotoSans-Black.ttf", NOTO_SANS_BLACK_BASE64);
   doc.addFont("NotoSans-Black.ttf", FONT_FAMILY_BLACK, "bold");
   doc.addFont("NotoSans-Black.ttf", FONT_FAMILY_BLACK, "normal");
+  // Space Mono — used by the Clean template for tabular/fixed-width numeric
+  // columns (matches the reference design's monospaced digit alignment).
+  doc.addFileToVFS("SpaceMono-Regular.ttf", SPACE_MONO_REGULAR_BASE64);
+  doc.addFont("SpaceMono-Regular.ttf", FONT_FAMILY_MONO, "normal");
+  doc.addFileToVFS("SpaceMono-Bold.ttf", SPACE_MONO_BOLD_BASE64);
+  doc.addFont("SpaceMono-Bold.ttf", FONT_FAMILY_MONO, "bold");
 }
 
 const FONT_FAMILY_BLACK = "NotoSansBlack";
@@ -43,6 +53,7 @@ const FONT_FAMILY_BLACK = "NotoSansBlack";
 export interface InvoicePdfData {
   companyName: string;
   companyLogo?: string;
+  companyAddress?: string;
   invoiceNumber: string;
   date: string;
   customerName: string;
@@ -51,6 +62,7 @@ export interface InvoicePdfData {
   customerAddress?: string;
   category?: string;
   currencySymbol: string;
+  currencyCode?: string;
   items: InvoiceItem[];
   subtotal: number;
   taxPercentage: number;
@@ -60,11 +72,13 @@ export interface InvoicePdfData {
   grandTotal: number;
   notes?: string;
   template?: InvoiceTemplate;
+  /** Current app theme — only consulted by the Clean template, whose
+   * background flips black/white to match the app's own dark/light toggle. */
+  isDarkMode?: boolean;
 }
 
-function formatCurrency(amount: number, symbol: string): string {
-  const safe = Number.isFinite(amount) ? amount : 0;
-  return `${symbol}${safe.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+function formatCurrency(amount: number, symbol: string, currencyCode?: string): string {
+  return formatCurrencyAmount(amount, symbol, currencyCode);
 }
 
 function formatDate(dateStr: string): string {
@@ -76,6 +90,17 @@ function formatDate(dateStr: string): string {
     month: "long",
     day: "numeric",
   });
+}
+
+/** DD/MM/YYYY, matching the reference invoice's metadata grid date format. */
+function formatDateSlash(dateStr: string): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 interface LoadedLogo {
@@ -146,6 +171,7 @@ interface TemplateContext {
   contentWidth: number;
   footerReserve: number;
   currency: string;
+  currencyCode?: string;
   validItems: InvoiceItem[];
 }
 
@@ -158,7 +184,7 @@ function getLastAutoTableFinalY(doc: jsPDF): number {
 // pink/red accent, generous card-like spacing.
 // ---------------------------------------------------------------------------
 function renderClassicTemplate(ctx: TemplateContext) {
-  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency } = ctx;
+  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
   const BRAND = {
     primary: [220, 38, 74] as [number, number, number],
@@ -218,43 +244,56 @@ function renderClassicTemplate(ctx: TemplateContext) {
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 9;
 
+  const billColWidth = contentWidth * 0.48;
+  const billByX = margin;
+  const billToX = margin + contentWidth - billColWidth;
+
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(...BRAND.muted);
-  doc.text("BILL TO", margin, yPos);
+  doc.text("BILLED BY", billByX, yPos);
+  doc.text("BILL TO", billToX, yPos);
   yPos += 6;
 
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(12);
   doc.setTextColor(...BRAND.dark);
-  doc.text(invoice.customerName || "Customer Name", margin, yPos);
-  yPos += 6;
+  doc.text(invoice.companyName || "Company Name", billByX, yPos);
+  doc.text(invoice.customerName || "Customer Name", billToX, yPos);
+  let billByY = yPos + 6;
+  let billToY = yPos + 6;
 
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(...BRAND.muted);
 
-  if (invoice.customerEmail) {
-    doc.text(invoice.customerEmail, margin, yPos);
-    yPos += 5;
-  }
-  if (invoice.customerPhone) {
-    doc.text(invoice.customerPhone, margin, yPos);
-    yPos += 5;
-  }
-  if (invoice.customerAddress) {
-    const addressLines = doc.splitTextToSize(invoice.customerAddress, contentWidth * 0.6);
-    doc.text(addressLines, margin, yPos);
-    yPos += addressLines.length * 4.6;
+  if (invoice.companyAddress) {
+    const lines = doc.splitTextToSize(invoice.companyAddress, billColWidth - 6);
+    doc.text(lines, billByX, billByY);
+    billByY += lines.length * 4.6;
   }
 
-  yPos += 8;
+  if (invoice.customerEmail) {
+    doc.text(invoice.customerEmail, billToX, billToY);
+    billToY += 5;
+  }
+  if (invoice.customerPhone) {
+    doc.text(invoice.customerPhone, billToX, billToY);
+    billToY += 5;
+  }
+  if (invoice.customerAddress) {
+    const addressLines = doc.splitTextToSize(invoice.customerAddress, billColWidth - 6);
+    doc.text(addressLines, billToX, billToY);
+    billToY += addressLines.length * 4.6;
+  }
+
+  yPos = Math.max(billByY, billToY) + 8;
 
   const itemsData = ctx.validItems.map((item) => [
     item.details ? `${item.name}\n${item.details}` : item.name,
     String(item.quantity),
-    formatCurrency(item.price, currency),
-    formatCurrency(item.quantity * item.price, currency),
+    formatCurrency(item.price, currency, currencyCode),
+    formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
   autoTable(doc, {
@@ -317,13 +356,13 @@ function renderClassicTemplate(ctx: TemplateContext) {
   doc.setFontSize(10);
 
   const rows: Array<{ label: string; value: string }> = [
-    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency) },
-    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency) },
+    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
+    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
   ];
   if (invoice.discount > 0) {
     rows.push({
       label: invoice.discountLabel || "Discount",
-      value: `-${formatCurrency(invoice.discount, currency)}`,
+      value: `-${formatCurrency(invoice.discount, currency, currencyCode)}`,
     });
   }
 
@@ -346,11 +385,26 @@ function renderClassicTemplate(ctx: TemplateContext) {
   doc.text("Total Due", summaryLabelX, yPos + 2);
   doc.setFontSize(15);
   doc.setTextColor(...BRAND.primary);
-  doc.text(formatCurrency(invoice.grandTotal, currency), summaryValueX, yPos + 2.5, {
+  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX, yPos + 2.5, {
     align: "right",
   });
 
-  yPos += 14;
+  yPos += 12;
+
+  const wordsLabelWidth = pageWidth - margin - (summaryLabelX - 4);
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...BRAND.muted);
+  doc.text("INVOICE TOTAL (IN WORDS)", summaryLabelX - 4, yPos);
+  yPos += 4.5;
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BRAND.dark);
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLines = doc.splitTextToSize(wordsText, wordsLabelWidth);
+  doc.text(wordsLines, summaryLabelX - 4, yPos);
+  yPos += wordsLines.length * 4;
+
+  yPos += 8;
 
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {
@@ -390,150 +444,166 @@ function renderClassicTemplate(ctx: TemplateContext) {
 }
 
 // ---------------------------------------------------------------------------
-// Clean template — Vercel-inspired. Pure monochrome, no fills, hairline rules
-// instead of boxes, uppercase micro-labels, generous whitespace.
+// Clean template — matches the user-supplied reference invoice exactly: a
+// giant thin page title, a label/value metadata grid, a two-column Billed
+// By/To split with a vertical divider, a borderless items table with plain
+// text headers, monospaced numeric columns, and an "Invoice Total (in
+// words)" line. Background flips black/white with the app's own theme
+// toggle (invoice.isDarkMode), rather than always being black.
 // ---------------------------------------------------------------------------
 function renderCleanTemplate(ctx: TemplateContext) {
-  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency } = ctx;
+  const { doc, invoice, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
-  const INK = [15, 15, 15] as [number, number, number];
-  const GRAY = [130, 130, 130] as [number, number, number];
-  const LINE = [225, 225, 225] as [number, number, number];
+  const isDark = !!invoice.isDarkMode;
+  const BG = (isDark ? [10, 10, 10] : [255, 255, 255]) as [number, number, number];
+  const INK = (isDark ? [245, 245, 245] : [15, 15, 15]) as [number, number, number];
+  const GRAY = (isDark ? [150, 150, 150] : [120, 120, 120]) as [number, number, number];
+  const LINE = (isDark ? [45, 45, 45] : [225, 225, 225]) as [number, number, number];
 
-  let yPos = margin + 2;
-  const headerTop = yPos;
-  const LOGO_MAX_W = 22;
-  const LOGO_MAX_H = 14;
+  const paintBackground = (targetPage?: number) => {
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...BG);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  };
+  paintBackground();
 
-  if (logo) {
-    const aspect = logo.width / logo.height;
-    let drawW = LOGO_MAX_W;
-    let drawH = drawW / aspect;
-    if (drawH > LOGO_MAX_H) {
-      drawH = LOGO_MAX_H;
-      drawW = drawH * aspect;
-    }
-    try {
-      doc.addImage(logo.dataUrl, "PNG", margin, headerTop, drawW, drawH);
-    } catch {
-      // Skip logo on failure.
-    }
-  }
+  let yPos = margin + 6;
 
-  const nameY = logo ? headerTop + LOGO_MAX_H + 8 : headerTop + 5;
-  doc.setFont(FONT_FAMILY, "bold");
-  doc.setFontSize(15);
-  doc.setTextColor(...INK);
-  doc.text(invoice.companyName || "Company Name", margin, nameY);
-
-  // Right-aligned, understated meta block — no color, just weight/size contrast.
+  // Giant, thin-weight page title — "Invoice INV-0069" style.
   doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...GRAY);
-  doc.text("INVOICE", pageWidth - margin, headerTop + 4, { align: "right" });
-
-  doc.setFont(FONT_FAMILY, "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(30);
   doc.setTextColor(...INK);
-  doc.text(invoice.invoiceNumber, pageWidth - margin, headerTop + 10, { align: "right" });
+  doc.text(`Invoice ${invoice.invoiceNumber || ""}`.trim(), margin, yPos);
+  yPos += 12;
 
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...GRAY);
-  let metaY = headerTop + 16;
-  doc.text(formatDate(invoice.date), pageWidth - margin, metaY, { align: "right" });
-  if (invoice.category) {
-    metaY += 4.5;
-    doc.text(invoice.category, pageWidth - margin, metaY, { align: "right" });
-  }
-
-  yPos = Math.max(nameY + 10, metaY + 8);
-
-  // Single hairline — the only divider in the whole header, Vercel-style.
   doc.setDrawColor(...LINE);
   doc.setLineWidth(0.25);
   doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
+  yPos += 8;
 
-  // Bill To / meta laid out as two plain columns, no card, no fill.
+  // --- Metadata label/value grid: Serial Number, Date, Payment Terms, Currency. ---
+  const metaLabelX = margin;
+  const metaValueX = margin + contentWidth * 0.22;
+  const metaRows: Array<{ label: string; value: string }> = [
+    { label: "Serial Number", value: (invoice.invoiceNumber || "").replace(/^INV-?/i, "") || invoice.invoiceNumber || "" },
+    { label: "Date", value: formatDateSlash(invoice.date) },
+  ];
+  if (invoice.notes && invoice.notes.trim()) {
+    metaRows.push({ label: "Payment Terms", value: invoice.notes.trim() });
+  }
+  metaRows.push({ label: "Currency", value: currencyCode || currency });
+
+  doc.setFontSize(9);
+  metaRows.forEach((row) => {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setTextColor(...GRAY);
+    doc.text(row.label, metaLabelX, yPos);
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setTextColor(...INK);
+    const lines = doc.splitTextToSize(row.value, contentWidth * 0.5);
+    doc.text(lines, metaValueX, yPos);
+    yPos += 5.5 * Math.max(1, lines.length);
+  });
+  yPos += 4;
+
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.25);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 9;
+
+  // --- Billed By / Billed To — two columns with a vertical divider. ---
+  const colGap = 10;
+  const colWidth = (contentWidth - colGap) / 2;
+  const billByX = margin;
+  const billToX = margin + colWidth + colGap;
+  const dividerX = margin + colWidth + colGap / 2;
+  const billTopY = yPos;
+
   doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...GRAY);
-  doc.text("BILLED TO", margin, yPos);
+  doc.text("Billed By", billByX, yPos);
+  doc.text("Billed To", billToX, yPos);
+  let byY = yPos + 6.5;
+  let toY = yPos + 6.5;
 
-  const metaColX = margin + contentWidth * 0.55;
-  doc.text("INVOICE DATE", metaColX, yPos);
-
-  yPos += 5.5;
   doc.setFont(FONT_FAMILY, "bold");
-  doc.setFontSize(10.5);
+  doc.setFontSize(11.5);
   doc.setTextColor(...INK);
-  doc.text(invoice.customerName || "Customer Name", margin, yPos);
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.text(formatDate(invoice.date), metaColX, yPos);
+  doc.text(invoice.companyName || "Company Name", billByX, byY);
+  doc.text(invoice.customerName || "Customer Name", billToX, toY);
+  byY += 5.5;
+  toY += 5.5;
 
-  let leftY = yPos + 5;
+  doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(9);
   doc.setTextColor(...GRAY);
-  if (invoice.customerEmail) {
-    doc.text(invoice.customerEmail, margin, leftY);
-    leftY += 4.5;
+  if (invoice.companyAddress) {
+    const lines = doc.splitTextToSize(invoice.companyAddress, colWidth - 4);
+    doc.text(lines, billByX, byY);
+    byY += lines.length * 4.4;
   }
-  if (invoice.customerPhone) {
-    doc.text(invoice.customerPhone, margin, leftY);
-    leftY += 4.5;
+  const toContactParts = [invoice.customerEmail, invoice.customerPhone].filter(Boolean);
+  if (toContactParts.length) {
+    doc.text(toContactParts.join("  •  "), billToX, toY);
+    toY += 4.4;
   }
   if (invoice.customerAddress) {
-    const addressLines = doc.splitTextToSize(invoice.customerAddress, contentWidth * 0.45);
-    doc.text(addressLines, margin, leftY);
-    leftY += addressLines.length * 4.2;
+    const lines = doc.splitTextToSize(invoice.customerAddress, colWidth - 4);
+    doc.text(lines, billToX, toY);
+    toY += lines.length * 4.4;
   }
 
-  yPos = leftY + 8;
+  yPos = Math.max(byY, toY) + 7;
 
-  // --- Items — no table borders/fills at all, just a header rule and row rules. ---
+  // Vertical divider between the two columns, spanning the Billed By/To block.
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.25);
+  doc.line(dividerX, billTopY - 4, dividerX, yPos - 3);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 9;
+
+  // --- Items — plain text column headers, no header fill, monospaced numbers. ---
   const colName = margin;
-  const colQty = margin + contentWidth * 0.58;
-  const colPrice = margin + contentWidth * 0.74;
+  const colQty = margin + contentWidth * 0.62;
+  const colPrice = margin + contentWidth * 0.8;
   const colTotal = pageWidth - margin;
 
   doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(9.5);
   doc.setTextColor(...GRAY);
-  doc.text("DESCRIPTION", colName, yPos);
-  doc.text("QTY", colQty, yPos, { align: "right" });
-  doc.text("PRICE", colPrice, yPos, { align: "right" });
-  doc.text("TOTAL", colTotal, yPos, { align: "right" });
-  yPos += 3;
-  doc.setDrawColor(...INK);
-  doc.setLineWidth(0.4);
+  doc.text("Item", colName, yPos);
+  doc.text("Qty", colQty, yPos, { align: "right" });
+  doc.text("Price", colPrice, yPos, { align: "right" });
+  doc.text("Total", colTotal, yPos, { align: "right" });
+  yPos += 4;
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.25);
   doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 7;
+  yPos += 8;
 
   const footerLimit = pageHeight - footerReserve;
+  const itemsTopOfBlock = yPos;
   ctx.validItems.forEach((item) => {
     const detailLines = item.details ? doc.splitTextToSize(item.details, contentWidth * 0.5) : [];
-    // Base clearance (11mm) keeps the divider comfortably below the name/price
-    // baseline — and below the *next* row's text — even with no details line;
-    // each wrapped detail line adds 4mm.
     const rowHeight = 11 + detailLines.length * 4;
 
     if (yPos + rowHeight > footerLimit) {
       doc.addPage();
-      yPos = margin + 8;
+      paintBackground();
+      yPos = margin + 10;
     }
 
-    doc.setFont(FONT_FAMILY, "bold");
-    doc.setFontSize(10);
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(10.5);
     doc.setTextColor(...INK);
     doc.text(item.name, colName, yPos);
 
-    doc.setFont(FONT_FAMILY, "normal");
-    doc.setFontSize(9.5);
+    doc.setFont(FONT_FAMILY_MONO, "normal");
+    doc.setFontSize(9);
     doc.text(String(item.quantity), colQty, yPos, { align: "right" });
-    doc.text(formatCurrency(item.price, currency), colPrice, yPos, { align: "right" });
-    doc.setFont(FONT_FAMILY, "bold");
-    doc.text(formatCurrency(item.quantity * item.price, currency), colTotal, yPos, {
+    doc.text(formatCurrency(item.price, currency, currencyCode), colPrice, yPos, { align: "right" });
+    doc.text(formatCurrency(item.quantity * item.price, currency, currencyCode), colTotal, yPos, {
       align: "right",
     });
 
@@ -541,73 +611,125 @@ function renderCleanTemplate(ctx: TemplateContext) {
       doc.setFont(FONT_FAMILY, "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...GRAY);
-      doc.text(detailLines, colName, yPos + 4.2);
+      doc.text(detailLines, colName, yPos + 4.4);
     }
 
     yPos += rowHeight;
-    doc.setDrawColor(...LINE);
-    doc.setLineWidth(0.2);
-    doc.line(margin, yPos - 4.5, pageWidth - margin, yPos - 4.5);
   });
+  // A single rule under the last item row, matching the reference's sparse table.
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.2);
+  doc.line(margin, yPos - 4.5, pageWidth - margin, yPos - 4.5);
 
-  yPos += 6;
+  const summaryLabelX = pageWidth - margin - 58;
+  const summaryValueX = pageWidth - margin;
 
-  const summaryBlockHeight = 50;
+  // Mirrors the reference invoice's per-item subtotal breakdown, but that
+  // only reads cleanly with a single line item — with several items it
+  // would just duplicate the items table, so it's limited to that case.
+  const showPerItemBreakdown = ctx.validItems.length <= 1;
+  const rowCount =
+    1 + // subtotal
+    (showPerItemBreakdown ? ctx.validItems.length : 0) +
+    (invoice.tax > 0 ? 1 : 0) +
+    (invoice.discount > 0 ? 1 : 0);
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLineEstimate = Math.ceil(wordsText.length / 42);
+  const summaryBlockHeight = rowCount * 5.5 + 14 + 14 + 5 + wordsLineEstimate * 4.5 + 8;
+
+  // The reference leaves a large empty gap between the items table and the
+  // totals block, which sit near the bottom of the page — reproduce that by
+  // pushing the summary down toward the footer rather than flowing tightly,
+  // as long as everything still fits above the footer.
+  const desiredSummaryTop = footerLimit - summaryBlockHeight;
+  yPos = Math.max(yPos + 10, Math.min(desiredSummaryTop, footerLimit - summaryBlockHeight));
+  if (yPos < itemsTopOfBlock) yPos = itemsTopOfBlock + 20;
   if (yPos + summaryBlockHeight > footerLimit) {
     doc.addPage();
-    yPos = margin + 8;
+    paintBackground();
+    yPos = margin + 10;
   }
-
-  const summaryLabelX = pageWidth - margin - 50;
-  const summaryValueX = pageWidth - margin;
 
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(9.5);
 
   const rows: Array<{ label: string; value: string }> = [
-    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency) },
-    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency) },
+    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
   ];
+  if (showPerItemBreakdown) {
+    ctx.validItems.forEach((item) => {
+      rows.push({
+        label: item.name,
+        value: formatCurrency(item.quantity * item.price, currency, currencyCode),
+      });
+    });
+  }
+  if (invoice.tax > 0) {
+    rows.push({
+      label: `Tax (${invoice.taxPercentage}%)`,
+      value: formatCurrency(invoice.tax, currency, currencyCode),
+    });
+  }
   if (invoice.discount > 0) {
     rows.push({
       label: invoice.discountLabel || "Discount",
-      value: `-${formatCurrency(invoice.discount, currency)}`,
+      value: `-${formatCurrency(invoice.discount, currency, currencyCode)}`,
     });
   }
 
   rows.forEach((row) => {
+    doc.setFont(FONT_FAMILY, "normal");
     doc.setTextColor(...GRAY);
-    doc.text(row.label, summaryLabelX, yPos);
+    const labelLines = doc.splitTextToSize(row.label, summaryValueX - summaryLabelX - 24);
+    doc.text(labelLines, summaryLabelX, yPos);
+    doc.setFont(FONT_FAMILY_MONO, "normal");
     doc.setTextColor(...INK);
     doc.text(row.value, summaryValueX, yPos, { align: "right" });
-    yPos += 6;
+    yPos += 5.5 * Math.max(1, labelLines.length);
   });
 
-  yPos += 2;
-  doc.setDrawColor(...INK);
-  doc.setLineWidth(0.4);
-  doc.line(summaryLabelX - 4, yPos - 4, summaryValueX, yPos - 4);
+  yPos += 3;
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.25);
+  doc.line(summaryLabelX - 4, yPos - 3.5, summaryValueX, yPos - 3.5);
+  yPos += 5;
 
-  doc.setFont(FONT_FAMILY, "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...INK);
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...GRAY);
   doc.text("Total", summaryLabelX, yPos + 3);
-  doc.setFontSize(14);
-  doc.text(formatCurrency(invoice.grandTotal, currency), summaryValueX, yPos + 3.2, {
+  doc.setFont(FONT_FAMILY_MONO, "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(...INK);
+  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX, yPos + 3.2, {
     align: "right",
   });
 
-  yPos += 15;
+  yPos += 14;
 
-  if (invoice.notes && invoice.notes.trim()) {
+  // --- Invoice Total (in words). ---
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...GRAY);
+  doc.text("Invoice Total (in words)", summaryLabelX - 4, yPos);
+  yPos += 5;
+  doc.setFontSize(9.5);
+  doc.setTextColor(...INK);
+  const wordsLines = doc.splitTextToSize(wordsText, pageWidth - margin - (summaryLabelX - 4));
+  doc.text(wordsLines, summaryLabelX - 4, yPos);
+  yPos += wordsLines.length * 4.5;
+
+  if (invoice.notes && invoice.notes.trim() && metaRows.every((r) => r.label !== "Payment Terms")) {
+    yPos += 6;
     if (yPos + 18 > footerLimit) {
       doc.addPage();
-      yPos = margin + 8;
+      paintBackground();
+      yPos = margin + 10;
     }
     doc.setFont(FONT_FAMILY, "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY);
-    doc.text("NOTES", margin, yPos);
+    doc.text("Notes", margin, yPos);
     yPos += 5;
     doc.setFontSize(9);
     doc.setTextColor(...INK);
@@ -638,7 +760,7 @@ function renderCleanTemplate(ctx: TemplateContext) {
 // header, dramatic total treatment.
 // ---------------------------------------------------------------------------
 function renderModernTemplate(ctx: TemplateContext) {
-  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency } = ctx;
+  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
   const ACCENT = [23, 23, 27] as [number, number, number]; // near-black banner
   const ACCENT_TEXT = [255, 255, 255] as [number, number, number];
@@ -692,53 +814,77 @@ function renderModernTemplate(ctx: TemplateContext) {
 
   yPos = bannerHeight + 14;
 
-  // --- Bill To / category, laid out as two soft rounded chips. ---
+  // --- Billed By / Billed To / Category, laid out as soft rounded chips. ---
   const chipY = yPos;
-  const chipHeight = 22;
   const chipGap = 6;
-  const chipWidth = (contentWidth - chipGap) / 2;
+  const chipWidth = (contentWidth - chipGap * 2) / 3;
+  const chipByX = margin;
+  const chipToX = margin + chipWidth + chipGap;
+  const chipCatX = margin + (chipWidth + chipGap) * 2;
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(9);
+  const byAddressLines = invoice.companyAddress
+    ? doc.splitTextToSize(invoice.companyAddress, chipWidth - 10)
+    : [];
+  const toAddressLines = invoice.customerAddress
+    ? doc.splitTextToSize(invoice.customerAddress, chipWidth - 10)
+    : [];
+  const toContactParts = [invoice.customerEmail, invoice.customerPhone].filter(Boolean);
+  const chipHeight = Math.max(
+    22,
+    14 + (byAddressLines.length + (toContactParts.length ? 1 : 0) + toAddressLines.length) * 4.2
+  );
 
   doc.setFillColor(...SOFT_FILL);
-  doc.roundedRect(margin, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
-  doc.roundedRect(margin + chipWidth + chipGap, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
+  doc.roundedRect(chipByX, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
+  doc.roundedRect(chipToX, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
+  doc.roundedRect(chipCatX, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
 
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
-  doc.text("BILLED TO", margin + 5, chipY + 6.5);
-  doc.text("CATEGORY", margin + chipWidth + chipGap + 5, chipY + 6.5);
+  doc.text("BILLED BY", chipByX + 5, chipY + 6.5);
+  doc.text("BILLED TO", chipToX + 5, chipY + 6.5);
+  doc.text("CATEGORY", chipCatX + 5, chipY + 6.5);
 
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(11);
   doc.setTextColor(...INK);
-  doc.text(invoice.customerName || "Customer Name", margin + 5, chipY + 14);
-  doc.text(invoice.category || "General", margin + chipWidth + chipGap + 5, chipY + 14);
+  doc.text(invoice.companyName || "Company Name", chipByX + 5, chipY + 14);
+  doc.text(invoice.customerName || "Customer Name", chipToX + 5, chipY + 14);
+  doc.text(invoice.category || "General", chipCatX + 5, chipY + 14);
+
+  let byDetailY = chipY + 19;
+  if (byAddressLines.length) {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text(byAddressLines, chipByX + 5, byDetailY);
+    byDetailY += byAddressLines.length * 4.2;
+  }
+
+  let toDetailY = chipY + 19;
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  if (toContactParts.length) {
+    doc.text(toContactParts.join(" • "), chipToX + 5, toDetailY);
+    toDetailY += 4.2;
+  }
+  if (toAddressLines.length) {
+    doc.text(toAddressLines, chipToX + 5, toDetailY);
+    toDetailY += toAddressLines.length * 4.2;
+  }
 
   yPos = chipY + chipHeight + 10;
-
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...MUTED);
-  let contactY = yPos;
-  const contactParts = [invoice.customerEmail, invoice.customerPhone].filter(Boolean);
-  if (contactParts.length) {
-    doc.text(contactParts.join("   •   "), margin, contactY);
-    contactY += 5;
-  }
-  if (invoice.customerAddress) {
-    const addressLines = doc.splitTextToSize(invoice.customerAddress, contentWidth * 0.7);
-    doc.text(addressLines, margin, contactY);
-    contactY += addressLines.length * 4.4;
-  }
-
-  yPos = contactY + 6;
 
   // --- Items table: rounded header pill, bold totals, soft row banding. ---
   const itemsData = ctx.validItems.map((item) => [
     item.details ? `${item.name}\n${item.details}` : item.name,
     String(item.quantity),
-    formatCurrency(item.price, currency),
-    formatCurrency(item.quantity * item.price, currency),
+    formatCurrency(item.price, currency, currencyCode),
+    formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
   autoTable(doc, {
@@ -803,13 +949,13 @@ function renderModernTemplate(ctx: TemplateContext) {
   doc.setFontSize(9.5);
 
   const rows: Array<{ label: string; value: string }> = [
-    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency) },
-    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency) },
+    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
+    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
   ];
   if (invoice.discount > 0) {
     rows.push({
       label: invoice.discountLabel || "Discount",
-      value: `-${formatCurrency(invoice.discount, currency)}`,
+      value: `-${formatCurrency(invoice.discount, currency, currencyCode)}`,
     });
   }
 
@@ -823,20 +969,34 @@ function renderModernTemplate(ctx: TemplateContext) {
 
   yPos += 4;
 
-  const totalCardHeight = 18;
+  const totalCardHeight = 22;
   doc.setFillColor(...POP);
   doc.roundedRect(summaryLabelX - 6, yPos, summaryValueX - (summaryLabelX - 6), totalCardHeight, 2.5, 2.5, "F");
 
   doc.setFont(FONT_FAMILY_BLACK, "normal");
-  doc.setFontSize(11);
+  doc.setFontSize(9);
   doc.setTextColor(...ACCENT_TEXT);
-  doc.text("TOTAL DUE", summaryLabelX, yPos + 11.5);
-  doc.setFontSize(15);
-  doc.text(formatCurrency(invoice.grandTotal, currency), summaryValueX - 6, yPos + 12, {
+  doc.text("TOTAL DUE", summaryLabelX, yPos + 8);
+  doc.setFontSize(14);
+  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX - 6, yPos + 17, {
     align: "right",
   });
 
-  yPos += totalCardHeight + 12;
+  yPos += totalCardHeight + 10;
+
+  const wordsWidth = pageWidth - margin - (summaryLabelX - 6);
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text("INVOICE TOTAL (IN WORDS)", summaryLabelX - 6, yPos);
+  yPos += 4.5;
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...INK);
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
+  doc.text(wordsLines, summaryLabelX - 6, yPos);
+  yPos += wordsLines.length * 4 + 6;
 
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {
@@ -905,6 +1065,7 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
     contentWidth,
     footerReserve,
     currency: invoice.currencySymbol,
+    currencyCode: invoice.currencyCode,
     validItems,
   };
 

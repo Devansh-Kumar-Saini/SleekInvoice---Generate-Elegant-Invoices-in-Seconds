@@ -17,6 +17,8 @@ import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
 import { generateInvoicePDF, INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-generator";
 import { type InvoiceItem } from "@/types/invoice";
+import { useTheme } from "@/hooks/use-theme";
+import { formatCurrencyAmount } from "@/lib/invoice-format";
 
 const categories = [
   "Electronics",
@@ -40,6 +42,7 @@ const currencies = [
 type FormValues = {
   companyName: string;
   companyLogo: string;
+  companyAddress: string;
   date: string;
   customerName: string;
   customerEmail: string;
@@ -71,11 +74,13 @@ export default function CreateInvoice() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const form = useForm<FormValues>({
     defaultValues: {
       companyName: "",
       companyLogo: "",
+      companyAddress: "",
       date: new Date().toISOString().split("T")[0],
       customerName: "",
       customerEmail: "",
@@ -151,7 +156,7 @@ export default function CreateInvoice() {
   );
 
   const formatCurrency = (amount: number) => {
-    return `${selectedCurrency?.symbol || "$"}${amount.toFixed(2)}`;
+    return formatCurrencyAmount(amount, selectedCurrency?.symbol || "$", selectedCurrency?.code);
   };
 
   const handleSubmit = form.handleSubmit(async (data) => {
@@ -180,6 +185,7 @@ export default function CreateInvoice() {
       await generateInvoicePDF({
         companyName: data.companyName,
         companyLogo: logoPreview || undefined,
+        companyAddress: data.companyAddress || undefined,
         invoiceNumber,
         date: data.date,
         customerName: data.customerName,
@@ -188,6 +194,7 @@ export default function CreateInvoice() {
         customerAddress: data.customerAddress || undefined,
         category: data.category || undefined,
         currencySymbol: selectedCurrency?.symbol || "$",
+        currencyCode: selectedCurrency?.code,
         items: validItems,
         subtotal,
         taxPercentage,
@@ -198,6 +205,7 @@ export default function CreateInvoice() {
         grandTotal,
         notes: data.notes || undefined,
         template: data.template,
+        isDarkMode: theme === "dark",
       });
 
       toast({
@@ -296,6 +304,19 @@ export default function CreateInvoice() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyAddress" className="text-sm font-medium">
+                    Address
+                  </Label>
+                  <Textarea
+                    id="companyAddress"
+                    data-testid="input-company-address"
+                    placeholder="Enter your company address"
+                    {...form.register("companyAddress")}
+                    className="min-h-24 resize-none"
+                  />
                 </div>
               </div>
             </Card>
@@ -725,6 +746,7 @@ export default function CreateInvoice() {
               template={form.watch("template")}
               companyName={form.watch("companyName")}
               companyLogo={logoPreview}
+              companyAddress={form.watch("companyAddress")}
               invoiceNumber={invoiceNumber}
               date={form.watch("date")}
               customerName={form.watch("customerName")}

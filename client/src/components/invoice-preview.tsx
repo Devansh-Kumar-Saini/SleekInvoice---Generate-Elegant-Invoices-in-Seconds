@@ -2,11 +2,14 @@ import { Card } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { type InvoiceItem } from "@/types/invoice";
 import { type InvoiceTemplate } from "@/lib/pdf-generator";
+import { amountToWords, formatCurrencyAmount } from "@/lib/invoice-format";
+import { useTheme } from "@/hooks/use-theme";
 
 interface InvoicePreviewProps {
   template?: InvoiceTemplate;
   companyName: string;
   companyLogo?: string;
+  companyAddress?: string;
   invoiceNumber?: string;
   date: string;
   customerName: string;
@@ -41,10 +44,21 @@ function formatDate(dateStr: string): string {
   });
 }
 
+/** DD/MM/YYYY, matching the Clean template's metadata grid date format. */
+function formatDateSlash(dateStr: string): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export function InvoicePreview(props: InvoicePreviewProps) {
   const currencySymbol = currencies[props.currency] || "$";
   const formatCurrency = (amount: number) =>
-    `${currencySymbol}${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+    formatCurrencyAmount(amount, currencySymbol, props.currency);
 
   const shared = { ...props, formatCurrency };
 
@@ -69,6 +83,7 @@ interface SharedProps extends InvoicePreviewProps {
 function ClassicPreview({
   companyName,
   companyLogo,
+  companyAddress,
   invoiceNumber,
   date,
   customerName,
@@ -76,6 +91,7 @@ function ClassicPreview({
   customerPhone,
   customerAddress,
   category,
+  currency,
   items,
   subtotal,
   taxPercentage,
@@ -132,33 +148,53 @@ function ClassicPreview({
           </div>
         </div>
 
-        {/* Customer Info */}
-        <div className="border-b pb-6">
-          <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
-            Bill To
-          </div>
-          <div className="space-y-2">
-            <div className="text-lg font-semibold text-foreground" data-testid="preview-customer-name">
-              {customerName || "Customer Name"}
+        {/* Billed By / Bill To */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-b pb-6">
+          <div>
+            <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
+              Billed By
             </div>
-            {customerEmail && (
-              <div className="text-sm text-muted-foreground" data-testid="preview-customer-email">
-                {customerEmail}
+            <div className="space-y-2">
+              <div className="text-lg font-semibold text-foreground" data-testid="preview-company-billed-by">
+                {companyName || "Company Name"}
               </div>
-            )}
-            {customerPhone && (
-              <div className="text-sm text-muted-foreground" data-testid="preview-customer-phone">
-                {customerPhone}
+              {companyAddress && (
+                <div
+                  className="text-sm text-muted-foreground whitespace-pre-wrap"
+                  data-testid="preview-company-address"
+                >
+                  {companyAddress}
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
+              Bill To
+            </div>
+            <div className="space-y-2">
+              <div className="text-lg font-semibold text-foreground" data-testid="preview-customer-name">
+                {customerName || "Customer Name"}
               </div>
-            )}
-            {customerAddress && (
-              <div
-                className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap"
-                data-testid="preview-customer-address"
-              >
-                {customerAddress}
-              </div>
-            )}
+              {customerEmail && (
+                <div className="text-sm text-muted-foreground" data-testid="preview-customer-email">
+                  {customerEmail}
+                </div>
+              )}
+              {customerPhone && (
+                <div className="text-sm text-muted-foreground" data-testid="preview-customer-phone">
+                  {customerPhone}
+                </div>
+              )}
+              {customerAddress && (
+                <div
+                  className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap"
+                  data-testid="preview-customer-address"
+                >
+                  {customerAddress}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -236,6 +272,14 @@ function ClassicPreview({
               {formatCurrency(grandTotal)}
             </span>
           </div>
+          <div className="pt-1">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Invoice Total (in words)
+            </div>
+            <div className="text-sm text-foreground capitalize" data-testid="preview-total-words">
+              {amountToWords(grandTotal, currency)}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -250,19 +294,22 @@ function ClassicPreview({
 }
 
 // ---------------------------------------------------------------------------
-// Clean — Vercel-inspired. Pure monochrome, hairline rules, no fills/boxes,
-// uppercase micro-labels, generous whitespace.
+// Clean — matches the reference invoice design exactly: giant thin title,
+// label/value metadata grid, Billed By/To split with a vertical divider,
+// borderless items table with plain-text headers, monospaced numeric
+// columns, and an "Invoice Total (in words)" line. The background flips
+// black/white with the app's own theme toggle rather than always being dark.
 // ---------------------------------------------------------------------------
 function CleanPreview({
   companyName,
-  companyLogo,
+  companyAddress,
   invoiceNumber,
   date,
   customerName,
   customerEmail,
   customerPhone,
   customerAddress,
-  category,
+  currency,
   items,
   subtotal,
   taxPercentage,
@@ -272,71 +319,63 @@ function CleanPreview({
   formatCurrency,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <Card
-      className="p-8 sm:p-10 bg-background shadow-sm w-full max-w-4xl border-border"
+      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl border-border ${
+        isDark ? "bg-black text-white" : "bg-white text-black"
+      }`}
       data-testid="invoice-preview"
     >
       <div className="space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 pb-6 border-b border-border">
-          <div className="min-w-0">
-            {companyLogo && (
-              <img
-                src={companyLogo}
-                alt={companyName}
-                className="max-h-10 w-auto object-contain mb-3"
-                data-testid="preview-company-logo"
-              />
-            )}
-            <h3
-              className="text-lg sm:text-xl font-bold text-foreground break-words"
-              data-testid="preview-company-name"
-            >
-              {companyName || "Company Name"}
-            </h3>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
-              Invoice
-            </div>
-            {invoiceNumber && (
-              <div
-                className="text-sm font-bold text-foreground whitespace-nowrap"
-                data-testid="preview-invoice-number"
-              >
-                {invoiceNumber}
-              </div>
-            )}
-            <div className="text-xs text-muted-foreground whitespace-nowrap mt-1" data-testid="preview-date">
-              {date ? formatDate(date) : "Date"}
-            </div>
-            {category && (
-              <div className="text-xs text-muted-foreground" data-testid="preview-category">
-                {category}
-              </div>
-            )}
-          </div>
+        {/* Giant, thin-weight title */}
+        <div className="pb-6 border-b border-border">
+          <h1
+            className="text-3xl sm:text-4xl font-light tracking-tight break-words"
+            data-testid="preview-company-name"
+          >
+            Invoice {invoiceNumber || ""}
+          </h1>
         </div>
 
-        {/* Billed to / date columns */}
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-2">
-              Billed To
+        {/* Metadata label/value grid */}
+        <div className="grid grid-cols-[auto,1fr] gap-x-6 gap-y-2 text-sm max-w-md">
+          <span className="text-muted-foreground">Serial Number</span>
+          <span data-testid="preview-invoice-number">
+            {(invoiceNumber || "").replace(/^INV-?/i, "") || invoiceNumber || "—"}
+          </span>
+          <span className="text-muted-foreground">Date</span>
+          <span data-testid="preview-date">{date ? formatDateSlash(date) : "—"}</span>
+          <span className="text-muted-foreground">Currency</span>
+          <span>{currency}</span>
+        </div>
+
+        {/* Billed By / Billed To with a vertical divider */}
+        <div className="grid grid-cols-2 gap-6 pb-6 border-b border-border relative">
+          <div className="sm:border-r border-border pr-6">
+            <div className="text-xs text-muted-foreground mb-2">Billed By</div>
+            <div className="text-base font-semibold" data-testid="preview-company-billed-by">
+              {companyName || "Company Name"}
             </div>
-            <div className="text-sm font-bold text-foreground" data-testid="preview-customer-name">
-              {customerName || "Customer Name"}
-            </div>
-            {customerEmail && (
-              <div className="text-xs text-muted-foreground mt-1" data-testid="preview-customer-email">
-                {customerEmail}
+            {companyAddress && (
+              <div
+                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap"
+                data-testid="preview-company-address"
+              >
+                {companyAddress}
               </div>
             )}
-            {customerPhone && (
-              <div className="text-xs text-muted-foreground" data-testid="preview-customer-phone">
-                {customerPhone}
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-2">Billed To</div>
+            <div className="text-base font-semibold" data-testid="preview-customer-name">
+              {customerName || "Customer Name"}
+            </div>
+            {(customerEmail || customerPhone) && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {[customerEmail, customerPhone].filter(Boolean).join("  •  ")}
               </div>
             )}
             {customerAddress && (
@@ -348,18 +387,12 @@ function CleanPreview({
               </div>
             )}
           </div>
-          <div>
-            <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-2">
-              Invoice Date
-            </div>
-            <div className="text-sm text-foreground">{date ? formatDate(date) : "—"}</div>
-          </div>
         </div>
 
-        {/* Items — no borders/fills, just header rule + row rules */}
+        {/* Items — no borders/fills on header, just a rule; monospaced numbers */}
         <div>
-          <div className="grid grid-cols-12 gap-4 pb-2 border-b-2 border-foreground text-[10px] font-medium uppercase tracking-widest text-muted-foreground min-w-[600px]">
-            <div className="col-span-6">Description</div>
+          <div className="grid grid-cols-12 gap-4 pb-2 border-b border-border text-sm text-muted-foreground min-w-[600px]">
+            <div className="col-span-6">Item</div>
             <div className="col-span-2 text-right">Qty</div>
             <div className="col-span-2 text-right">Price</div>
             <div className="col-span-2 text-right">Total</div>
@@ -369,22 +402,22 @@ function CleanPreview({
             validItems.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-12 gap-4 py-3 border-b border-border min-w-[600px]"
+                className="grid grid-cols-12 gap-4 py-3 min-w-[600px]"
                 data-testid={`preview-item-${index}`}
               >
                 <div className="col-span-6">
-                  <div className="font-bold text-sm text-foreground break-words">{item.name}</div>
+                  <div className="text-sm break-words">{item.name}</div>
                   {item.details && (
                     <div className="text-xs text-muted-foreground mt-0.5 break-words">
                       {item.details}
                     </div>
                   )}
                 </div>
-                <div className="col-span-2 text-right text-sm text-foreground">{item.quantity}</div>
-                <div className="col-span-2 text-right text-sm text-foreground">
+                <div className="col-span-2 text-right text-sm font-mono">{item.quantity}</div>
+                <div className="col-span-2 text-right text-sm font-mono">
                   {formatCurrency(item.price)}
                 </div>
-                <div className="col-span-2 text-right text-sm font-bold text-foreground">
+                <div className="col-span-2 text-right text-sm font-mono">
                   {formatCurrency(item.quantity * item.price)}
                 </div>
               </div>
@@ -392,36 +425,60 @@ function CleanPreview({
           ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
           )}
+          <div className="border-b border-border" />
         </div>
+
+        {/* Large sparse gap, matching the reference's minimal layout */}
+        <div className="hidden sm:block h-24" />
 
         {/* Calculations */}
         <div className="flex justify-end">
-          <div className="w-full sm:w-64 space-y-2">
+          <div className="w-full sm:w-72 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Subtotal</span>
-              <span className="text-sm text-foreground" data-testid="preview-subtotal">
+              <span className="text-sm font-mono" data-testid="preview-subtotal">
                 {formatCurrency(subtotal)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Tax ({taxPercentage}%)</span>
-              <span className="text-sm text-foreground" data-testid="preview-tax">
-                {formatCurrency(tax)}
-              </span>
-            </div>
+            {/* Mirrors the reference invoice's per-item subtotal breakdown,
+                but that only reads cleanly with a single line item — with
+                several items it would just duplicate the items table. */}
+            {validItems.length <= 1 &&
+              validItems.map((item, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground break-words pr-2">{item.name}</span>
+                  <span className="text-sm font-mono whitespace-nowrap">
+                    {formatCurrency(item.quantity * item.price)}
+                  </span>
+                </div>
+              ))}
+            {tax > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">Tax ({taxPercentage}%)</span>
+                <span className="text-sm font-mono" data-testid="preview-tax">
+                  {formatCurrency(tax)}
+                </span>
+              </div>
+            )}
             {discount > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Discount</span>
-                <span className="text-sm text-foreground" data-testid="preview-discount">
+                <span className="text-sm font-mono" data-testid="preview-discount">
                   -{formatCurrency(discount)}
                 </span>
               </div>
             )}
-            <div className="flex justify-between items-center pt-2 border-t-2 border-foreground">
-              <span className="text-sm font-bold text-foreground">Total</span>
-              <span className="text-lg font-bold text-foreground" data-testid="preview-total">
+            <div className="flex justify-between items-center pt-2 border-t border-border">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-lg font-mono font-bold" data-testid="preview-total">
                 {formatCurrency(grandTotal)}
               </span>
+            </div>
+            <div className="pt-2">
+              <div className="text-[10px] text-muted-foreground">Invoice Total (in words)</div>
+              <div className="text-sm capitalize" data-testid="preview-total-words">
+                {amountToWords(grandTotal, currency)}
+              </div>
             </div>
           </div>
         </div>
@@ -442,6 +499,7 @@ function CleanPreview({
 function ModernPreview({
   companyName,
   companyLogo,
+  companyAddress,
   invoiceNumber,
   date,
   customerName,
@@ -449,6 +507,7 @@ function ModernPreview({
   customerPhone,
   customerAddress,
   category,
+  currency,
   items,
   subtotal,
   taxPercentage,
@@ -500,8 +559,24 @@ function ModernPreview({
       </div>
 
       <div className="p-8 space-y-6">
-        {/* Bill To / Category chips */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Billed By / Billed To / Category chips */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-lg bg-muted p-3">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              Billed By
+            </div>
+            <div className="text-sm font-bold text-foreground" data-testid="preview-company-billed-by">
+              {companyName || "Company Name"}
+            </div>
+            {companyAddress && (
+              <div
+                className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap"
+                data-testid="preview-company-address"
+              >
+                {companyAddress}
+              </div>
+            )}
+          </div>
           <div className="rounded-lg bg-muted p-3">
             <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
               Billed To
@@ -509,6 +584,19 @@ function ModernPreview({
             <div className="text-sm font-bold text-foreground" data-testid="preview-customer-name">
               {customerName || "Customer Name"}
             </div>
+            {(customerEmail || customerPhone) && (
+              <div className="text-[11px] text-muted-foreground mt-1">
+                {[customerEmail, customerPhone].filter(Boolean).join(" • ")}
+              </div>
+            )}
+            {customerAddress && (
+              <div
+                className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap"
+                data-testid="preview-customer-address"
+              >
+                {customerAddress}
+              </div>
+            )}
           </div>
           <div className="rounded-lg bg-muted p-3">
             <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
@@ -519,22 +607,6 @@ function ModernPreview({
             </div>
           </div>
         </div>
-
-        {(customerEmail || customerPhone || customerAddress) && (
-          <div className="text-xs text-muted-foreground space-y-0.5">
-            {(customerEmail || customerPhone) && (
-              <div className="flex gap-3">
-                {customerEmail && <span data-testid="preview-customer-email">{customerEmail}</span>}
-                {customerPhone && <span data-testid="preview-customer-phone">{customerPhone}</span>}
-              </div>
-            )}
-            {customerAddress && (
-              <div className="whitespace-pre-wrap" data-testid="preview-customer-address">
-                {customerAddress}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Items */}
         <div className="rounded-lg overflow-hidden border border-border">
@@ -604,6 +676,14 @@ function ModernPreview({
               <span className="text-xl font-extrabold text-primary-foreground" data-testid="preview-total">
                 {formatCurrency(grandTotal)}
               </span>
+            </div>
+            <div className="pt-1">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                Invoice Total (in words)
+              </div>
+              <div className="text-sm text-foreground capitalize" data-testid="preview-total-words">
+                {amountToWords(grandTotal, currency)}
+              </div>
             </div>
           </div>
         </div>
