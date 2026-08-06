@@ -1,6 +1,8 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { Header } from "@/components/header";
 import CreateInvoice from "@/pages/create-invoice";
 import NotFound from "@/pages/not-found";
 
@@ -15,12 +17,15 @@ function Router() {
 
 function App() {
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        <Router />
-      </div>
-      <Toaster />
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <Router />
+        </div>
+        <Toaster />
+      </TooltipProvider>
+    </ThemeProvider>
   );
 }
 

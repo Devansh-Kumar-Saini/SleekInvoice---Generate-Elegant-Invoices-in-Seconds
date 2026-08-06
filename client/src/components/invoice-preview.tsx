@@ -5,6 +5,7 @@ import { type InvoiceItem } from "@/types/invoice";
 interface InvoicePreviewProps {
   companyName: string;
   companyLogo?: string;
+  invoiceNumber?: string;
   date: string;
   customerName: string;
   customerEmail?: string;
@@ -31,6 +32,7 @@ const currencies: Record<string, string> = {
 export function InvoicePreview({
   companyName,
   companyLogo,
+  invoiceNumber,
   date,
   customerName,
   customerEmail,
@@ -65,8 +67,8 @@ export function InvoicePreview({
     <Card className="p-8 bg-background shadow-sm w-full max-w-4xl" data-testid="invoice-preview">
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-start justify-between border-b pb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 border-b pb-6">
+          <div className="min-w-0">
             {companyLogo ? (
               <img
                 src={companyLogo}
@@ -79,15 +81,26 @@ export function InvoicePreview({
                 <FileText className="w-8 h-8 text-muted-foreground" />
               </div>
             )}
-            <h3 className="text-3xl font-bold text-foreground" data-testid="preview-company-name">
+            <h3
+              className="text-2xl sm:text-3xl font-bold text-foreground break-words"
+              data-testid="preview-company-name"
+            >
               {companyName || "Company Name"}
             </h3>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="text-lg font-medium uppercase tracking-wider text-primary mb-1">
               Invoice
             </div>
-            <div className="text-sm text-foreground" data-testid="preview-date">
+            {invoiceNumber && (
+              <div
+                className="text-xs sm:text-sm font-mono text-foreground whitespace-nowrap"
+                data-testid="preview-invoice-number"
+              >
+                {invoiceNumber}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground whitespace-nowrap" data-testid="preview-date">
               {date ? formatDate(date) : "Date"}
             </div>
             {category && (

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InvoicePreview } from "@/components/invoice-preview";
-import { Plus, Trash2, FileText, Loader2 } from "lucide-react";
-import { jsPDF } from "jspdf";
+import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
+import { generateInvoicePDF } from "@/lib/pdf-generator";
 import { type InvoiceItem } from "@/types/invoice";
 
 const categories = [
@@ -38,18 +38,28 @@ const currencies = [
 ];
 
 type FormValues = {
-  companyName: string
-  companyLogo: string
-  date: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  category: string
-  currency: string
-  taxPercentage: number
-  discountType: "none" | "flat" | "percentage"
-  discountValue: number
+  companyName: string;
+  companyLogo: string;
+  date: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  category: string;
+  currency: string;
+  taxPercentage: number;
+  discountType: "none" | "flat" | "percentage";
+  discountValue: number;
+  notes: string;
+};
+
+function generateInvoiceNumber(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const rand = Math.floor(100 + Math.random() * 900); // 3-digit suffix
+  return `INV-${y}${m}${d}-${rand}`;
 }
 
 export default function CreateInvoice() {
@@ -58,6 +68,7 @@ export default function CreateInvoice() {
   ]);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -74,86 +85,9 @@ export default function CreateInvoice() {
       taxPercentage: 10,
       discountType: "none",
       discountValue: 0,
+      notes: "",
     },
   });
-
-  const generatePDF = async (invoiceData: any) => {
-    const doc = new jsPDF();
-    
-    // Add company info
-    doc.setFontSize(20);
-    doc.text(invoiceData.companyName, 20, 20);
-    
-    if (invoiceData.companyLogo) {
-      try {
-        const img = new Image();
-        img.src = invoiceData.companyLogo;
-        await new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = () => {
-            console.error("Failed to load logo");
-            resolve(null);
-          };
-        });
-        
-        if (img.complete && img.naturalWidth !== 0) {
-          doc.addImage(img, 'JPEG', 160, 10, 30, 30);
-        }
-      } catch (e) {
-        console.error("Error adding logo:", e);
-      }
-    }
-    
-    // Add invoice details
-    doc.setFontSize(12);
-    doc.text(`Invoice Date: ${invoiceData.date}`, 20, 40);
-    doc.text(`Customer: ${invoiceData.customerName}`, 20, 50);
-    
-    // Add items table
-    doc.setFontSize(14);
-    doc.text("Items", 20, 70);
-    
-    doc.setFontSize(10);
-    doc.text("Item", 20, 80);
-    doc.text("Qty", 80, 80);
-    doc.text("Price", 100, 80);
-    doc.text("Total", 140, 80);
-    
-    const items = JSON.parse(invoiceData.items);
-    let y = 90;
-    items.forEach((item: any) => {
-      doc.text(item.name, 20, y);
-      doc.text(item.quantity.toString(), 80, y);
-      doc.text(`${invoiceData.currency}${item.price.toFixed(2)}`, 100, y);
-      doc.text(
-        `${invoiceData.currency}${(item.quantity * item.price).toFixed(2)}`, 
-        140, 
-        y
-      );
-      y += 7;
-    });
-    
-    // Add totals
-    doc.setFontSize(12);
-    doc.text("Subtotal:", 120, y + 10);
-    doc.text(`${invoiceData.currency}${invoiceData.subtotal}`, 160, y + 10);
-    
-    doc.text(`Tax (${invoiceData.taxPercentage}%):`, 120, y + 20);
-    doc.text(`${invoiceData.currency}${invoiceData.tax}`, 160, y + 20);
-    
-    if (invoiceData.discount) {
-      doc.text("Discount:", 120, y + 30);
-      doc.text(`-${invoiceData.currency}${invoiceData.discount}`, 160, y + 30);
-      y += 10;
-    }
-    
-    doc.setFontSize(14);
-    doc.text("Grand Total:", 120, y + 40);
-    doc.text(`${invoiceData.currency}${invoiceData.grandTotal}`, 160, y + 40);
-    
-    // Save the PDF
-    doc.save(`invoice_${invoiceData.date}_${invoiceData.customerName}.pdf`);
-  };
 
   const addItem = () => {
     setItems([...items, { name: "", quantity: 1, price: 0, details: "" }]);
@@ -176,6 +110,24 @@ export default function CreateInvoice() {
     setLogoPreview(url);
   };
 
+  const handleLogoFileChange = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      form.setValue("companyLogo", dataUrl);
+      setLogoPreview(dataUrl);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Couldn't read logo file",
+        description: "Please try a different image file.",
+        variant: "destructive",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   const taxPercentage = form.watch("taxPercentage") || 0;
@@ -188,15 +140,19 @@ export default function CreateInvoice() {
       : discountType === "percentage"
       ? (subtotal * discountValue) / 100
       : 0;
-  const grandTotal = subtotal + tax - discount;
+  const grandTotal = Math.max(subtotal + tax - discount, 0);
 
-  const selectedCurrency = currencies.find((c) => c.code === form.watch("currency"));
+  const selectedCurrency = useMemo(
+    () => currencies.find((c) => c.code === form.watch("currency")),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form.watch("currency")]
+  );
+
   const formatCurrency = (amount: number) => {
     return `${selectedCurrency?.symbol || "$"}${amount.toFixed(2)}`;
   };
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    // Validate items
     const validItems = items.filter((item) => item.name.trim() !== "");
     if (validItems.length === 0) {
       toast({
@@ -207,37 +163,44 @@ export default function CreateInvoice() {
       return;
     }
 
+    if (!data.companyName.trim() || !data.customerName.trim()) {
+      toast({
+        title: "Missing required details",
+        description: "Company name and customer name are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
-    
+
     try {
-      // Prepare invoice data
-      const invoiceData = {
+      await generateInvoicePDF({
         companyName: data.companyName,
-        companyLogo: logoPreview || "",
+        companyLogo: logoPreview || undefined,
+        invoiceNumber,
         date: data.date,
         customerName: data.customerName,
-        customerEmail: data.customerEmail || "",
-        customerPhone: data.customerPhone || "",
-        customerAddress: data.customerAddress || "",
-        category: data.category,
-        currency: selectedCurrency?.symbol || "$",
-        items: JSON.stringify(validItems),
-        subtotal: subtotal.toFixed(2),
-        taxPercentage: data.taxPercentage.toString(),
-        tax: tax.toFixed(2),
-        discountType: data.discountType === "none" ? null : data.discountType,
-        discountValue: data.discountType === "none" ? null : discountValue.toString(),
-        discount: data.discountType === "none" ? null : discount.toFixed(2),
-        grandTotal: grandTotal.toFixed(2),
-      };
+        customerEmail: data.customerEmail || undefined,
+        customerPhone: data.customerPhone || undefined,
+        customerAddress: data.customerAddress || undefined,
+        category: data.category || undefined,
+        currencySymbol: selectedCurrency?.symbol || "$",
+        items: validItems,
+        subtotal,
+        taxPercentage,
+        tax,
+        discountLabel:
+          discountType === "percentage" ? `Discount (${discountValue}%)` : "Discount",
+        discount,
+        grandTotal,
+        notes: data.notes || undefined,
+      });
 
-      await generatePDF(invoiceData);
-      
       toast({
         title: "Invoice generated successfully",
-        description: "Your invoice has been downloaded.",
+        description: `${invoiceNumber}.pdf has been downloaded.`,
       });
-      
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast({
@@ -254,17 +217,21 @@ export default function CreateInvoice() {
     form.reset();
     setItems([{ name: "", quantity: 1, price: 0, details: "" }]);
     setLogoPreview("");
+    setInvoiceNumber(generateInvoiceNumber());
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2" data-testid="text-page-title">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="mb-8">
+          <h1
+            className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2"
+            data-testid="text-page-title"
+          >
             Create Invoice
           </h1>
           <p className="text-sm text-muted-foreground">
-            Fill in the details below to generate a professional invoice
+            Fill in the details below and InvoiceForge will generate a polished, ready-to-send PDF.
           </p>
         </div>
 
@@ -272,7 +239,7 @@ export default function CreateInvoice() {
           {/* Form Section */}
           <div className="xl:w-2/3 space-y-6">
             {/* Company Information */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <h2 className="text-xl font-semibold mb-6">Company Information</h2>
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -290,19 +257,34 @@ export default function CreateInvoice() {
 
                 <div className="space-y-2">
                   <Label htmlFor="companyLogo" className="text-sm font-medium">
-                    Company Logo (URL)
+                    Company Logo
                   </Label>
-                  <div className="flex gap-4">
-                    <Input
-                      id="companyLogo"
-                      data-testid="input-company-logo"
-                      placeholder="https://example.com/logo.png"
-                      value={logoPreview}
-                      onChange={(e) => handleLogoUrlChange(e.target.value)}
-                      className="h-12 flex-1"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="companyLogo"
+                        data-testid="input-company-logo"
+                        placeholder="https://example.com/logo.png"
+                        value={logoPreview.startsWith("data:") ? "" : logoPreview}
+                        onChange={(e) => handleLogoUrlChange(e.target.value)}
+                        className="h-12"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="companyLogoFile"
+                          type="file"
+                          accept="image/*"
+                          data-testid="input-company-logo-file"
+                          onChange={(e) => handleLogoFileChange(e.target.files?.[0] ?? null)}
+                          className="h-10 text-xs file:text-xs file:font-medium"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Paste a logo URL, or upload an image file directly.
+                      </p>
+                    </div>
                     {logoPreview && (
-                      <div className="w-12 h-12 border border-border rounded-md overflow-hidden flex items-center justify-center bg-card">
+                      <div className="w-16 h-16 border border-border rounded-md overflow-hidden flex items-center justify-center bg-card shrink-0">
                         <img
                           src={logoPreview}
                           alt="Logo preview"
@@ -311,17 +293,27 @@ export default function CreateInvoice() {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Enter a URL to your company logo
-                  </p>
                 </div>
               </div>
             </Card>
 
             {/* Invoice Details */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <h2 className="text-xl font-semibold mb-6">Invoice Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="invoiceNumber" className="text-sm font-medium">
+                    Invoice Number
+                  </Label>
+                  <Input
+                    id="invoiceNumber"
+                    data-testid="input-invoice-number"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    className="h-12 font-mono"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="date" className="text-sm font-medium">
                     Date *
@@ -337,22 +329,22 @@ export default function CreateInvoice() {
 
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-sm font-medium">
-                    Category *
+                    Category
                   </Label>
                   <Select
                     value={form.watch("category")}
                     onValueChange={(value) => form.setValue("category", value)}
                   >
-                    <SelectTrigger
-                      id="category"
-                      data-testid="select-category"
-                      className="h-12"
-                    >
+                    <SelectTrigger id="category" data-testid="select-category" className="h-12">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat} data-testid={`option-category-${cat.toLowerCase()}`}>
+                        <SelectItem
+                          key={cat}
+                          value={cat}
+                          data-testid={`option-category-${cat.toLowerCase()}`}
+                        >
                           {cat}
                         </SelectItem>
                       ))}
@@ -368,16 +360,16 @@ export default function CreateInvoice() {
                     value={form.watch("currency")}
                     onValueChange={(value) => form.setValue("currency", value)}
                   >
-                    <SelectTrigger
-                      id="currency"
-                      data-testid="select-currency"
-                      className="h-12"
-                    >
+                    <SelectTrigger id="currency" data-testid="select-currency" className="h-12">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {currencies.map((curr) => (
-                        <SelectItem key={curr.code} value={curr.code} data-testid={`option-currency-${curr.code.toLowerCase()}`}>
+                        <SelectItem
+                          key={curr.code}
+                          value={curr.code}
+                          data-testid={`option-currency-${curr.code.toLowerCase()}`}
+                        >
                           {curr.symbol} {curr.code} - {curr.name}
                         </SelectItem>
                       ))}
@@ -388,7 +380,7 @@ export default function CreateInvoice() {
             </Card>
 
             {/* Customer Information */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <h2 className="text-xl font-semibold mb-6">Customer Information</h2>
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -449,15 +441,14 @@ export default function CreateInvoice() {
             </Card>
 
             {/* Items */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Items</h2>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={addItem}
                   data-testid="button-add-item"
-                  disabled={false}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Item
@@ -522,15 +513,20 @@ export default function CreateInvoice() {
                       />
                     </div>
 
-                    <div className="col-span-2 md:col-span-1 flex items-end">
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
+                    <div className="col-span-2 md:col-span-1 flex flex-col space-y-2">
+                      <Label className="text-sm font-medium invisible hidden md:block">
+                        Remove
+                      </Label>
+                      <Button
+                        variant="destructive"
+                        size="icon"
                         onClick={() => removeItem(index)}
                         disabled={items.length === 1}
                         data-testid={`button-remove-item-${index}`}
+                        aria-label="Remove item"
+                        className="h-12 w-full"
                       >
-                        <Trash2 className="w-4 h-4 text-destructive" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -539,7 +535,7 @@ export default function CreateInvoice() {
             </Card>
 
             {/* Calculations */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <h2 className="text-xl font-semibold mb-6">Calculations</h2>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -567,9 +563,7 @@ export default function CreateInvoice() {
                     </Label>
                     <Select
                       value={form.watch("discountType")}
-                      onValueChange={(value) =>
-                        form.setValue("discountType", value as any)
-                      }
+                      onValueChange={(value) => form.setValue("discountType", value as any)}
                     >
                       <SelectTrigger
                         id="discountType"
@@ -607,6 +601,19 @@ export default function CreateInvoice() {
                   </div>
                 )}
 
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="text-sm font-medium">
+                    Notes (optional)
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    data-testid="input-notes"
+                    placeholder="Payment terms, thank-you message, etc."
+                    {...form.register("notes")}
+                    className="min-h-20 resize-none"
+                  />
+                </div>
+
                 {/* Totals Display */}
                 <div className="border-t border-border pt-6 space-y-3">
                   <div className="flex justify-between items-center">
@@ -616,9 +623,7 @@ export default function CreateInvoice() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-foreground">
-                      Tax ({taxPercentage}%)
-                    </span>
+                    <span className="text-sm text-foreground">Tax ({taxPercentage}%)</span>
                     <span className="text-base font-mono font-semibold" data-testid="text-tax">
                       {formatCurrency(tax)}
                     </span>
@@ -626,16 +631,20 @@ export default function CreateInvoice() {
                   {discount > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-foreground">Discount</span>
-                      <span className="text-base font-mono font-semibold text-destructive" data-testid="text-discount">
+                      <span
+                        className="text-base font-mono font-semibold text-destructive"
+                        data-testid="text-discount"
+                      >
                         -{formatCurrency(discount)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 border-t border-border">
-                    <span className="text-lg font-semibold text-foreground">
-                      Grand Total
-                    </span>
-                    <span className="text-2xl font-mono font-bold text-primary" data-testid="text-grand-total">
+                    <span className="text-lg font-semibold text-foreground">Grand Total</span>
+                    <span
+                      className="text-2xl font-mono font-bold text-primary"
+                      data-testid="text-grand-total"
+                    >
                       {formatCurrency(grandTotal)}
                     </span>
                   </div>
@@ -644,11 +653,11 @@ export default function CreateInvoice() {
             </Card>
 
             {/* Action Buttons */}
-            <Card className="p-8">
+            <Card className="p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
+                <Button
+                  variant="default"
+                  size="lg"
                   onClick={handleSubmit}
                   disabled={isGenerating}
                   className="flex-1 h-12"
@@ -661,20 +670,21 @@ export default function CreateInvoice() {
                     </>
                   ) : (
                     <>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Generate Invoice
+                      <FileDown className="w-4 h-4 mr-2" />
+                      Download PDF
                     </>
                   )}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
+                <Button
+                  variant="outline"
+                  size="lg"
                   type="button"
                   onClick={handleClearForm}
                   disabled={isGenerating}
                   className="h-12"
                   data-testid="button-clear-form"
                 >
+                  <RotateCcw className="w-4 h-4 mr-2" />
                   Clear Form
                 </Button>
               </div>
@@ -682,10 +692,11 @@ export default function CreateInvoice() {
           </div>
 
           {/* Preview Section */}
-          <div className="w-full xl:w-1/3 xl:sticky xl:top-4 xl:h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="w-full xl:w-1/3 xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)] overflow-y-auto">
             <InvoicePreview
               companyName={form.watch("companyName")}
               companyLogo={logoPreview}
+              invoiceNumber={invoiceNumber}
               date={form.watch("date")}
               customerName={form.watch("customerName")}
               customerEmail={form.watch("customerEmail")}

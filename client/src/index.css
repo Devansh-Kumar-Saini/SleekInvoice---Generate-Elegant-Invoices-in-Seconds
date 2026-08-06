@@ -30,7 +30,7 @@
   --sidebar-ring: 9 75% 61%;
 
   --popover: 45 25% 97%;
-  --popover-foreground: 0 0% 100%;
+  --popover-foreground: 0 0% 10.2%;
   --popover-border: 45 15% 87%;
 
   --primary: 342 85.11% 52.55%;
@@ -59,7 +59,7 @@
 
   --font-sans: 'Poppins', sans-serif;
   --font-serif: 'Poppins', sans-serif;
-  --font-mono: Menlo, monospace;
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: 0.8rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
