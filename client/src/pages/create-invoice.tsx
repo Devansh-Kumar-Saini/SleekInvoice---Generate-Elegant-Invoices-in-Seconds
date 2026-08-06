@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
-import { generateInvoicePDF } from "@/lib/pdf-generator";
+import { generateInvoicePDF, INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-generator";
 import { type InvoiceItem } from "@/types/invoice";
 
 const categories = [
@@ -51,6 +51,7 @@ type FormValues = {
   discountType: "none" | "flat" | "percentage";
   discountValue: number;
   notes: string;
+  template: InvoiceTemplate;
 };
 
 function generateInvoiceNumber(): string {
@@ -86,6 +87,7 @@ export default function CreateInvoice() {
       discountType: "none",
       discountValue: 0,
       notes: "",
+      template: "classic",
     },
   });
 
@@ -195,6 +197,7 @@ export default function CreateInvoice() {
         discount,
         grandTotal,
         notes: data.notes || undefined,
+        template: data.template,
       });
 
       toast({
@@ -371,6 +374,31 @@ export default function CreateInvoice() {
                           data-testid={`option-currency-${curr.code.toLowerCase()}`}
                         >
                           {curr.symbol} {curr.code} - {curr.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="template" className="text-sm font-medium">
+                    PDF Template
+                  </Label>
+                  <Select
+                    value={form.watch("template")}
+                    onValueChange={(value) => form.setValue("template", value as InvoiceTemplate)}
+                  >
+                    <SelectTrigger id="template" data-testid="select-template" className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INVOICE_TEMPLATES.map((tpl) => (
+                        <SelectItem
+                          key={tpl.id}
+                          value={tpl.id}
+                          data-testid={`option-template-${tpl.id}`}
+                        >
+                          {tpl.label} — {tpl.description}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -694,6 +722,7 @@ export default function CreateInvoice() {
           {/* Preview Section */}
           <div className="w-full xl:w-1/3 xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)] overflow-y-auto">
             <InvoicePreview
+              template={form.watch("template")}
               companyName={form.watch("companyName")}
               companyLogo={logoPreview}
               invoiceNumber={invoiceNumber}
