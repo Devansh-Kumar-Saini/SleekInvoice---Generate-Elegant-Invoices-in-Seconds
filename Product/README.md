@@ -126,5 +126,5 @@ For any questions or feedback, please reach out to [your-email@example.com](mail
 ---
 
 <div align="center">
-  Made with ❤️ by [Your Name]
+  Made with ❤️ by Dev
 </div>
