@@ -27,9 +27,18 @@ function Page() {
         overflowX: 'hidden',
       }}
     >
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle,var(--grid-dot) 1px,transparent 1.4px)', backgroundSize: '28px 28px' }} />
-      <div style={{ position: 'fixed', top: -220, left: -140, width: 520, height: 520, borderRadius: '50%', background: 'var(--amber)', opacity: 0.14, filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', top: 260, right: -200, width: 560, height: 560, borderRadius: '50%', background: 'var(--cyan)', opacity: 0.10, filter: 'blur(130px)', zIndex: 0, pointerEvents: 'none' }} />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+          background: `
+            radial-gradient(680px 480px at 8% -8%, var(--mesh-1), transparent 60%),
+            radial-gradient(720px 520px at 96% 22%, var(--mesh-2), transparent 60%),
+            radial-gradient(600px 440px at 30% 100%, var(--mesh-3), transparent 60%)
+          `,
+          animation: 'meshDrift 22s ease-in-out infinite',
+        }}
+      />
 
       <Header />
       <Hero />

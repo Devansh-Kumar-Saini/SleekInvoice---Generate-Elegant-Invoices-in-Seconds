@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import SectionHeading from './SectionHeading'
+import Reveal from './Reveal'
 import { DEFAULT_LINE_ITEMS, formatMoney } from '../data/content'
 import { MinusIcon, PlusIcon } from './Icons'
 
@@ -31,7 +32,7 @@ export default function TryItLive() {
         maxWidth={600}
       />
 
-      <div className="sv-reveal sv-d1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', background: 'var(--bg-surface)', border: '1px solid var(--border-hair-strong)', borderRadius: 22, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+      <Reveal delay={1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', background: 'var(--bg-surface)', border: '1px solid var(--border-hair-strong)', borderRadius: 22, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ padding: 36 }}>
           <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}>Line Items</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 26 }}>
@@ -62,7 +63,7 @@ export default function TryItLive() {
           </div>
           <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 11, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Discount</span>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color: 'var(--amber-ink)' }}>{discountPct}%</span>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color: 'var(--blue-ink)' }}>{discountPct}%</span>
           </div>
           <input
             type="range"
@@ -94,14 +95,14 @@ export default function TryItLive() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 4 }}>
               <span style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 600 }}>Total</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, color: 'var(--amber-ink)', fontWeight: 700 }}>{CURRENCY_SYMBOL}{formatMoney(totals.total)}</span>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, color: 'var(--blue-ink)', fontWeight: 700 }}>{CURRENCY_SYMBOL}{formatMoney(totals.total)}</span>
             </div>
           </div>
           <p style={{ fontSize: 12.5, color: 'var(--text-tertiary)', margin: '20px 0 0', lineHeight: 1.5 }}>
             This is a live preview of the real builder — updates instantly as you adjust quantity or discount.
           </p>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }

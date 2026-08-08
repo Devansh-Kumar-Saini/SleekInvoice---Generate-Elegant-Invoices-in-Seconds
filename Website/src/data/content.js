@@ -35,7 +35,7 @@ export const HOW_IT_WORKS = [
 export const TEMPLATES = [
   { name: 'Minimal Mono', accent: 'var(--cyan-ink)', surface: 'var(--bg-surface-2)' },
   { name: 'Classic Ledger', accent: 'var(--text-secondary)', surface: 'var(--bg-surface-2)' },
-  { name: 'Bold Amber', accent: 'var(--amber)', surface: 'var(--bg-surface-2)', highlighted: true, badge: 'Default' },
+  { name: 'Bold Blue', accent: 'var(--blue)', surface: 'var(--bg-surface-2)', highlighted: true, badge: 'Default' },
   { name: 'Dark Forge', accent: 'var(--cyan)', surface: 'var(--bg-canvas)', bordered: true },
 ]
 

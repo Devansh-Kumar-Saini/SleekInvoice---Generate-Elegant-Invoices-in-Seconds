@@ -1,41 +1,40 @@
 :root{
-  --bg-canvas:#090D16; --bg-surface:#0F172A; --bg-surface-2:#141d33; --bg-glass:rgba(15,23,42,.6);
-  --text-primary:#F8FAFC; --text-secondary:#96A1B8; --text-tertiary:#5C6785;
-  --border-hair:rgba(255,255,255,.08); --border-hair-strong:rgba(255,255,255,.16);
-  --amber:#F59E0B; --amber-soft:#FBBF24; --amber-ink:#FCD34D;
+  --bg-canvas:#080B14; --bg-surface:#0E1526; --bg-surface-2:#131B30; --bg-glass:rgba(14,21,38,.68);
+  --text-primary:#F5F7FB; --text-secondary:#93A0BC; --text-tertiary:#576181;
+  --border-hair:rgba(255,255,255,.08); --border-hair-strong:rgba(255,255,255,.15);
+  --blue:#3B82F6; --blue-soft:#60A5FA; --blue-ink:#93C5FD; --indigo:#6366F1;
   --cyan:#22D3EE; --cyan-ink:#67E8F9; --green:#34D399;
-  --shadow-card:0 24px 60px rgba(0,0,0,.55); --shadow-glow:0 0 44px rgba(245,158,11,.32);
-  --grid-dot:rgba(255,255,255,.07);
+  --shadow-card:0 24px 60px rgba(0,0,0,.55); --shadow-glow:0 0 44px rgba(59,130,246,.30);
+  --mesh-1:rgba(59,130,246,.16); --mesh-2:rgba(99,102,241,.14); --mesh-3:rgba(34,211,238,.08);
 }
 [data-theme="light"]{
-  --bg-canvas:#F4F5FA; --bg-surface:#FFFFFF; --bg-surface-2:#EEF1F7; --bg-glass:rgba(255,255,255,.72);
+  --bg-canvas:#F4F6FB; --bg-surface:#FFFFFF; --bg-surface-2:#EEF2F9; --bg-glass:rgba(255,255,255,.72);
   --text-primary:#0B1220; --text-secondary:#4B5568; --text-tertiary:#7C879C;
   --border-hair:rgba(11,18,32,.08); --border-hair-strong:rgba(11,18,32,.14);
-  --amber-ink:#B45309; --cyan-ink:#0E7490;
-  --shadow-card:0 20px 50px rgba(15,23,42,.10); --shadow-glow:0 0 40px rgba(245,158,11,.16);
-  --grid-dot:rgba(11,18,32,.06);
+  --blue-ink:#1D4ED8; --cyan-ink:#0E7490;
+  --shadow-card:0 20px 50px rgba(15,23,42,.10); --shadow-glow:0 0 40px rgba(59,130,246,.14);
+  --mesh-1:rgba(59,130,246,.10); --mesh-2:rgba(99,102,241,.08); --mesh-3:rgba(34,211,238,.06);
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{margin:0;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg-canvas);}
-::selection{background:var(--amber);color:#1A1206;}
-input[type="range"]{accent-color:#F59E0B;}
+::selection{background:var(--blue);color:#F5F9FF;}
+input[type="range"]{accent-color:#3B82F6;}
 
 @keyframes floatY{0%,100%{transform:translateY(0px);}50%{transform:translateY(-14px);}}
 @keyframes pulseDot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.5);}50%{opacity:.65;box-shadow:0 0 0 6px rgba(52,211,153,0);}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-@keyframes svReveal{from{opacity:0;clip-path:polygon(0% 0%,0% 0%,-20% 100%,0% 100%);transform:translateY(20px);}to{opacity:1;clip-path:polygon(0% 0%,100% 0%,100% 100%,0% 100%);transform:translateY(0);}}
+@keyframes meshDrift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-3%,2%) scale(1.05);}}
 
-.sv-reveal{opacity:1;}
-@supports (animation-timeline: view()){
-  .sv-reveal{animation:svReveal 1s cubic-bezier(.22,.68,.18,1) both;animation-timeline:view();animation-range:entry 0% entry 55%;}
-  .sv-d1{animation-delay:.1s;}
-  .sv-d2{animation-delay:.2s;}
-  .sv-d3{animation-delay:.3s;}
+/* Scroll-reveal: default hidden state, JS (useReveal hook) adds .is-visible via IntersectionObserver */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,.68,.18,1),transform .8s cubic-bezier(.22,.68,.18,1);will-change:opacity,transform;}
+.reveal.is-visible{opacity:1;transform:translateY(0);}
+.reveal-d1.is-visible{transition-delay:.08s;}
+.reveal-d2.is-visible{transition-delay:.16s;}
+.reveal-d3.is-visible{transition-delay:.24s;}
+
+@media (prefers-reduced-motion: reduce){
+  .reveal{opacity:1;transform:none;transition:none;}
 }
-
-.fade-up{animation:fadeUp .7s ease both;}
-.fade-up-slow{animation:fadeUp .9s ease both;}
 
 a{transition:color .2s;}
 button{font-family:'Inter',sans-serif;}
@@ -43,13 +42,14 @@ button{font-family:'Inter',sans-serif;}
 /* hover helper classes (inline style-hover equivalents) */
 .nav-link:hover{color:var(--text-primary) !important;}
 .icon-btn:hover{background:var(--bg-surface-2);color:var(--text-primary);}
-.btn-outline:hover{background:var(--bg-surface-2);}
-.btn-primary:hover{transform:translateY(-2px);}
+.btn-outline:hover{background:var(--bg-surface-2);border-color:var(--blue);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 54px rgba(59,130,246,.42);}
 .btn-primary-sm:hover{transform:translateY(-1px);}
-.trust-logo:hover{opacity:1;color:var(--amber-ink);}
-.feature-card:hover{transform:translateY(-4px);border-color:var(--border-hair-strong);}
+.trust-logo:hover{opacity:1;color:var(--blue-ink);}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--border-hair-strong);box-shadow:var(--shadow-card);}
 .template-card:hover{transform:translateY(-4px);border-color:var(--border-hair-strong);}
-.footer-link:hover{color:var(--amber-ink);}
-.social-icon:hover{border-color:var(--amber);color:var(--amber-ink);transform:translateY(-2px);}
-.mode-toggle:hover{border-color:var(--amber);color:var(--text-primary);}
-.cta-final:hover{transform:translateY(-2px);}
+.footer-link:hover{color:var(--blue-ink);}
+.social-icon:hover{border-color:var(--blue);color:var(--blue-ink);transform:translateY(-2px);}
+.mode-toggle:hover{border-color:var(--blue);color:var(--text-primary);}
+.cta-final:hover{transform:translateY(-2px);box-shadow:0 0 54px rgba(59,130,246,.42);}
+.header-scrolled{box-shadow:0 8px 30px rgba(0,0,0,.18);}

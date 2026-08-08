@@ -1,5 +1,6 @@
 import React from 'react'
 import SectionHeading from './SectionHeading'
+import Reveal from './Reveal'
 import { GridIcon, DocIcon, GlobeIcon, UsersIcon } from './Icons'
 
 const SMALL_FEATURES = [
@@ -29,9 +30,9 @@ export default function Features() {
         subtitle="A tight, focused toolkit — not a bloated accounting suite."
       />
 
-      <div className="sv-reveal sv-d1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hair)', borderRadius: 20, padding: 40, marginBottom: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 40, alignItems: 'center' }}>
+      <Reveal delay={1} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hair)', borderRadius: 20, padding: 40, marginBottom: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 40, alignItems: 'center' }}>
         <div>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--amber-ink)', marginBottom: 18 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-ink)', marginBottom: 18 }}>
             <GridIcon />
           </div>
           <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 21, fontWeight: 600, margin: '0 0 10px' }}>Live Real-Time Preview</h3>
@@ -48,26 +49,26 @@ export default function Features() {
             <div style={{ height: 8, width: '80%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
           </div>
           <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, color: 'var(--amber-ink)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Invoice</div>
-            <div style={{ height: 8, width: '85%', background: 'var(--amber)', opacity: 0.5, borderRadius: 4 }} />
+            <div style={{ fontSize: 10, color: 'var(--blue-ink)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Invoice</div>
+            <div style={{ height: 8, width: '85%', background: 'var(--blue)', opacity: 0.5, borderRadius: 4 }} />
             <div style={{ height: 8, width: '65%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
             <div style={{ height: 8, width: '75%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 9, width: '40%', background: 'var(--amber-ink)', borderRadius: 4, marginTop: 4 }} />
+            <div style={{ height: 9, width: '40%', background: 'var(--blue-ink)', borderRadius: 4, marginTop: 4 }} />
           </div>
         </div>
-      </div>
+      </Reveal>
 
-      <div className="sv-reveal sv-d2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20 }}>
+      <Reveal delay={2} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20 }}>
         {SMALL_FEATURES.map(({ Icon, title, body }) => (
           <div key={title} className="feature-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hair)', borderRadius: 18, padding: 32, transition: 'all .25s' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--amber-ink)', marginBottom: 18 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-ink)', marginBottom: 18 }}>
               <Icon />
             </div>
             <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 17.5, fontWeight: 600, margin: '0 0 8px' }}>{title}</h3>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>{body}</p>
           </div>
         ))}
-      </div>
+      </Reveal>
     </section>
   )
 }

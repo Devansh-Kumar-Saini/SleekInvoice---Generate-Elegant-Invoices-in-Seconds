@@ -1,10 +1,11 @@
 import React from 'react'
-import { ForgeMark, BoltIcon, ArrowRightIcon, PlayIcon, DocIcon } from './Icons'
+import { ForgeMark, BoltIcon, ArrowRightIcon, DocIcon } from './Icons'
+import Reveal from './Reveal'
 
 export default function Hero() {
   return (
     <section style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '88px 24px 72px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(400px,1fr))', gap: 56, alignItems: 'center' }}>
-      <div className="fade-up">
+      <Reveal>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '7px 14px', borderRadius: 999, border: '1px solid var(--border-hair-strong)', background: 'var(--bg-surface-2)', width: 'fit-content', marginBottom: 24 }}>
           <BoltIcon />
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, letterSpacing: '.05em', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
@@ -13,30 +14,47 @@ export default function Hero() {
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--green)', animation: 'pulseDot 2s infinite', flexShrink: 0 }} />
         </div>
         <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 'clamp(2.3rem,4.4vw,3.9rem)', lineHeight: 1.06, letterSpacing: '-0.02em', margin: '0 0 22px', color: 'var(--text-primary)' }}>
-          Professional Invoices.<br />Effortlessly Built.<br /><span style={{ color: 'var(--amber-ink)' }}>Instantly Paid.</span>
+          Professional Invoices.<br />Effortlessly Built.<br /><span style={{ color: 'var(--blue-ink)' }}>Instantly Paid.</span>
         </h1>
         <p style={{ fontSize: 17, lineHeight: 1.65, color: 'var(--text-secondary)', maxWidth: 480, margin: '0 0 34px' }}>
           The fastest invoice builder for freelancers, consultants, and teams. No login required, automatic tax math, and instant client-ready PDF downloads.
         </p>
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-          <a href="#try-it" className="btn-primary" style={{ padding: '16px 26px', borderRadius: 12, background: 'linear-gradient(135deg,var(--amber),var(--amber-soft))', color: '#1A1206', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'transform .2s' }}>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+          <a href="#try-it" className="btn-primary" style={{ padding: '16px 26px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'transform .2s, box-shadow .2s' }}>
             Generate Free Invoice
             <ArrowRightIcon />
           </a>
-          <a href="#how-it-works" className="btn-outline" style={{ padding: '16px 24px', borderRadius: 12, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid var(--border-hair-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <PlayIcon />
-            </span>
-            Watch 1-Min Tour
+          <a href="#features" className="btn-outline" style={{ padding: '16px 24px', borderRadius: 12, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', transition: 'background .2s, border-color .2s' }}>
+            See How It Works
           </a>
         </div>
-      </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28 }}>
+          <div style={{ display: 'flex' }}>
+            {['FD', 'AO', 'IC'].map((initials, i) => (
+              <span
+                key={initials}
+                style={{
+                  width: 30, height: 30, borderRadius: '50%', background: 'var(--bg-surface-2)',
+                  border: '2px solid var(--bg-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: "'Outfit',sans-serif", fontSize: 10.5, fontWeight: 600, color: 'var(--blue-ink)',
+                  marginLeft: i === 0 ? 0 : -10,
+                }}
+              >
+                {initials}
+              </span>
+            ))}
+          </div>
+          <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+            Trusted by <strong style={{ color: 'var(--text-secondary)' }}>25,000+</strong> freelancers &amp; teams
+          </span>
+        </div>
+      </Reveal>
 
-      <div style={{ perspective: 1400, position: 'relative' }} className="fade-up-slow">
+      <Reveal delay={1} style={{ perspective: 1400, position: 'relative', paddingBottom: 46, paddingRight: 16 }}>
         <div style={{ animation: 'floatY 6s ease-in-out infinite', transform: 'rotateX(6deg) rotateY(-8deg)', transformStyle: 'preserve-3d', background: 'var(--bg-surface)', border: '1px solid var(--border-hair-strong)', borderRadius: 20, boxShadow: 'var(--shadow-card)', padding: 28, position: 'relative', maxWidth: 440, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,var(--amber),var(--amber-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ForgeMark size={11} />
               </span>
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: 'var(--text-tertiary)', letterSpacing: '.04em' }}>INV-2024-0847</span>
@@ -60,7 +78,7 @@ export default function Hero() {
               </div>
             ))}
           </div>
-          <div style={{ borderTop: '1px solid var(--border-hair)', marginTop: 14, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ borderTop: '1px solid var(--border-hair)', marginTop: 14, paddingTop: 14, paddingBottom: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-tertiary)' }}>
               <span>Subtotal</span>
               <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>$2,250.00</span>
@@ -71,10 +89,10 @@ export default function Hero() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
               <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>Total</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, color: 'var(--amber-ink)', fontWeight: 700 }}>$2,430.00</span>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, color: 'var(--blue-ink)', fontWeight: 700 }}>$2,430.00</span>
             </div>
           </div>
-          <div style={{ position: 'absolute', right: -18, bottom: -18, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)', borderRadius: 14, padding: '12px 16px', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', gap: 10, transform: 'rotate(-4deg)' }}>
+          <div style={{ position: 'absolute', right: -18, bottom: -28, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)', borderRadius: 14, padding: '12px 16px', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', gap: 10, transform: 'rotate(-4deg)' }}>
             <span style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(34,211,238,.14)', border: '1px solid rgba(34,211,238,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cyan-ink)', flexShrink: 0 }}>
               <DocIcon size={15} />
             </span>
@@ -84,7 +102,7 @@ export default function Hero() {
             </div>
           </div>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }

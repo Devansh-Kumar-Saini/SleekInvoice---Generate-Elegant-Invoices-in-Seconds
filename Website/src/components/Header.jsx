@@ -7,6 +7,7 @@ export default function Header() {
   const { theme, toggleTheme, isLight, isDark } = useTheme()
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 900 : false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 900)
@@ -14,20 +15,29 @@ export default function Header() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   return (
     <header
       id="top"
+      className={scrolled ? 'header-scrolled' : ''}
       style={{
         position: 'sticky', top: 0, zIndex: 50, background: 'var(--bg-glass)',
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid var(--border-hair)',
+        transition: 'box-shadow .3s ease',
       }}
     >
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,var(--amber),var(--amber-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)', flexShrink: 0 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)', flexShrink: 0 }}>
             <ForgeMark />
           </span>
           <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 19, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>InvoiceForge</span>
@@ -54,7 +64,7 @@ export default function Header() {
               <a href="#try-it" className="btn-outline" style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', background: 'transparent', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
                 Try Live Demo
               </a>
-              <a href="#try-it" className="btn-primary-sm" style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,var(--amber),var(--amber-soft))', color: '#1A1206', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'transform .2s' }}>
+              <a href="#try-it" className="btn-primary-sm" style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'transform .2s' }}>
                 Create Invoice Now
               </a>
             </div>
@@ -92,7 +102,7 @@ export default function Header() {
             <a href="#try-it" onClick={closeMobileMenu} style={{ flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>
               Try Live Demo
             </a>
-            <a href="#try-it" onClick={closeMobileMenu} style={{ flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: 'linear-gradient(135deg,var(--amber),var(--amber-soft))', color: '#1A1206', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+            <a href="#try-it" onClick={closeMobileMenu} style={{ flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
               Create Invoice
             </a>
           </div>
