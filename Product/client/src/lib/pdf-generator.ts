@@ -1112,6 +1112,608 @@ function renderModernTemplate(ctx: TemplateContext) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Elegant template — a formal serif letterhead style: centered company name,
+// a thin double-rule under the header, a muted ink/gold palette, and a
+// bordered (not filled) total box. Modeled on traditional accounting-firm
+// and consultancy letterhead invoices — restrained where Modern is loud.
+// ---------------------------------------------------------------------------
+function renderElegantTemplate(ctx: TemplateContext) {
+  const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
+
+  const INK = [35, 32, 28] as [number, number, number];
+  const MUTED = [120, 113, 103] as [number, number, number];
+  const GOLD = [150, 116, 56] as [number, number, number];
+  const RULE = [210, 202, 188] as [number, number, number];
+  const FAINT_FILL = [250, 248, 244] as [number, number, number];
+
+  let yPos = margin + 2;
+
+  if (logo) {
+    const LOGO_MAX_W = 24;
+    const LOGO_MAX_H = 16;
+    const aspect = logo.width / logo.height;
+    let drawW = LOGO_MAX_W;
+    let drawH = drawW / aspect;
+    if (drawH > LOGO_MAX_H) {
+      drawH = LOGO_MAX_H;
+      drawW = drawH * aspect;
+    }
+    try {
+      doc.addImage(logo.dataUrl, "PNG", pageWidth / 2 - drawW / 2, yPos, drawW, drawH);
+      yPos += drawH + 6;
+    } catch {
+      // Corrupt/unsupported image data — skip the logo rather than fail the whole PDF.
+    }
+  } else {
+    yPos += 4;
+  }
+
+  // Centered company name in a serif-weight display face (bold Noto Sans
+  // stands in for a true serif — jsPDF's registered fonts are sans-only —
+  // but wide letter-spacing plus small-caps-style sizing below reads as a
+  // formal letterhead rather than a UI heading).
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(...INK);
+  doc.text(invoice.companyName || "Company Name", pageWidth / 2, yPos + 6, { align: "center" });
+  yPos += 11;
+
+  if (invoice.companyAddress) {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    const lines = doc.splitTextToSize(invoice.companyAddress, contentWidth * 0.7);
+    doc.text(lines, pageWidth / 2, yPos, { align: "center" });
+    yPos += lines.length * 4;
+  }
+
+  yPos += 5;
+
+  // Thin double-rule under the header — the letterhead's signature motif.
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.6);
+  doc.line(pageWidth / 2 - 14, yPos, pageWidth / 2 + 14, yPos);
+  yPos += 1.6;
+  doc.setLineWidth(0.25);
+  doc.setDrawColor(...RULE);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 10;
+
+  // --- INVOICE title + metadata, centered-left balance. ---
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(...GOLD);
+  doc.text("INVOICE", margin, yPos);
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...MUTED);
+  doc.text(`No. ${invoice.invoiceNumber}`, pageWidth - margin, yPos - 1, { align: "right" });
+  doc.text(formatDate(invoice.date), pageWidth - margin, yPos + 4.5, { align: "right" });
+  yPos += 11;
+
+  doc.setDrawColor(...RULE);
+  doc.setLineWidth(0.25);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 9;
+
+  // --- Billed By / Bill To — quiet, label-above-value, no icons. ---
+  const billColWidth = contentWidth * 0.46;
+  const billByX = margin;
+  const billToX = pageWidth - margin - billColWidth;
+
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...GOLD);
+  doc.text("BILLED BY", billByX, yPos);
+  doc.text("BILL TO", billToX, yPos);
+  let byY = yPos + 6;
+  let toY = yPos + 6;
+
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...INK);
+  doc.text(invoice.companyName || "Company Name", billByX, byY);
+  doc.text(invoice.customerName || "Customer Name", billToX, toY);
+  byY += 5.5;
+  toY += 5.5;
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  if (invoice.companyAddress) {
+    const lines = doc.splitTextToSize(invoice.companyAddress, billColWidth);
+    doc.text(lines, billByX, byY);
+    byY += lines.length * 4.2;
+  }
+  const toContact = [invoice.customerEmail, invoice.customerPhone].filter(Boolean).join("   ");
+  if (toContact) {
+    const lines = doc.splitTextToSize(toContact, billColWidth);
+    doc.text(lines, billToX, toY);
+    toY += lines.length * 4.2;
+  }
+  if (invoice.customerAddress) {
+    const lines = doc.splitTextToSize(invoice.customerAddress, billColWidth);
+    doc.text(lines, billToX, toY);
+    toY += lines.length * 4.2;
+  }
+
+  yPos = Math.max(byY, toY) + 9;
+
+  // --- Items — bordered table, serif-style small caps header, gold rule under head. ---
+  const itemsData = ctx.validItems.map((item) => [
+    item.details ? `${item.name}\n${item.details}` : item.name,
+    String(item.quantity),
+    formatCurrency(item.price, currency, currencyCode),
+    formatCurrency(item.quantity * item.price, currency, currencyCode),
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [["Description", "Qty", "Rate", "Amount"]],
+    body: itemsData,
+    margin: { left: margin, right: margin, bottom: footerReserve },
+    theme: "plain",
+    tableWidth: contentWidth,
+    headStyles: {
+      textColor: GOLD,
+      fontStyle: "bold",
+      fontSize: 8.5,
+      cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+    },
+    bodyStyles: {
+      fontSize: 9.5,
+      textColor: INK,
+      cellPadding: { top: 4, bottom: 4, left: 3, right: 3 },
+    },
+    styles: {
+      font: FONT_FAMILY,
+      valign: "middle",
+      lineColor: RULE,
+      lineWidth: 0.25,
+      overflow: "linebreak",
+    },
+    columnStyles: {
+      0: { cellWidth: "auto", halign: "left" },
+      1: { cellWidth: 18, halign: "center" },
+      2: { cellWidth: 36, halign: "right" },
+      3: { cellWidth: 36, halign: "right" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "head") {
+        data.cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.6, left: 0 };
+      }
+      if (data.section === "body") {
+        data.cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.25, left: 0 };
+        if (data.column.index === 0) {
+          const raw = String(data.cell.raw ?? "");
+          if (raw.includes("\n")) data.cell.styles.fontStyle = "normal";
+        }
+      }
+    },
+    didDrawCell: (data) => {
+      // Redraw the gold head-rule per column since didParseCell's per-side
+      // lineWidth on head cells only affects that cell's own border.
+      if (data.section === "head") {
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(0.6);
+        doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+      }
+    },
+  });
+
+  yPos = getLastAutoTableFinalY(doc) + 10;
+
+  const summaryBlockHeight = 62;
+  if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
+    doc.addPage();
+    yPos = margin + 8;
+  }
+
+  const summaryLabelX = pageWidth - margin - 58;
+  const summaryValueX = pageWidth - margin;
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(9.5);
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
+    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
+  ];
+  if (invoice.discount > 0) {
+    rows.push({
+      label: invoice.discountLabel || "Discount",
+      value: `-${formatCurrency(invoice.discount, currency, currencyCode)}`,
+    });
+  }
+
+  rows.forEach((row) => {
+    doc.setTextColor(...MUTED);
+    doc.text(row.label, summaryLabelX, yPos);
+    doc.setTextColor(...INK);
+    doc.text(row.value, summaryValueX, yPos, { align: "right" });
+    yPos += 6.5;
+  });
+
+  yPos += 3;
+
+  // Bordered (not filled) total box — the letterhead's restraint carries
+  // through even to the grand total, unlike Classic/Modern's bold fills.
+  const boxHeight = 18;
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.5);
+  doc.rect(summaryLabelX - 6, yPos, summaryValueX - (summaryLabelX - 6), boxHeight, "S");
+
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...GOLD);
+  doc.text("TOTAL DUE", summaryLabelX, yPos + 7.5);
+  doc.setFontSize(14);
+  doc.setTextColor(...INK);
+  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX - 4, yPos + 13.5, {
+    align: "right",
+  });
+
+  yPos += boxHeight + 10;
+
+  const wordsWidth = pageWidth - margin - (summaryLabelX - 6);
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text("Invoice total in words", summaryLabelX - 6, yPos);
+  yPos += 4.5;
+  doc.setFontSize(8.5);
+  doc.setTextColor(...INK);
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
+  doc.text(wordsLines, summaryLabelX - 6, yPos);
+  yPos += wordsLines.length * 4 + 8;
+
+  if (invoice.notes && invoice.notes.trim()) {
+    if (yPos + 20 > pageHeight - footerReserve) {
+      doc.addPage();
+      yPos = margin + 8;
+    }
+    doc.setFillColor(...FAINT_FILL);
+    const noteLines = doc.splitTextToSize(invoice.notes, contentWidth - 8);
+    const noteBoxHeight = 10 + noteLines.length * 4.2;
+    doc.rect(margin, yPos - 5, contentWidth, noteBoxHeight, "F");
+    doc.setFont(FONT_FAMILY, "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...GOLD);
+    doc.text("NOTES", margin + 4, yPos);
+    yPos += 5;
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...INK);
+    doc.text(noteLines, margin + 4, yPos);
+  }
+
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.25);
+    doc.line(margin, pageHeight - 16, pageWidth - margin, pageHeight - 16);
+
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text("Thank you for your business", pageWidth / 2, pageHeight - 10, { align: "center" });
+    if (pageCount > 1) {
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar template — a full-height color block running down the left edge
+// carries the company identity and invoice metadata; the items table and
+// totals sit in the white main column to the right. Structurally distinct
+// from Modern's top banner — an asymmetrical two-column silhouette rather
+// than a header treatment.
+// ---------------------------------------------------------------------------
+function renderSidebarTemplate(ctx: TemplateContext) {
+  const { doc, invoice, logo, pageWidth, pageHeight, margin, footerReserve, currency, currencyCode } = ctx;
+
+  const SIDEBAR = [24, 58, 51] as [number, number, number]; // deep teal
+  const SIDEBAR_TEXT = [255, 255, 255] as [number, number, number];
+  const SIDEBAR_MUTED = [175, 200, 194] as [number, number, number];
+  const POP = [235, 178, 74] as [number, number, number]; // warm amber accent
+  const INK = [28, 28, 28] as [number, number, number];
+  const MUTED = [115, 115, 115] as [number, number, number];
+  const LINE = [228, 228, 228] as [number, number, number];
+
+  const sidebarWidth = 58;
+  const mainMargin = margin;
+  const mainX = sidebarWidth + mainMargin;
+  const mainWidth = pageWidth - mainX - margin;
+
+  const paintSidebar = (targetPage?: number) => {
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...SIDEBAR);
+    doc.rect(0, 0, sidebarWidth, pageHeight, "F");
+  };
+  paintSidebar();
+
+  let sy = margin + 2;
+  const sPad = 10;
+
+  if (logo) {
+    const LOGO_MAX_W = sidebarWidth - sPad * 2;
+    const LOGO_MAX_H = 16;
+    const aspect = logo.width / logo.height;
+    let drawW = LOGO_MAX_W;
+    let drawH = drawW / aspect;
+    if (drawH > LOGO_MAX_H) {
+      drawH = LOGO_MAX_H;
+      drawW = drawH * aspect;
+    }
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(sPad - 1.5, sy - 1.5, drawW + 3, drawH + 3, 1.5, 1.5, "F");
+      doc.addImage(logo.dataUrl, "PNG", sPad, sy, drawW, drawH);
+      sy += drawH + 8;
+    } catch {
+      // Skip logo on failure.
+    }
+  } else {
+    sy += 2;
+  }
+
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(...SIDEBAR_TEXT);
+  const nameLines = doc.splitTextToSize(invoice.companyName || "Company Name", sidebarWidth - sPad * 2);
+  doc.text(nameLines, sPad, sy);
+  sy += nameLines.length * 5.5 + 3;
+
+  if (invoice.companyAddress) {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...SIDEBAR_MUTED);
+    const lines = doc.splitTextToSize(invoice.companyAddress, sidebarWidth - sPad * 2);
+    doc.text(lines, sPad, sy);
+    sy += lines.length * 4;
+  }
+
+  sy += 10;
+  doc.setDrawColor(...POP);
+  doc.setLineWidth(0.6);
+  doc.line(sPad, sy, sidebarWidth - sPad, sy);
+  sy += 9;
+
+  // --- Invoice metadata stacked in the sidebar. ---
+  const metaRows: Array<{ label: string; value: string }> = [
+    { label: "INVOICE NO.", value: invoice.invoiceNumber || "" },
+    { label: "DATE", value: formatDate(invoice.date) },
+  ];
+  if (invoice.category) metaRows.push({ label: "CATEGORY", value: invoice.category });
+  metaRows.push({ label: "CURRENCY", value: currencyCode || currency });
+
+  metaRows.forEach((row) => {
+    doc.setFont(FONT_FAMILY, "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...POP);
+    doc.text(row.label, sPad, sy);
+    sy += 4.2;
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...SIDEBAR_TEXT);
+    const lines = doc.splitTextToSize(row.value, sidebarWidth - sPad * 2);
+    doc.text(lines, sPad, sy);
+    sy += lines.length * 4.6 + 4.5;
+  });
+
+  sy += 4;
+  doc.setDrawColor(...POP);
+  doc.setLineWidth(0.6);
+  doc.line(sPad, sy, sidebarWidth - sPad, sy);
+  sy += 9;
+
+  // --- Bill To, also in the sidebar. ---
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...POP);
+  doc.text("BILL TO", sPad, sy);
+  sy += 5;
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...SIDEBAR_TEXT);
+  const customerLines = doc.splitTextToSize(invoice.customerName || "Customer Name", sidebarWidth - sPad * 2);
+  doc.text(customerLines, sPad, sy);
+  sy += customerLines.length * 4.8 + 2;
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...SIDEBAR_MUTED);
+  if (invoice.customerEmail) {
+    const lines = doc.splitTextToSize(invoice.customerEmail, sidebarWidth - sPad * 2);
+    doc.text(lines, sPad, sy);
+    sy += lines.length * 4;
+  }
+  if (invoice.customerPhone) {
+    const lines = doc.splitTextToSize(invoice.customerPhone, sidebarWidth - sPad * 2);
+    doc.text(lines, sPad, sy);
+    sy += lines.length * 4;
+  }
+  if (invoice.customerAddress) {
+    const lines = doc.splitTextToSize(invoice.customerAddress, sidebarWidth - sPad * 2);
+    doc.text(lines, sPad, sy);
+    sy += lines.length * 4;
+  }
+
+  // --- Main column: big "Invoice" title, items table, totals. ---
+  let yPos = margin + 4;
+
+  doc.setFont(FONT_FAMILY_BLACK, "normal");
+  doc.setFontSize(24);
+  doc.setTextColor(...INK);
+  doc.text("Invoice", mainX, yPos + 6);
+  yPos += 18;
+
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.3);
+  doc.line(mainX, yPos, pageWidth - margin, yPos);
+  yPos += 9;
+
+  const itemsData = ctx.validItems.map((item) => [
+    item.details ? `${item.name}\n${item.details}` : item.name,
+    String(item.quantity),
+    formatCurrency(item.price, currency, currencyCode),
+    formatCurrency(item.quantity * item.price, currency, currencyCode),
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [["Item", "Qty", "Price", "Total"]],
+    body: itemsData,
+    margin: { left: mainX, right: margin, bottom: footerReserve },
+    theme: "plain",
+    tableWidth: mainWidth,
+    headStyles: {
+      fillColor: [244, 244, 242],
+      textColor: INK,
+      fontStyle: "bold",
+      fontSize: 9,
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+    },
+    bodyStyles: {
+      fontSize: 9.5,
+      textColor: INK,
+      cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 249],
+    },
+    styles: {
+      font: FONT_FAMILY,
+      valign: "middle",
+      lineColor: LINE,
+      lineWidth: 0.25,
+      overflow: "linebreak",
+    },
+    columnStyles: {
+      0: { cellWidth: "auto", halign: "left" },
+      1: { cellWidth: 16, halign: "center" },
+      2: { cellWidth: 32, halign: "right" },
+      3: { cellWidth: 32, halign: "right" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const raw = String(data.cell.raw ?? "");
+        if (raw.includes("\n")) {
+          data.cell.styles.fontStyle = "normal";
+        }
+      }
+    },
+    // Repaint the sidebar on any page autoTable adds internally (e.g. when a
+    // large items table spans multiple pages), since addPage() would
+    // otherwise leave subsequent pages blank-white.
+    didDrawPage: () => {
+      paintSidebar(doc.getCurrentPageInfo().pageNumber);
+    },
+  });
+
+  yPos = getLastAutoTableFinalY(doc) + 10;
+
+  const summaryBlockHeight = 58;
+  if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
+    doc.addPage();
+    paintSidebar();
+    yPos = margin + 8;
+  }
+
+  const summaryLabelX = pageWidth - margin - 56;
+  const summaryValueX = pageWidth - margin;
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(9.5);
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
+    { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
+  ];
+  if (invoice.discount > 0) {
+    rows.push({
+      label: invoice.discountLabel || "Discount",
+      value: `-${formatCurrency(invoice.discount, currency, currencyCode)}`,
+    });
+  }
+
+  rows.forEach((row) => {
+    doc.setTextColor(...MUTED);
+    doc.text(row.label, summaryLabelX, yPos);
+    doc.setTextColor(...INK);
+    doc.text(row.value, summaryValueX, yPos, { align: "right" });
+    yPos += 6.5;
+  });
+
+  yPos += 3;
+  doc.setFillColor(...SIDEBAR);
+  const totalBoxHeight = 20;
+  doc.roundedRect(summaryLabelX - 6, yPos, summaryValueX - (summaryLabelX - 6), totalBoxHeight, 2, 2, "F");
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...POP);
+  doc.text("TOTAL DUE", summaryLabelX, yPos + 8);
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255);
+  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX - 4, yPos + 15.5, {
+    align: "right",
+  });
+
+  yPos += totalBoxHeight + 9;
+
+  const wordsWidth = pageWidth - margin - (summaryLabelX - 6);
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text("Invoice total in words", summaryLabelX - 6, yPos);
+  yPos += 4.5;
+  doc.setFontSize(8.5);
+  doc.setTextColor(...INK);
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
+  doc.text(wordsLines, summaryLabelX - 6, yPos);
+  yPos += wordsLines.length * 4 + 6;
+
+  if (invoice.notes && invoice.notes.trim()) {
+    if (yPos + 20 > pageHeight - footerReserve) {
+      doc.addPage();
+      paintSidebar();
+      yPos = margin + 8;
+    }
+    doc.setFont(FONT_FAMILY, "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    doc.text("NOTES", mainX, yPos);
+    yPos += 5.5;
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...INK);
+    const noteLines = doc.splitTextToSize(invoice.notes, mainWidth);
+    doc.text(noteLines, mainX, yPos);
+  }
+
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...LINE);
+    doc.setLineWidth(0.3);
+    doc.line(mainX, pageHeight - 16, pageWidth - margin, pageHeight - 16);
+
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    doc.text("Thank you for your business!", mainX, pageHeight - 10);
+    if (pageCount > 1) {
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    }
+  }
+}
+
 export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   registerFonts(doc);
@@ -1150,6 +1752,12 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
       break;
     case "modern":
       renderModernTemplate(ctx);
+      break;
+    case "elegant":
+      renderElegantTemplate(ctx);
+      break;
+    case "sidebar":
+      renderSidebarTemplate(ctx);
       break;
     case "classic":
     default:

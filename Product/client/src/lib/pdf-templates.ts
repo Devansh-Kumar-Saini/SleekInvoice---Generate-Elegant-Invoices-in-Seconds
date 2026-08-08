@@ -8,10 +8,12 @@
  * rest of the app import it eagerly while the actual PDF renderer is loaded
  * lazily (only when the user clicks "Download PDF").
  */
-export type InvoiceTemplate = "classic" | "clean" | "modern";
+export type InvoiceTemplate = "classic" | "clean" | "modern" | "elegant" | "sidebar";
 
 export const INVOICE_TEMPLATES: Array<{ id: InvoiceTemplate; label: string; description: string }> = [
   { id: "classic", label: "Classic", description: "The original InvoiceForge design" },
   { id: "clean", label: "Clean", description: "Monochrome, hairline dividers — Vercel-inspired" },
   { id: "modern", label: "Modern", description: "Bold type, color banner, dramatic total" },
+  { id: "elegant", label: "Elegant", description: "Serif letterhead, centered header, boxed total" },
+  { id: "sidebar", label: "Sidebar", description: "Full-height color sidebar, two-column layout" },
 ];

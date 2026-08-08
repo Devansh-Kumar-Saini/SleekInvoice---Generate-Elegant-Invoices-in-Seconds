@@ -72,6 +72,10 @@ export const InvoicePreview = memo(function InvoicePreview(props: InvoicePreview
       return <CleanPreview {...shared} />;
     case "modern":
       return <ModernPreview {...shared} />;
+    case "elegant":
+      return <ElegantPreview {...shared} />;
+    case "sidebar":
+      return <SidebarPreview {...shared} />;
     case "classic":
     default:
       return <ClassicPreview {...shared} />;
@@ -714,6 +718,410 @@ function ModernPreview({
         <div className="pt-4 border-t border-border flex justify-between text-xs text-muted-foreground">
           <span>Thank you for your business!</span>
           <span className="font-bold text-primary">InvoiceForge</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Elegant — a formal serif-style letterhead: centered company name, a thin
+// gold double-rule under the header, label-above-value contact blocks with
+// no icons, and a bordered (not filled) total box. Mirrors the "Elegant" PDF
+// template's restrained, letterhead-inspired aesthetic.
+// ---------------------------------------------------------------------------
+function ElegantPreview({
+  companyName,
+  companyLogo,
+  companyAddress,
+  invoiceNumber,
+  date,
+  customerName,
+  customerEmail,
+  customerPhone,
+  customerAddress,
+  currency,
+  items,
+  subtotal,
+  taxPercentage,
+  tax,
+  discount,
+  grandTotal,
+  formatCurrency,
+}: SharedProps) {
+  const validItems = items.filter((item) => item.name);
+
+  return (
+    <Card
+      className="p-8 sm:p-10 bg-background shadow-sm w-full max-w-4xl"
+      data-testid="invoice-preview"
+    >
+      <div className="space-y-8">
+        {/* Centered letterhead header */}
+        <div className="flex flex-col items-center text-center">
+          {companyLogo ? (
+            <img
+              src={companyLogo}
+              alt={companyName}
+              className="max-h-14 w-auto object-contain mb-3"
+              data-testid="preview-company-logo"
+            />
+          ) : null}
+          <h3
+            className="text-2xl sm:text-3xl font-semibold tracking-wide text-foreground break-words"
+            data-testid="preview-company-name"
+          >
+            {companyName || "Company Name"}
+          </h3>
+          {companyAddress && (
+            <div
+              className="text-xs text-muted-foreground mt-2 max-w-md whitespace-pre-wrap break-words"
+              data-testid="preview-company-address"
+            >
+              {companyAddress}
+            </div>
+          )}
+          <div className="flex items-center gap-1 mt-4">
+            <span className="h-px w-10 bg-amber-600/70" />
+            <span className="h-px w-10 bg-amber-600/70" />
+          </div>
+        </div>
+
+        {/* Invoice title + metadata */}
+        <div className="flex items-baseline justify-between border-t pt-6">
+          <div className="text-sm font-bold uppercase tracking-widest text-amber-700 dark:text-amber-500">
+            Invoice
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            {invoiceNumber && <div data-testid="preview-invoice-number">No. {invoiceNumber}</div>}
+            <div data-testid="preview-date">{date ? formatDate(date) : "Date"}</div>
+          </div>
+        </div>
+
+        {/* Billed By / Bill To — quiet, no icons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6">
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-500 mb-2">
+              Billed By
+            </div>
+            <div className="text-base font-semibold text-foreground break-words" data-testid="preview-company-billed-by">
+              {companyName || "Company Name"}
+            </div>
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-500 mb-2">
+              Bill To
+            </div>
+            <div className="text-base font-semibold text-foreground break-words" data-testid="preview-customer-name">
+              {customerName || "Customer Name"}
+            </div>
+            {(customerEmail || customerPhone) && (
+              <div className="text-xs text-muted-foreground mt-1 break-words">
+                {[customerEmail, customerPhone].filter(Boolean).join("   ")}
+              </div>
+            )}
+            {customerAddress && (
+              <div
+                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words"
+                data-testid="preview-customer-address"
+              >
+                {customerAddress}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Items — bordered table, gold rule under header */}
+        <div>
+          <div className="grid grid-cols-12 gap-4 pb-2 border-b-2 border-amber-600/70 text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-500 min-w-[600px]">
+            <div className="col-span-6">Description</div>
+            <div className="col-span-2 text-right">Qty</div>
+            <div className="col-span-2 text-right">Rate</div>
+            <div className="col-span-2 text-right">Amount</div>
+          </div>
+
+          {validItems.length > 0 ? (
+            validItems.map((item, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-12 gap-4 py-3 border-b border-border min-w-[600px]"
+                data-testid={`preview-item-${index}`}
+              >
+                <div className="col-span-6">
+                  <div className="text-sm text-foreground break-words">{item.name}</div>
+                  {item.details && (
+                    <div className="text-xs text-muted-foreground mt-0.5 break-words">
+                      {item.details}
+                    </div>
+                  )}
+                </div>
+                <div className="col-span-2 text-right text-sm text-foreground">{item.quantity}</div>
+                <div className="col-span-2 text-right text-sm text-foreground">
+                  {formatCurrency(item.price)}
+                </div>
+                <div className="col-span-2 text-right text-sm text-foreground">
+                  {formatCurrency(item.quantity * item.price)}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+          )}
+        </div>
+
+        {/* Calculations */}
+        <div className="flex justify-end">
+          <div className="w-full sm:w-72 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="text-sm text-foreground" data-testid="preview-subtotal">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Tax ({taxPercentage}%)</span>
+              <span className="text-sm text-foreground" data-testid="preview-tax">
+                {formatCurrency(tax)}
+              </span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Discount</span>
+                <span className="text-sm text-foreground" data-testid="preview-discount">
+                  -{formatCurrency(discount)}
+                </span>
+              </div>
+            )}
+            {/* Bordered (not filled) total box — restrained, letterhead-style. */}
+            <div className="flex justify-between items-center border-2 border-amber-600/70 rounded-sm px-4 py-3 mt-3">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-500">
+                Total Due
+              </span>
+              <span className="text-xl font-semibold text-foreground" data-testid="preview-total">
+                {formatCurrency(grandTotal)}
+              </span>
+            </div>
+            <div className="pt-1">
+              <div className="text-[10px] text-muted-foreground">Invoice total in words</div>
+              <div className="text-sm text-foreground capitalize" data-testid="preview-total-words">
+                {amountToWords(grandTotal, currency)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-6 border-t border-border text-center text-xs text-muted-foreground">
+          Thank you for your business
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar — a full-height color block down the left carries the company
+// identity and invoice metadata; items and totals sit in the white main
+// column. Structurally distinct from Modern's top banner.
+// ---------------------------------------------------------------------------
+function SidebarPreview({
+  companyName,
+  companyLogo,
+  companyAddress,
+  invoiceNumber,
+  date,
+  customerName,
+  customerEmail,
+  customerPhone,
+  customerAddress,
+  category,
+  currency,
+  items,
+  subtotal,
+  taxPercentage,
+  tax,
+  discount,
+  grandTotal,
+  formatCurrency,
+}: SharedProps) {
+  const validItems = items.filter((item) => item.name);
+
+  return (
+    <Card
+      className="p-0 bg-background shadow-sm w-full max-w-4xl overflow-hidden"
+      data-testid="invoice-preview"
+    >
+      <div className="flex flex-col sm:flex-row">
+        {/* Sidebar */}
+        <div className="sm:w-56 shrink-0 bg-teal-950 text-white p-6 space-y-6">
+          <div>
+            {companyLogo && (
+              <div className="bg-white rounded-md p-1.5 inline-block mb-3">
+                <img
+                  src={companyLogo}
+                  alt={companyName}
+                  className="max-h-8 w-auto object-contain"
+                  data-testid="preview-company-logo"
+                />
+              </div>
+            )}
+            <div className="text-base font-bold break-words" data-testid="preview-company-name">
+              {companyName || "Company Name"}
+            </div>
+            {companyAddress && (
+              <div
+                className="text-xs text-teal-200/80 mt-2 whitespace-pre-wrap break-words"
+                data-testid="preview-company-address"
+              >
+                {companyAddress}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-amber-400/40 pt-4 space-y-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                Invoice No.
+              </div>
+              <div className="text-sm mt-0.5" data-testid="preview-invoice-number">
+                {invoiceNumber || "—"}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">Date</div>
+              <div className="text-sm mt-0.5" data-testid="preview-date">
+                {date ? formatDate(date) : "—"}
+              </div>
+            </div>
+            {category && (
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                  Category
+                </div>
+                <div className="text-sm mt-0.5" data-testid="preview-category">
+                  {category}
+                </div>
+              </div>
+            )}
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                Currency
+              </div>
+              <div className="text-sm mt-0.5">{currency}</div>
+            </div>
+          </div>
+
+          <div className="border-t border-amber-400/40 pt-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400 mb-1">
+              Bill To
+            </div>
+            <div className="text-sm font-bold break-words" data-testid="preview-customer-name">
+              {customerName || "Customer Name"}
+            </div>
+            {customerEmail && (
+              <div className="text-xs text-teal-200/80 mt-1 break-all">{customerEmail}</div>
+            )}
+            {customerPhone && (
+              <div className="text-xs text-teal-200/80 mt-0.5 break-words">{customerPhone}</div>
+            )}
+            {customerAddress && (
+              <div
+                className="text-xs text-teal-200/80 mt-1 whitespace-pre-wrap break-words"
+                data-testid="preview-customer-address"
+              >
+                {customerAddress}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main column */}
+        <div className="flex-1 p-6 sm:p-8 space-y-6 min-w-0">
+          <h3 className="text-3xl font-extrabold tracking-tight text-foreground">Invoice</h3>
+
+          <div className="border rounded-lg overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium uppercase tracking-wider text-muted-foreground min-w-[500px]">
+              <div className="col-span-6">Item</div>
+              <div className="col-span-2 text-right">Qty</div>
+              <div className="col-span-2 text-right">Price</div>
+              <div className="col-span-2 text-right">Total</div>
+            </div>
+
+            {validItems.length > 0 ? (
+              validItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[500px] odd:bg-muted/20"
+                  data-testid={`preview-item-${index}`}
+                >
+                  <div className="col-span-6">
+                    <div className="font-medium text-sm text-foreground break-words">{item.name}</div>
+                    {item.details && (
+                      <div className="text-xs text-muted-foreground mt-1 break-words">
+                        {item.details}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-2 text-right font-mono text-sm text-foreground">
+                    {item.quantity}
+                  </div>
+                  <div className="col-span-2 text-right font-mono text-sm text-foreground">
+                    {formatCurrency(item.price)}
+                  </div>
+                  <div className="col-span-2 text-right font-mono text-sm font-semibold text-foreground">
+                    {formatCurrency(item.quantity * item.price)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <div className="w-full sm:w-72 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Subtotal</span>
+                <span className="text-sm font-mono text-foreground" data-testid="preview-subtotal">
+                  {formatCurrency(subtotal)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Tax ({taxPercentage}%)</span>
+                <span className="text-sm font-mono text-foreground" data-testid="preview-tax">
+                  {formatCurrency(tax)}
+                </span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Discount</span>
+                  <span className="text-sm font-mono text-foreground" data-testid="preview-discount">
+                    -{formatCurrency(discount)}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center rounded-lg bg-teal-950 px-4 py-3 mt-3">
+                <span className="text-sm font-bold uppercase tracking-wide text-amber-400">
+                  Total Due
+                </span>
+                <span className="text-xl font-mono font-bold text-white" data-testid="preview-total">
+                  {formatCurrency(grandTotal)}
+                </span>
+              </div>
+              <div className="pt-1">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Invoice total in words
+                </div>
+                <div className="text-sm text-foreground capitalize" data-testid="preview-total-words">
+                  {amountToWords(grandTotal, currency)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border text-xs text-muted-foreground">
+            Thank you for your business!
+          </div>
         </div>
       </div>
     </Card>
