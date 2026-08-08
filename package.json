@@ -2,6 +2,6 @@
   "name": "sleek-invoice-generator-monorepo",
   "private": true,
   "scripts": {
-    "build": "cd Product && npm install && npm run build"
+    "build": "npm --prefix Product run build"
   }
 }
