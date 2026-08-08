@@ -13,9 +13,15 @@ import { amountToWords, formatCurrencyAmount } from "./invoice-format";
 // only need the template list/type (e.g. the template <Select>, the live
 // preview) don't have to pull in jsPDF + the embedded fonts below. Re-exported
 // here so existing imports from "./pdf-generator" keep working unchanged.
-import { type InvoiceTemplate, INVOICE_TEMPLATES } from "./pdf-templates";
+import {
+  type InvoiceTemplate,
+  type CustomColors,
+  INVOICE_TEMPLATES,
+  hexToRgb,
+  resolveColor,
+} from "./pdf-templates";
 
-export type { InvoiceTemplate };
+export type { InvoiceTemplate, CustomColors };
 export { INVOICE_TEMPLATES };
 
 const FONT_FAMILY = "NotoSans";
@@ -75,6 +81,10 @@ export interface InvoicePdfData {
   /** Current app theme — only consulted by the Clean template, whose
    * background flips black/white to match the app's own dark/light toggle. */
   isDarkMode?: boolean;
+  /** Per-template color overrides from the "Customize Invoice" section.
+   * Slots left unset fall back to that template's built-in default —
+   * see TEMPLATE_COLOR_SLOTS in pdf-templates.ts. Not consulted by Clean. */
+  customColors?: CustomColors;
 }
 
 function formatCurrency(amount: number, symbol: string, currencyCode?: string): string {
@@ -217,7 +227,15 @@ interface TemplateContext {
   currency: string;
   currencyCode?: string;
   validItems: InvoiceItem[];
+  /** Resolves a template's color slot (see TEMPLATE_COLOR_SLOTS) to a jsPDF
+   * [r, g, b] triple, applying the invoice's customColors override if set,
+   * else that slot's built-in default. Not used by the Clean renderer. */
+  color: (template: ColorizableTemplateArg, slotKey: string) => [number, number, number];
 }
+
+// Local alias so TemplateContext doesn't need to import ColorizableTemplate
+// under a name that collides with anything template-render functions declare.
+type ColorizableTemplateArg = "classic" | "modern" | "elegant" | "sidebar";
 
 function getLastAutoTableFinalY(doc: jsPDF): number {
   return (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
@@ -231,11 +249,11 @@ function renderClassicTemplate(ctx: TemplateContext) {
   const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
   const BRAND = {
-    primary: [220, 38, 74] as [number, number, number],
-    dark: [30, 30, 30] as [number, number, number],
-    muted: [110, 110, 110] as [number, number, number],
-    border: [225, 225, 225] as [number, number, number],
-    headerFill: [40, 40, 40] as [number, number, number],
+    primary: ctx.color("classic", "primary"),
+    dark: ctx.color("classic", "dark"),
+    muted: ctx.color("classic", "muted"),
+    border: ctx.color("classic", "border"),
+    headerFill: ctx.color("classic", "headerFill"),
   };
 
   let yPos = margin + 4;
@@ -820,11 +838,11 @@ function renderCleanTemplate(ctx: TemplateContext) {
 function renderModernTemplate(ctx: TemplateContext) {
   const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
-  const ACCENT = [23, 23, 27] as [number, number, number]; // near-black banner
+  const ACCENT = ctx.color("modern", "accent"); // banner background
   const ACCENT_TEXT = [255, 255, 255] as [number, number, number];
-  const POP = [236, 72, 100] as [number, number, number]; // vivid accent for total/highlights
-  const INK = [24, 24, 27] as [number, number, number];
-  const MUTED = [113, 113, 122] as [number, number, number];
+  const POP = ctx.color("modern", "pop"); // vivid accent for total/highlights
+  const INK = ctx.color("modern", "ink");
+  const MUTED = ctx.color("modern", "muted");
   const SOFT_FILL = [244, 244, 246] as [number, number, number];
 
   const bannerHeight = 46;
@@ -1121,10 +1139,10 @@ function renderModernTemplate(ctx: TemplateContext) {
 function renderElegantTemplate(ctx: TemplateContext) {
   const { doc, invoice, logo, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
 
-  const INK = [35, 32, 28] as [number, number, number];
-  const MUTED = [120, 113, 103] as [number, number, number];
-  const GOLD = [150, 116, 56] as [number, number, number];
-  const RULE = [210, 202, 188] as [number, number, number];
+  const INK = ctx.color("elegant", "ink");
+  const MUTED = ctx.color("elegant", "muted");
+  const GOLD = ctx.color("elegant", "gold");
+  const RULE = ctx.color("elegant", "rule");
   const FAINT_FILL = [250, 248, 244] as [number, number, number];
 
   let yPos = margin + 2;
@@ -1417,12 +1435,12 @@ function renderElegantTemplate(ctx: TemplateContext) {
 function renderSidebarTemplate(ctx: TemplateContext) {
   const { doc, invoice, logo, pageWidth, pageHeight, margin, footerReserve, currency, currencyCode } = ctx;
 
-  const SIDEBAR = [24, 58, 51] as [number, number, number]; // deep teal
+  const SIDEBAR = ctx.color("sidebar", "sidebar"); // deep teal by default
   const SIDEBAR_TEXT = [255, 255, 255] as [number, number, number];
   const SIDEBAR_MUTED = [175, 200, 194] as [number, number, number];
-  const POP = [235, 178, 74] as [number, number, number]; // warm amber accent
-  const INK = [28, 28, 28] as [number, number, number];
-  const MUTED = [115, 115, 115] as [number, number, number];
+  const POP = ctx.color("sidebar", "pop"); // warm amber accent by default
+  const INK = ctx.color("sidebar", "ink");
+  const MUTED = ctx.color("sidebar", "muted");
   const LINE = [228, 228, 228] as [number, number, number];
 
   const sidebarWidth = 58;
@@ -1744,6 +1762,7 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
     currency: invoice.currencySymbol,
     currencyCode: invoice.currencyCode,
     validItems,
+    color: (template, slotKey) => hexToRgb(resolveColor(template, slotKey, invoice.customColors)),
   };
 
   switch (invoice.template) {

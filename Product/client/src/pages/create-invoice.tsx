@@ -20,11 +20,24 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { InvoicePreview } from "@/components/invoice-preview";
-import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
-import { INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-templates";
+import { Plus, Trash2, FileDown, Loader2, RotateCcw, Palette } from "lucide-react";
+import {
+  INVOICE_TEMPLATES,
+  TEMPLATE_COLOR_SLOTS,
+  type InvoiceTemplate,
+  type ColorizableTemplate,
+  type CustomColors,
+} from "@/lib/pdf-templates";
 import { type InvoiceItem } from "@/types/invoice";
 import { useTheme } from "@/hooks/use-theme";
 import { formatCurrencyAmount } from "@/lib/invoice-format";
+
+/** Clean's palette auto-flips with the app theme rather than acting as a
+ * customizable brand accent (see pdf-templates.ts) — the "Customize Invoice"
+ * section only renders when the selected template is one of these. */
+function isColorizable(template: InvoiceTemplate): template is ColorizableTemplate {
+  return template !== "clean";
+}
 
 const categories = [
   "Electronics",
@@ -66,6 +79,11 @@ type FormValues = {
   discountValue: number;
   notes: string;
   template: InvoiceTemplate;
+  /** Per-template color overrides from the "Customize Invoice" section —
+   * each template remembers its own overrides independently, so switching
+   * templates recalls that template's own customization rather than sharing
+   * one global accent. Slots left unset fall back to that template's default. */
+  customColors: CustomColors;
 };
 
 function generateInvoiceNumber(): string {
@@ -106,8 +124,30 @@ export default function CreateInvoice() {
       discountValue: 0,
       notes: "",
       template: "classic",
+      customColors: {},
     },
   });
+
+  // Sets one color slot for one template's overrides, leaving every other
+  // template's overrides (and this template's other slots) untouched — this
+  // is what makes each template "remember" its own customization
+  // independently rather than sharing one global accent.
+  const setTemplateColor = (template: ColorizableTemplate, slotKey: string, value: string) => {
+    const current = form.getValues("customColors");
+    form.setValue("customColors", {
+      ...current,
+      [template]: { ...current[template], [slotKey]: value },
+    });
+  };
+
+  // Clears all overrides for one template, reverting every one of its slots
+  // back to that template's built-in defaults.
+  const resetTemplateColors = (template: ColorizableTemplate) => {
+    const current = form.getValues("customColors");
+    const next = { ...current };
+    delete next[template];
+    form.setValue("customColors", next);
+  };
 
   // Functional setState updaters (rather than closing over the current
   // `items` value) so these callbacks don't need to change identity on
@@ -242,6 +282,7 @@ export default function CreateInvoice() {
         notes: data.notes || undefined,
         template: data.template,
         isDarkMode: theme === "dark",
+        customColors: data.customColors,
       });
 
       toast({
@@ -476,6 +517,79 @@ export default function CreateInvoice() {
                   </Select>
                 </div>
               </div>
+                </AccordionContent>
+              </AccordionItem>
+
+            {/* Customize Invoice — per-template color overrides */}
+            <AccordionItem value="customize" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <div className="flex items-center gap-2 text-left">
+                    <Palette className="w-5 h-5 text-muted-foreground" />
+                    <h2 className="text-xl font-semibold">Customize Invoice</h2>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
+              {isColorizable(values.template) ? (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm text-muted-foreground">
+                      Colors for the <span className="font-medium text-foreground">{INVOICE_TEMPLATES.find((t) => t.id === values.template)?.label}</span> template. Each template remembers its own colors, so switching templates won't lose these.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => resetTemplateColors(values.template as ColorizableTemplate)}
+                      data-testid="button-reset-colors"
+                      className="shrink-0"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                      Reset to default
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {TEMPLATE_COLOR_SLOTS[values.template].map((slot) => {
+                      const current =
+                        values.customColors[values.template as ColorizableTemplate]?.[slot.key] ??
+                        slot.default;
+                      return (
+                        <div key={slot.key} className="space-y-2">
+                          <Label htmlFor={`color-${values.template}-${slot.key}`} className="text-sm font-medium">
+                            {slot.label}
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              id={`color-${values.template}-${slot.key}`}
+                              type="color"
+                              value={current}
+                              onChange={(e) =>
+                                setTemplateColor(values.template as ColorizableTemplate, slot.key, e.target.value)
+                              }
+                              data-testid={`input-color-${values.template}-${slot.key}`}
+                              className="h-12 w-16 shrink-0 rounded-md border border-input cursor-pointer bg-background p-1"
+                              aria-label={`${slot.label} color`}
+                            />
+                            <Input
+                              value={current}
+                              onChange={(e) =>
+                                setTemplateColor(values.template as ColorizableTemplate, slot.key, e.target.value)
+                              }
+                              data-testid={`input-color-hex-${values.template}-${slot.key}`}
+                              className="h-12 font-mono uppercase"
+                              maxLength={7}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  The Clean template automatically matches your app's light/dark mode and doesn't have customizable colors. Pick a different PDF Template above to customize its colors.
+                </p>
+              )}
                 </AccordionContent>
               </AccordionItem>
 
@@ -839,6 +953,7 @@ export default function CreateInvoice() {
                   tax={tax}
                   discount={discount}
                   grandTotal={grandTotal}
+                  customColors={values.customColors}
                 />
               </div>
             </div>
