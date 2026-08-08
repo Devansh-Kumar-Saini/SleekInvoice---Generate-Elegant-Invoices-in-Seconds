@@ -24,4 +24,4 @@ npm run preview    # preview the production build
 - Theme toggle switches CSS custom properties via a `data-theme="dark" | "light"` attribute on the root wrapper — no external state library needed.
 - Fonts (Outfit, Inter, JetBrains Mono) are loaded from Google Fonts in `index.html`.
 
-<!-- testing 2 -->
+<!-- testing 3 -->
