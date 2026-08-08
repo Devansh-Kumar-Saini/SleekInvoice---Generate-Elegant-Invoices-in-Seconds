@@ -14,7 +14,7 @@ export default function FinalCta() {
           <h2 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 'clamp(1.9rem,3.4vw,2.7rem)', letterSpacing: '-0.01em', margin: '0 0 30px', maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
             Ready to upgrade your invoicing experience?
           </h2>
-          <a href="#try-it" className="cta-final" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 28px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', transition: 'transform .2s, box-shadow .2s' }}>
+          <a href="https://allfreeinvoice.vercel.app/" className="cta-final" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 28px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', transition: 'transform .2s, box-shadow .2s' }}>
             Create Your First Invoice Free
             <ArrowRightIcon />
           </a>

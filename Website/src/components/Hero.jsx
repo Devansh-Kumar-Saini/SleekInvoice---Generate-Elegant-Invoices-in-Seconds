@@ -20,7 +20,7 @@ export default function Hero() {
           The fastest invoice builder for freelancers, consultants, and teams. No login required, automatic tax math, and instant client-ready PDF downloads.
         </p>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-          <a href="#try-it" className="btn-primary" style={{ padding: '16px 26px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'transform .2s, box-shadow .2s' }}>
+          <a href="https://allfreeinvoice.vercel.app/" className="btn-primary" style={{ padding: '16px 26px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'transform .2s, box-shadow .2s' }}>
             Generate Free Invoice
             <ArrowRightIcon />
           </a>
