@@ -15,6 +15,27 @@ export default defineConfig({
   root: path.resolve(__dirname, "client"),
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Split the eagerly-loaded entry chunk so the browser can cache
+        // slow-changing vendor code (React, Radix UI primitives) separately
+        // from app code that changes on every deploy. Without this, editing
+        // one line anywhere invalidates a single monolithic bundle and
+        // forces a full re-download on every repeat visit.
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-radix": [
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-slot",
+            "@radix-ui/react-label",
+            "@radix-ui/react-toast",
+          ],
+          "vendor-forms": ["react-hook-form", "zod"],
+        },
+      },
+    },
   }
 });

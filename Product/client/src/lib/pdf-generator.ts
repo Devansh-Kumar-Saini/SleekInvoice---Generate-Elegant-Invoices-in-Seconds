@@ -9,17 +9,17 @@ import {
   SPACE_MONO_REGULAR_BASE64,
 } from "./pdf-fonts";
 import { amountToWords, formatCurrencyAmount } from "./invoice-format";
+// Template metadata lives in its own dependency-free module so callers that
+// only need the template list/type (e.g. the template <Select>, the live
+// preview) don't have to pull in jsPDF + the embedded fonts below. Re-exported
+// here so existing imports from "./pdf-generator" keep working unchanged.
+import { type InvoiceTemplate, INVOICE_TEMPLATES } from "./pdf-templates";
+
+export type { InvoiceTemplate };
+export { INVOICE_TEMPLATES };
 
 const FONT_FAMILY = "NotoSans";
 const FONT_FAMILY_MONO = "SpaceMono";
-
-export type InvoiceTemplate = "classic" | "clean" | "modern";
-
-export const INVOICE_TEMPLATES: Array<{ id: InvoiceTemplate; label: string; description: string }> = [
-  { id: "classic", label: "Classic", description: "The original InvoiceForge design" },
-  { id: "clean", label: "Clean", description: "Monochrome, hairline dividers — Vercel-inspired" },
-  { id: "modern", label: "Modern", description: "Bold type, color banner, dramatic total" },
-];
 
 /**
  * Registers the bundled Noto Sans subset with this jsPDF instance so currency

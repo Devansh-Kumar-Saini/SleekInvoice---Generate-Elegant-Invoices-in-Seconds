@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { type InvoiceItem } from "@/types/invoice";
-import { type InvoiceTemplate } from "@/lib/pdf-generator";
+import { type InvoiceTemplate } from "@/lib/pdf-templates";
 import { amountToWords, formatCurrencyAmount } from "@/lib/invoice-format";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -55,7 +56,11 @@ function formatDateSlash(dateStr: string): string {
   return `${day}/${month}/${year}`;
 }
 
-export function InvoicePreview(props: InvoicePreviewProps) {
+// Memoized so this (fairly large) template tree only re-renders when one of
+// its own props actually changes — the parent page also re-renders on
+// unrelated state (e.g. isGenerating, accordion open/close) that shouldn't
+// force the live preview to redo its work.
+export const InvoicePreview = memo(function InvoicePreview(props: InvoicePreviewProps) {
   const currencySymbol = currencies[props.currency] || "$";
   const formatCurrency = (amount: number) =>
     formatCurrencyAmount(amount, currencySymbol, props.currency);
@@ -71,7 +76,7 @@ export function InvoicePreview(props: InvoicePreviewProps) {
     default:
       return <ClassicPreview {...shared} />;
   }
-}
+});
 
 interface SharedProps extends InvoicePreviewProps {
   formatCurrency: (amount: number) => string;

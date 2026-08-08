@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/accordion";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
-import { generateInvoicePDF, INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-generator";
+import { INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-templates";
 import { type InvoiceItem } from "@/types/invoice";
 import { useTheme } from "@/hooks/use-theme";
 import { formatCurrencyAmount } from "@/lib/invoice-format";
@@ -109,20 +109,23 @@ export default function CreateInvoice() {
     },
   });
 
+  // Functional setState updaters (rather than closing over the current
+  // `items` value) so these callbacks don't need to change identity on
+  // every keystroke — lets item-row inputs take a stable onChange handler.
   const addItem = () => {
-    setItems([...items, { name: "", quantity: 1, price: 0, details: "" }]);
+    setItems((prev) => [...prev, { name: "", quantity: 1, price: 0, details: "" }]);
   };
 
   const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
-    }
+    setItems((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
   };
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
+    setItems((prev) => {
+      const newItems = [...prev];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return newItems;
+    });
   };
 
   const handleLogoUrlChange = (url: string) => {
@@ -148,18 +151,28 @@ export default function CreateInvoice() {
     reader.readAsDataURL(file);
   };
 
-  const category = form.watch("category");
+  // A single watch() subscription for the whole render, rather than the ~15
+  // separate form.watch("field") calls previously scattered through this
+  // component and its JSX. Behavior is identical (the component still
+  // re-renders on every field change, same as before) but each render now
+  // reads from one already-computed object instead of re-invoking the
+  // watch proxy over a dozen times.
+  const values = form.watch();
+  const { category, taxPercentage: watchedTax, discountType, discountValue: watchedDiscountValue, currency } = values;
+
   // For Consulting/Services, Qty isn't a natural fit (e.g. a flat-fee
   // engagement) — hide the field by default. Quantity still defaults to 1
   // under the hood so totals and the invoice designs are unaffected.
   const showQty = !QTY_OPTIONAL_CATEGORIES.has(category);
 
   // Calculate totals
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const taxPercentage = form.watch("taxPercentage") || 0;
+  const subtotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity * item.price, 0),
+    [items]
+  );
+  const taxPercentage = watchedTax || 0;
   const tax = (subtotal * taxPercentage) / 100;
-  const discountType = form.watch("discountType");
-  const discountValue = form.watch("discountValue") || 0;
+  const discountValue = watchedDiscountValue || 0;
   const discount =
     discountType === "flat"
       ? discountValue
@@ -169,9 +182,8 @@ export default function CreateInvoice() {
   const grandTotal = Math.max(subtotal + tax - discount, 0);
 
   const selectedCurrency = useMemo(
-    () => currencies.find((c) => c.code === form.watch("currency")),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.watch("currency")]
+    () => currencies.find((c) => c.code === currency),
+    [currency]
   );
 
   const formatCurrency = (amount: number) => {
@@ -201,6 +213,11 @@ export default function CreateInvoice() {
     setIsGenerating(true);
 
     try {
+      // Loaded on demand rather than imported at the top of the file: jsPDF,
+      // jspdf-autotable and the embedded font subsets (~250KB+ uncompressed)
+      // are only needed once the user actually asks for a PDF, so keeping
+      // this import dynamic keeps that weight out of the initial page load.
+      const { generateInvoicePDF } = await import("@/lib/pdf-generator");
       await generateInvoicePDF({
         companyName: data.companyName,
         companyLogo: logoPreview || undefined,
@@ -389,7 +406,7 @@ export default function CreateInvoice() {
                     Category
                   </Label>
                   <Select
-                    value={form.watch("category")}
+                    value={values.category}
                     onValueChange={(value) => form.setValue("category", value)}
                   >
                     <SelectTrigger id="category" data-testid="select-category" className="h-12">
@@ -414,7 +431,7 @@ export default function CreateInvoice() {
                     Currency *
                   </Label>
                   <Select
-                    value={form.watch("currency")}
+                    value={values.currency}
                     onValueChange={(value) => form.setValue("currency", value)}
                   >
                     <SelectTrigger id="currency" data-testid="select-currency" className="h-12">
@@ -439,7 +456,7 @@ export default function CreateInvoice() {
                     PDF Template
                   </Label>
                   <Select
-                    value={form.watch("template")}
+                    value={values.template}
                     onValueChange={(value) => form.setValue("template", value as InvoiceTemplate)}
                   >
                     <SelectTrigger id="template" data-testid="select-template" className="h-12">
@@ -665,7 +682,7 @@ export default function CreateInvoice() {
                       Discount Type
                     </Label>
                     <Select
-                      value={form.watch("discountType")}
+                      value={values.discountType}
                       onValueChange={(value) => form.setValue("discountType", value as any)}
                     >
                       <SelectTrigger
@@ -804,18 +821,18 @@ export default function CreateInvoice() {
             >
               <div className="min-w-fit">
                 <InvoicePreview
-                  template={form.watch("template")}
-                  companyName={form.watch("companyName")}
+                  template={values.template}
+                  companyName={values.companyName}
                   companyLogo={logoPreview}
-                  companyAddress={form.watch("companyAddress")}
+                  companyAddress={values.companyAddress}
                   invoiceNumber={invoiceNumber}
-                  date={form.watch("date")}
-                  customerName={form.watch("customerName")}
-                  customerEmail={form.watch("customerEmail")}
-                  customerPhone={form.watch("customerPhone")}
-                  customerAddress={form.watch("customerAddress")}
-                  category={form.watch("category")}
-                  currency={form.watch("currency")}
+                  date={values.date}
+                  customerName={values.customerName}
+                  customerEmail={values.customerEmail}
+                  customerPhone={values.customerPhone}
+                  customerAddress={values.customerAddress}
+                  category={values.category}
+                  currency={values.currency}
                   items={items}
                   subtotal={subtotal}
                   taxPercentage={taxPercentage}
