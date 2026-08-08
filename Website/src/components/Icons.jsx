@@ -178,3 +178,14 @@ export function PlusIcon({ size = 12 }) {
     </svg>
   )
 }
+
+export function PaletteIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a10 10 0 100 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0022 10.7C22 5.9 17.5 2 12 2z" />
+      <circle cx="7.5" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="11.5" cy="7" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="9" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}

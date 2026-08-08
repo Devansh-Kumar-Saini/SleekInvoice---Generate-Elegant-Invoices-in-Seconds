@@ -1,13 +1,18 @@
 import React from 'react'
 import SectionHeading from './SectionHeading'
 import Reveal from './Reveal'
-import { GridIcon, DocIcon, GlobeIcon, UsersIcon } from './Icons'
+import { GridIcon, DocIcon, GlobeIcon, UsersIcon, PaletteIcon } from './Icons'
 
 const SMALL_FEATURES = [
   {
     Icon: DocIcon,
     title: '1-Click PDF Export',
     body: 'High-speed vector rendering with your own logo and brand colors baked in.',
+  },
+  {
+    Icon: PaletteIcon,
+    title: 'Custom Accent Colors',
+    body: '5 templates, each with every color slot overridable — pick your brand hex per template and it’s remembered independently the next time you switch.',
   },
   {
     Icon: GlobeIcon,

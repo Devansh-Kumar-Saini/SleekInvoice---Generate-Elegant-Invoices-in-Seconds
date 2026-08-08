@@ -23,7 +23,7 @@ export const HOW_IT_WORKS = [
   {
     num: '02',
     title: 'Customize & Preview',
-    body: 'Toggle templates, tax rates, and dark or light invoice themes on the fly.',
+    body: 'Toggle templates, tax rates, and accent colors — every change reflects instantly in the live preview.',
   },
   {
     num: '03',
@@ -33,10 +33,11 @@ export const HOW_IT_WORKS = [
 ]
 
 export const TEMPLATES = [
-  { name: 'Minimal Mono', accent: 'var(--cyan-ink)', surface: 'var(--bg-surface-2)' },
-  { name: 'Classic Ledger', accent: 'var(--text-secondary)', surface: 'var(--bg-surface-2)' },
-  { name: 'Bold Blue', accent: 'var(--blue)', surface: 'var(--bg-surface-2)', highlighted: true, badge: 'Default' },
-  { name: 'Dark Forge', accent: 'var(--cyan)', surface: 'var(--bg-canvas)', bordered: true },
+  { name: 'Classic', accent: 'var(--blue)', surface: 'var(--bg-surface-2)', highlighted: true, badge: 'Default' },
+  { name: 'Clean', accent: 'var(--text-secondary)', surface: 'var(--bg-surface-2)' },
+  { name: 'Modern', accent: 'var(--cyan)', surface: 'var(--bg-canvas)', bordered: true },
+  { name: 'Elegant', accent: 'var(--indigo)', surface: 'var(--bg-surface-2)' },
+  { name: 'Sidebar', accent: 'var(--cyan-ink)', surface: 'var(--bg-surface-2)' },
 ]
 
 export const TESTIMONIALS = [

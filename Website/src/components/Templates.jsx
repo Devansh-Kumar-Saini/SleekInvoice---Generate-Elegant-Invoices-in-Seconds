@@ -9,8 +9,8 @@ export default function Templates() {
       <SectionHeading
         eyebrow="Templates"
         title="Pick a look, or make it yours"
-        subtitle="Every template exports pixel-identical to what you see on screen."
-        maxWidth={600}
+        subtitle="5 layouts to start from, each with its own accent color you can swap to match your brand. Every template exports pixel-identical to what you see on screen."
+        maxWidth={620}
       />
       <Reveal delay={1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 20 }}>
         {TEMPLATES.map((t) => (
@@ -35,6 +35,10 @@ export default function Templates() {
               {t.badge && (
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, letterSpacing: '.05em', color: 'var(--blue-ink)', textTransform: 'uppercase' }}>{t.badge}</span>
               )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: t.accent, border: '1px solid var(--border-hair-strong)', flexShrink: 0 }} />
+              <span style={{ fontSize: 11.5, color: 'var(--text-tertiary)' }}>Accent color customizable</span>
             </div>
           </div>
         ))}
