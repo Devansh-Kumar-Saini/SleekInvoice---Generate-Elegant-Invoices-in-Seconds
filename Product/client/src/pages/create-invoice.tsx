@@ -13,6 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Plus, Trash2, FileDown, Loader2, RotateCcw } from "lucide-react";
 import { generateInvoicePDF, INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-generator";
@@ -30,6 +36,11 @@ const categories = [
   "Office Supplies",
   "Other",
 ];
+
+// Categories where a "quantity" doesn't make sense by default (e.g. a
+// consulting engagement or a flat-fee service) — Qty is hidden and optional
+// for these until the user explicitly wants it.
+const QTY_OPTIONAL_CATEGORIES = new Set(["Consulting", "Services"]);
 
 const currencies = [
   { code: "USD", symbol: "$", name: "US Dollar" },
@@ -73,6 +84,8 @@ export default function CreateInvoice() {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
+  // Only one form section is expanded at a time; "Company Information" opens first.
+  const [openSection, setOpenSection] = useState<string>("company");
   const { toast } = useToast();
   const { theme } = useTheme();
 
@@ -134,6 +147,12 @@ export default function CreateInvoice() {
     };
     reader.readAsDataURL(file);
   };
+
+  const category = form.watch("category");
+  // For Consulting/Services, Qty isn't a natural fit (e.g. a flat-fee
+  // engagement) — hide the field by default. Quantity still defaults to 1
+  // under the hood so totals and the invoice designs are unaffected.
+  const showQty = !QTY_OPTIONAL_CATEGORIES.has(category);
 
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
@@ -246,12 +265,22 @@ export default function CreateInvoice() {
           </p>
         </div>
 
-        <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
           {/* Form Section */}
-          <div className="xl:w-2/3 space-y-6">
+          <div className="w-full xl:w-1/2">
+          <Accordion
+            type="single"
+            collapsible
+            value={openSection}
+            onValueChange={(value) => setOpenSection(value)}
+            className="space-y-4"
+          >
             {/* Company Information */}
-            <Card className="p-6 sm:p-8">
-              <h2 className="text-xl font-semibold mb-6">Company Information</h2>
+            <AccordionItem value="company" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <h2 className="text-xl font-semibold text-left">Company Information</h2>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="companyName" className="text-sm font-medium">
@@ -319,11 +348,15 @@ export default function CreateInvoice() {
                   />
                 </div>
               </div>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
 
             {/* Invoice Details */}
-            <Card className="p-6 sm:p-8">
-              <h2 className="text-xl font-semibold mb-6">Invoice Details</h2>
+            <AccordionItem value="invoice" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <h2 className="text-xl font-semibold text-left">Invoice Details</h2>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="invoiceNumber" className="text-sm font-medium">
@@ -426,11 +459,15 @@ export default function CreateInvoice() {
                   </Select>
                 </div>
               </div>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
 
             {/* Customer Information */}
-            <Card className="p-6 sm:p-8">
-              <h2 className="text-xl font-semibold mb-6">Customer Information</h2>
+            <AccordionItem value="customer" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <h2 className="text-xl font-semibold text-left">Customer Information</h2>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="customerName" className="text-sm font-medium">
@@ -487,31 +524,42 @@ export default function CreateInvoice() {
                   />
                 </div>
               </div>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
 
             {/* Items */}
-            <Card className="p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Items</h2>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={addItem}
-                  data-testid="button-add-item"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Item
-                </Button>
-              </div>
-
+            <AccordionItem value="items" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <h2 className="text-xl font-semibold">Items</h2>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addItem();
+                      }}
+                      data-testid="button-add-item"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
               <div className="space-y-4">
+                {!showQty && (
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    Qty is hidden for {category} — each line item is treated as a single flat-fee entry.
+                  </p>
+                )}
                 {items.map((item, index) => (
                   <div
                     key={index}
                     className="grid grid-cols-12 gap-4 p-4 border border-border rounded-md bg-card hover-elevate"
                     data-testid={`item-row-${index}`}
                   >
-                    <div className="col-span-12 md:col-span-4 space-y-2">
+                    <div className={showQty ? "col-span-12 md:col-span-4 space-y-2" : "col-span-12 md:col-span-6 space-y-2"}>
                       <Label className="text-sm font-medium">Item Name *</Label>
                       <Input
                         placeholder="Product or service"
@@ -522,19 +570,21 @@ export default function CreateInvoice() {
                       />
                     </div>
 
-                    <div className="col-span-6 md:col-span-2 space-y-2">
-                      <Label className="text-sm font-medium">Qty *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(index, "quantity", parseInt(e.target.value) || 1)
-                        }
-                        data-testid={`input-item-quantity-${index}`}
-                        className="h-12"
-                      />
-                    </div>
+                    {showQty && (
+                      <div className="col-span-6 md:col-span-2 space-y-2">
+                        <Label className="text-sm font-medium">Qty *</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateItem(index, "quantity", parseInt(e.target.value) || 1)
+                          }
+                          data-testid={`input-item-quantity-${index}`}
+                          className="h-12"
+                        />
+                      </div>
+                    )}
 
                     <div className="col-span-6 md:col-span-2 space-y-2">
                       <Label className="text-sm font-medium">Price *</Label>
@@ -581,11 +631,15 @@ export default function CreateInvoice() {
                   </div>
                 ))}
               </div>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
 
             {/* Calculations */}
-            <Card className="p-6 sm:p-8">
-              <h2 className="text-xl font-semibold mb-6">Calculations</h2>
+            <AccordionItem value="calculations" className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden">
+                <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
+                  <h2 className="text-xl font-semibold text-left">Calculations</h2>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 sm:px-8 pb-8">
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -699,10 +753,12 @@ export default function CreateInvoice() {
                   </div>
                 </div>
               </div>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
+          </Accordion>
 
             {/* Action Buttons */}
-            <Card className="p-6 sm:p-8">
+            <Card className="p-6 sm:p-8 mt-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="default"
@@ -741,27 +797,34 @@ export default function CreateInvoice() {
           </div>
 
           {/* Preview Section */}
-          <div className="w-full xl:w-1/3 xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)] overflow-y-auto">
-            <InvoicePreview
-              template={form.watch("template")}
-              companyName={form.watch("companyName")}
-              companyLogo={logoPreview}
-              companyAddress={form.watch("companyAddress")}
-              invoiceNumber={invoiceNumber}
-              date={form.watch("date")}
-              customerName={form.watch("customerName")}
-              customerEmail={form.watch("customerEmail")}
-              customerPhone={form.watch("customerPhone")}
-              customerAddress={form.watch("customerAddress")}
-              category={form.watch("category")}
-              currency={form.watch("currency")}
-              items={items}
-              subtotal={subtotal}
-              taxPercentage={taxPercentage}
-              tax={tax}
-              discount={discount}
-              grandTotal={grandTotal}
-            />
+          <div className="w-full xl:w-1/2 xl:sticky xl:top-20">
+            <div
+              className="max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-auto rounded-xl border border-card-border bg-muted/40 p-4 sm:p-6"
+              data-testid="invoice-preview-scroll-area"
+            >
+              <div className="min-w-fit">
+                <InvoicePreview
+                  template={form.watch("template")}
+                  companyName={form.watch("companyName")}
+                  companyLogo={logoPreview}
+                  companyAddress={form.watch("companyAddress")}
+                  invoiceNumber={invoiceNumber}
+                  date={form.watch("date")}
+                  customerName={form.watch("customerName")}
+                  customerEmail={form.watch("customerEmail")}
+                  customerPhone={form.watch("customerPhone")}
+                  customerAddress={form.watch("customerAddress")}
+                  category={form.watch("category")}
+                  currency={form.watch("currency")}
+                  items={items}
+                  subtotal={subtotal}
+                  taxPercentage={taxPercentage}
+                  tax={tax}
+                  discount={discount}
+                  grandTotal={grandTotal}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

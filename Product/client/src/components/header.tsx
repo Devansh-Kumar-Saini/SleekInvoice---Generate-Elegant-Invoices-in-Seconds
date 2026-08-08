@@ -15,7 +15,7 @@ export function Header() {
               className="flex items-center gap-2.5 hover-elevate rounded-md px-3 py-2 -ml-3 cursor-pointer"
               data-testid="link-home"
             >
-              <div className="w-9 h-9 bg-primary rounded-md flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 bg-primary rounded-lg shadow-sm flex items-center justify-center shrink-0">
                 <FileStack className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold text-foreground tracking-tight whitespace-nowrap">
