@@ -61,10 +61,10 @@ export default function Header() {
               >
                 {isLight ? <SunIcon /> : <MoonIcon />}
               </button>
-              <a href="#try-it" className="btn-outline" style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', background: 'transparent', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
+              {/* <a href="#try-it" className="btn-outline" style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', background: 'transparent', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
                 Try Live Demo
-              </a>
-              <a href="#try-it" className="btn-primary-sm" style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'transform .2s' }}>
+              </a> */}
+              <a href="https://allfreeinvoice.vercel.app/" className="btn-primary-sm" style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'transform .2s' }}>
                 Create Invoice Now
               </a>
             </div>

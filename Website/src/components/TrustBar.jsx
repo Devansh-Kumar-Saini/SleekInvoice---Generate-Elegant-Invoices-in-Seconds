@@ -6,7 +6,7 @@ export default function TrustBar() {
   return (
     <section style={{ position: 'relative', zIndex: 1, padding: '36px 24px', borderTop: '1px solid var(--border-hair)', borderBottom: '1px solid var(--border-hair)' }}>
       <Reveal as="p" style={{ textAlign: 'center', fontSize: 12.5, letterSpacing: '.05em', color: 'var(--text-tertiary)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', margin: '0 0 26px' }}>
-        Trusted by 25,000+ freelancers, developers, and agency founders worldwide
+        Trusted by freelancers, developers, and agency founders worldwide
       </Reveal>
       <Reveal delay={1} style={{ display: 'flex', justifyContent: 'center', gap: 44, flexWrap: 'wrap', maxWidth: 1000, margin: '0 auto' }}>
         {TRUSTED_LOGOS.map((logo) => (

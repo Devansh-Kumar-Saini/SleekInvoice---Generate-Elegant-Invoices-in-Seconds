@@ -6,12 +6,12 @@ export const NAV_LINKS = [
 ]
 
 export const TRUSTED_LOGOS = [
-  'NORTHFIELD STUDIO',
-  'ATLAS & CO',
-  'PIXELFORM',
-  'LEDGER LOOP',
-  'BRIGHTPATH',
-  'KILN CREATIVE',
+  'Momentum',
+  'CoRide Connect',
+  'News Connect',
+  'Pass Guard',
+  'Rehabit',
+  'Talk2SQL',
 ]
 
 export const HOW_IT_WORKS = [

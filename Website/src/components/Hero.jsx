@@ -30,7 +30,7 @@ export default function Hero() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28 }}>
           <div style={{ display: 'flex' }}>
-            {['FD', 'AO', 'IC'].map((initials, i) => (
+            {['NC', 'CR', 'M'].map((initials, i) => (
               <span
                 key={initials}
                 style={{
@@ -45,7 +45,7 @@ export default function Hero() {
             ))}
           </div>
           <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
-            Trusted by <strong style={{ color: 'var(--text-secondary)' }}>25,000+</strong> freelancers &amp; teams
+            Trusted by <strong style={{ color: 'var(--text-secondary)' }}>freelancers, developers &amp; teams</strong>
           </span>
         </div>
       </Reveal>
