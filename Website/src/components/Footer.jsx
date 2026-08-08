@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTheme } from '../context/ThemeContext'
-import { ForgeMark, SunIcon, MoonIcon, MailIcon, CommunityIcon, UpdatesIcon } from './Icons'
+import { ForgeMark, SunIcon, MoonIcon, MailIcon, CommunityIcon, UpdatesIcon, XIcon, LinkedinIcon, YoutubeIcon } from './Icons'
 import Reveal from './Reveal'
 
 const PRODUCT_LINKS = [
@@ -19,7 +19,7 @@ export default function Footer() {
   const { isDark, toggleTheme } = useTheme()
 
   return (
-    <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--border-hair)', padding: '56px 24px 28px' }}>
+    <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--border-hair)', padding: '56px 24px 0' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         <Reveal style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 36, marginBottom: 44 }}>
           <div>
@@ -80,13 +80,64 @@ export default function Footer() {
             All Systems Operational
           </span>
         </div>
+      </div>
 
-        <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.6 }}>
-          <span style={{ width: 18, height: 18, borderRadius: 5, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <ForgeMark size={9} />
-          </span>
-          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: '.01em', color: 'var(--text-tertiary)' }}>
-            InvoiceForge
+      <div style={{ position: 'relative', marginTop: 40, overflow: 'hidden' }}>
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'radial-gradient(60% 100% at 50% 100%, var(--mesh-1), transparent 70%)',
+          }}
+        />
+        <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '0 24px 78px' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              fontFamily: "'Outfit',sans-serif", fontWeight: 800,
+              fontSize: 'clamp(4.5rem, 15vw, 11.5rem)', lineHeight: 0.8,
+              letterSpacing: '-0.02em', textAlign: 'center',
+              color: 'var(--text-primary)', opacity: 0.08,
+              whiteSpace: 'nowrap', userSelect: 'none',
+            }}
+          >
+            INVOICEFORGE
+          </div>
+          <div
+            style={{
+              position: 'absolute', left: 24, bottom: 22,
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}
+          >
+            {[
+              { label: 'X', Icon: XIcon, href: '#' },
+              { label: 'LinkedIn', Icon: LinkedinIcon, href: '#' },
+              { label: 'YouTube', Icon: YoutubeIcon, href: '#' },
+            ].map(({ label, Icon, href }) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                className="social-icon"
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-primary)', textDecoration: 'none', transition: 'all .2s',
+                }}
+              >
+                <Icon />
+              </a>
+            ))}
+          </div>
+          <span
+            style={{
+              position: 'absolute', right: 24, bottom: 22,
+              fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: 13,
+              color: 'var(--text-primary)',
+            }}
+          >
+            InvoiceForge © 2026
           </span>
         </div>
       </div>

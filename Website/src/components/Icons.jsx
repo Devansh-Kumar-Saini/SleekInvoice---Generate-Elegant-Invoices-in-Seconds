@@ -189,3 +189,27 @@ export function PaletteIcon({ size = 20 }) {
     </svg>
   )
 }
+
+export function XIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M18.9 2.6h3.3l-7.2 8.2 8.5 10.6h-6.6l-5.2-6.5-5.9 6.5H2.5l7.6-8.7L2 2.6h6.8l4.7 6z" />
+    </svg>
+  )
+}
+
+export function LinkedinIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M4.98 3.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM3 9.98h4v11.02H3zM9.5 9.98h3.8v1.5h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1v6.48h-4v-5.75c0-1.37-.02-3.13-1.9-3.13-1.9 0-2.2 1.49-2.2 3.03v5.85h-4z" />
+    </svg>
+  )
+}
+
+export function YoutubeIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M22.5 7.2s-.22-1.56-.9-2.25c-.86-.9-1.83-.9-2.27-.95C16.3 3.75 12 3.75 12 3.75h-.01s-4.3 0-7.33.25c-.44.05-1.4.05-2.27.95-.68.69-.9 2.25-.9 2.25S1.25 9.03 1.25 10.86v1.63c0 1.83.24 3.66.24 3.66s.22 1.56.9 2.25c.86.9 1.99.87 2.5.97 1.8.17 7.11.25 7.11.25s4.3-.01 7.33-.26c.44-.05 1.4-.05 2.27-.95.68-.69.9-2.25.9-2.25s.24-1.83.24-3.66v-1.63c0-1.83-.24-3.66-.24-3.66zM9.75 14.98v-6l6 3z" />
+    </svg>
+  )
+}
