@@ -1,6 +1,7 @@
 export const NAV_LINKS = [
   { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How It Works' },
+  { href: '#gallery', label: 'Gallery' },
   { href: '#templates', label: 'Templates' },
   { href: '#faqs', label: 'FAQs' },
 ]
@@ -38,6 +39,16 @@ export const TEMPLATES = [
   { name: 'Modern', accent: 'var(--cyan)', surface: 'var(--bg-canvas)', bordered: true },
   { name: 'Elegant', accent: 'var(--indigo)', surface: 'var(--bg-surface-2)' },
   { name: 'Sidebar', accent: 'var(--cyan-ink)', surface: 'var(--bg-surface-2)' },
+]
+
+export const GALLERY_ITEMS = [
+  { key: 'fullpreview', image: 'fullpreview.png', caption: 'Live builder with real-time invoice preview', colSpan: 2, rowSpan: 2 },
+  { key: 'default', image: 'default.png', caption: 'Classic template — clean itemized layout', colSpan: 1, rowSpan: 2 },
+  { key: 'modern', image: 'modern.png', caption: 'Modern template — bold header, card summary', colSpan: 1, rowSpan: 2 },
+  { key: 'cleanInvoice', image: 'cleanInvoice.png', caption: 'Clean template — minimal, theme-aware', colSpan: 1, rowSpan: 2 },
+  { key: 'customize', image: 'customize.png', caption: 'Customize Invoice — brand your accent colors', colSpan: 1, rowSpan: 2 },
+  { key: 'elegent', image: 'elegent.png', caption: 'Elegant template — formal serif letterhead', colSpan: 1, rowSpan: 2 },
+  { key: 'darkmode', image: 'darkmode.png', caption: 'Dark mode — easy on the eyes for night work', colSpan: 1, rowSpan: 2 },
 ]
 
 export const TESTIMONIALS = [

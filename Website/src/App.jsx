@@ -5,7 +5,7 @@ import Hero from './components/Hero'
 import TrustBar from './components/TrustBar'
 import Features from './components/Features'
 import HowItWorks from './components/HowItWorks'
-import TryItLive from './components/TryItLive'
+import Gallery from './components/Gallery'
 import Templates from './components/Templates'
 import Testimonials from './components/Testimonials'
 import Faqs from './components/Faqs'
@@ -45,7 +45,7 @@ function Page() {
       <TrustBar />
       <Features />
       <HowItWorks />
-      <TryItLive />
+      <Gallery />
       <Templates />
       <Testimonials />
       <Faqs />
