@@ -253,17 +253,17 @@ export default function CreateInvoice() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
-        <div className="mb-8">
-          <h1
+        {/* <div className="mb-8"> */}
+          {/* <h1
             className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2"
             data-testid="text-page-title"
           >
             Create Invoice
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          </h1> */}
+          {/* <p className="text-sm text-muted-foreground">
             Fill in the details below and InvoiceForge will generate a polished, ready-to-send PDF.
-          </p>
-        </div>
+          </p> */}
+        {/* </div> */}
 
         <div className="flex flex-col xl:flex-row gap-6 items-start">
           {/* Form Section */}
