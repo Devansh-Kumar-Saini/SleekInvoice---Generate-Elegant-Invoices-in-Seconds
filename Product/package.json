@@ -1,9 +1,10 @@
 {
   "name": "invoice-generator",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -46,7 +47,7 @@
     "react": "^18.3.1",
     "react-day-picker": "^9.11.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.55.0",
+    "react-hook-form": "7.55.0",
     "react-resizable-panels": "^3.0.6",
     "recharts": "^3.3.0",
     "tailwind-merge": "^2.6.0",
