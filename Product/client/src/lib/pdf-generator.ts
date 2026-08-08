@@ -103,6 +103,50 @@ function formatDateSlash(dateStr: string): string {
   return `${day}/${month}/${year}`;
 }
 
+// ---------------------------------------------------------------------------
+// Small vector icons drawn with jsPDF's own line/shape primitives (mail,
+// phone, home) so the PDF's Billed To / Billed By contact lines carry the
+// same at-a-glance icons as the on-screen preview. jsPDF can't embed a
+// React icon component (lucide-react), so these are hand-drawn glyphs sized
+// to sit inline with small body text; `size` is the glyph's bounding box in
+// mm and (x, y) is its top-left corner.
+// ---------------------------------------------------------------------------
+function drawMailIcon(doc: jsPDF, x: number, y: number, size: number, color: [number, number, number]) {
+  doc.setDrawColor(...color);
+  doc.setLineWidth(size * 0.09);
+  doc.rect(x, y, size, size * 0.72);
+  doc.line(x, y, x + size / 2, y + size * 0.44);
+  doc.line(x + size / 2, y + size * 0.44, x + size, y);
+}
+
+function drawPhoneIcon(doc: jsPDF, x: number, y: number, size: number, color: [number, number, number]) {
+  doc.setDrawColor(...color);
+  doc.setLineWidth(size * 0.11);
+  // A simple mobile-phone silhouette (rounded rectangle body + a small
+  // "speaker" notch near the top) — reads unambiguously as a phone even at
+  // very small sizes, unlike a stylized handset-receiver curve.
+  const w = size * 0.62;
+  const h = size;
+  const bx = x + (size - w) / 2;
+  doc.roundedRect(bx, y, w, h, size * 0.14, size * 0.14, "S");
+  doc.setLineWidth(size * 0.09);
+  doc.line(bx + w * 0.32, y + size * 0.16, bx + w * 0.68, y + size * 0.16);
+}
+
+function drawHomeIcon(doc: jsPDF, x: number, y: number, size: number, color: [number, number, number]) {
+  doc.setDrawColor(...color);
+  doc.setLineWidth(size * 0.09);
+  const roofTipY = y;
+  const eaveY = y + size * 0.42;
+  const baseY = y + size;
+  // Roof (triangle).
+  doc.line(x + size / 2, roofTipY, x, eaveY);
+  doc.line(x + size / 2, roofTipY, x + size, eaveY);
+  doc.line(x, eaveY, x, baseY);
+  doc.line(x + size, eaveY, x + size, baseY);
+  doc.line(x, baseY, x + size, baseY);
+}
+
 interface LoadedLogo {
   /** PNG data URL, re-rasterized via canvas so any source format (SVG, WebP, GIF, PNG, JPEG) embeds reliably. */
   dataUrl: string;
@@ -267,23 +311,37 @@ function renderClassicTemplate(ctx: TemplateContext) {
   doc.setFontSize(9.5);
   doc.setTextColor(...BRAND.muted);
 
+  // Contact lines get a small leading icon (mail/phone/home) matching the
+  // on-screen preview; text is indented past the icon and wrapped to the
+  // remaining column width so long values (long emails, multi-line
+  // addresses) wrap onto additional lines instead of overlapping whatever
+  // comes next.
+  const ICON_SIZE = 3;
+  const ICON_GAP = 4.5;
+
   if (invoice.companyAddress) {
-    const lines = doc.splitTextToSize(invoice.companyAddress, billColWidth - 6);
-    doc.text(lines, billByX, billByY);
+    const lines = doc.splitTextToSize(invoice.companyAddress, billColWidth - 6 - ICON_GAP);
+    drawHomeIcon(doc, billByX, billByY - ICON_SIZE + 0.5, ICON_SIZE, BRAND.muted);
+    doc.text(lines, billByX + ICON_GAP, billByY);
     billByY += lines.length * 4.6;
   }
 
   if (invoice.customerEmail) {
-    doc.text(invoice.customerEmail, billToX, billToY);
-    billToY += 5;
+    const lines = doc.splitTextToSize(invoice.customerEmail, billColWidth - 6 - ICON_GAP);
+    drawMailIcon(doc, billToX, billToY - ICON_SIZE + 0.5, ICON_SIZE, BRAND.muted);
+    doc.text(lines, billToX + ICON_GAP, billToY);
+    billToY += lines.length * 4.6;
   }
   if (invoice.customerPhone) {
-    doc.text(invoice.customerPhone, billToX, billToY);
-    billToY += 5;
+    const lines = doc.splitTextToSize(invoice.customerPhone, billColWidth - 6 - ICON_GAP);
+    drawPhoneIcon(doc, billToX, billToY - ICON_SIZE + 0.5, ICON_SIZE, BRAND.muted);
+    doc.text(lines, billToX + ICON_GAP, billToY);
+    billToY += lines.length * 4.6;
   }
   if (invoice.customerAddress) {
-    const addressLines = doc.splitTextToSize(invoice.customerAddress, billColWidth - 6);
-    doc.text(addressLines, billToX, billToY);
+    const addressLines = doc.splitTextToSize(invoice.customerAddress, billColWidth - 6 - ICON_GAP);
+    drawHomeIcon(doc, billToX, billToY - ICON_SIZE + 0.5, ICON_SIZE, BRAND.muted);
+    doc.text(addressLines, billToX + ICON_GAP, billToY);
     billToY += addressLines.length * 4.6;
   }
 
@@ -824,17 +882,26 @@ function renderModernTemplate(ctx: TemplateContext) {
 
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(9);
+  const CHIP_ICON_SIZE = 2.6;
+  const CHIP_ICON_GAP = 4;
   const byAddressLines = invoice.companyAddress
-    ? doc.splitTextToSize(invoice.companyAddress, chipWidth - 10)
+    ? doc.splitTextToSize(invoice.companyAddress, chipWidth - 10 - CHIP_ICON_GAP)
+    : [];
+  const toEmailLines = invoice.customerEmail
+    ? doc.splitTextToSize(invoice.customerEmail, chipWidth - 10 - CHIP_ICON_GAP)
+    : [];
+  const toPhoneLines = invoice.customerPhone
+    ? doc.splitTextToSize(invoice.customerPhone, chipWidth - 10 - CHIP_ICON_GAP)
     : [];
   const toAddressLines = invoice.customerAddress
-    ? doc.splitTextToSize(invoice.customerAddress, chipWidth - 10)
+    ? doc.splitTextToSize(invoice.customerAddress, chipWidth - 10 - CHIP_ICON_GAP)
     : [];
-  const toContactParts = [invoice.customerEmail, invoice.customerPhone].filter(Boolean);
-  const chipHeight = Math.max(
-    22,
-    14 + (byAddressLines.length + (toContactParts.length ? 1 : 0) + toAddressLines.length) * 4.2
-  );
+  // "Billed To" now stacks email/phone/address as separate icon-led lines
+  // (rather than joining email+phone with "•" on one line) so each value
+  // wraps independently and long values never overlap the next one.
+  const byLineCount = byAddressLines.length;
+  const toLineCount = toEmailLines.length + toPhoneLines.length + toAddressLines.length;
+  const chipHeight = Math.max(22, 14 + Math.max(byLineCount, toLineCount) * 4.4);
 
   doc.setFillColor(...SOFT_FILL);
   doc.roundedRect(chipByX, chipY, chipWidth, chipHeight, 2.5, 2.5, "F");
@@ -860,21 +927,29 @@ function renderModernTemplate(ctx: TemplateContext) {
     doc.setFont(FONT_FAMILY, "normal");
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text(byAddressLines, chipByX + 5, byDetailY);
-    byDetailY += byAddressLines.length * 4.2;
+    drawHomeIcon(doc, chipByX + 5, byDetailY - CHIP_ICON_SIZE + 0.4, CHIP_ICON_SIZE, MUTED);
+    doc.text(byAddressLines, chipByX + 5 + CHIP_ICON_GAP, byDetailY);
+    byDetailY += byAddressLines.length * 4.4;
   }
 
   let toDetailY = chipY + 19;
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  if (toContactParts.length) {
-    doc.text(toContactParts.join(" • "), chipToX + 5, toDetailY);
-    toDetailY += 4.2;
+  if (toEmailLines.length) {
+    drawMailIcon(doc, chipToX + 5, toDetailY - CHIP_ICON_SIZE + 0.4, CHIP_ICON_SIZE, MUTED);
+    doc.text(toEmailLines, chipToX + 5 + CHIP_ICON_GAP, toDetailY);
+    toDetailY += toEmailLines.length * 4.4;
+  }
+  if (toPhoneLines.length) {
+    drawPhoneIcon(doc, chipToX + 5, toDetailY - CHIP_ICON_SIZE + 0.4, CHIP_ICON_SIZE, MUTED);
+    doc.text(toPhoneLines, chipToX + 5 + CHIP_ICON_GAP, toDetailY);
+    toDetailY += toPhoneLines.length * 4.4;
   }
   if (toAddressLines.length) {
-    doc.text(toAddressLines, chipToX + 5, toDetailY);
-    toDetailY += toAddressLines.length * 4.2;
+    drawHomeIcon(doc, chipToX + 5, toDetailY - CHIP_ICON_SIZE + 0.4, CHIP_ICON_SIZE, MUTED);
+    doc.text(toAddressLines, chipToX + 5 + CHIP_ICON_GAP, toDetailY);
+    toDetailY += toAddressLines.length * 4.4;
   }
 
   yPos = chipY + chipHeight + 10;

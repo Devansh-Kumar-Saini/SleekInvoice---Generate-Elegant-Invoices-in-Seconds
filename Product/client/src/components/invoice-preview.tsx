@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Card } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { FileText, Mail, Phone, Home } from "lucide-react";
 import { type InvoiceItem } from "@/types/invoice";
 import { type InvoiceTemplate } from "@/lib/pdf-templates";
 import { amountToWords, formatCurrencyAmount } from "@/lib/invoice-format";
@@ -155,48 +155,52 @@ function ClassicPreview({
 
         {/* Billed By / Bill To */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-b pb-6">
-          <div>
+          <div className="min-w-0">
             <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
               Billed By
             </div>
             <div className="space-y-2">
-              <div className="text-lg font-semibold text-foreground" data-testid="preview-company-billed-by">
+              <div className="text-lg font-semibold text-foreground break-words" data-testid="preview-company-billed-by">
                 {companyName || "Company Name"}
               </div>
               {companyAddress && (
                 <div
-                  className="text-sm text-muted-foreground whitespace-pre-wrap"
+                  className="flex items-start gap-2 text-sm text-muted-foreground"
                   data-testid="preview-company-address"
                 >
-                  {companyAddress}
+                  <Home className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span className="whitespace-pre-wrap break-words min-w-0">{companyAddress}</span>
                 </div>
               )}
             </div>
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
               Bill To
             </div>
             <div className="space-y-2">
-              <div className="text-lg font-semibold text-foreground" data-testid="preview-customer-name">
+              <div className="text-lg font-semibold text-foreground break-words" data-testid="preview-customer-name">
                 {customerName || "Customer Name"}
               </div>
               {customerEmail && (
-                <div className="text-sm text-muted-foreground" data-testid="preview-customer-email">
-                  {customerEmail}
+                <div className="flex items-start gap-2 text-sm text-muted-foreground" data-testid="preview-customer-email">
+                  <Mail className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span className="break-all min-w-0">{customerEmail}</span>
                 </div>
               )}
               {customerPhone && (
-                <div className="text-sm text-muted-foreground" data-testid="preview-customer-phone">
-                  {customerPhone}
+                <div className="flex items-start gap-2 text-sm text-muted-foreground" data-testid="preview-customer-phone">
+                  <Phone className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span className="break-words min-w-0">{customerPhone}</span>
                 </div>
               )}
               {customerAddress && (
                 <div
-                  className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap"
+                  className="flex items-start gap-2 text-sm text-muted-foreground mt-2"
                   data-testid="preview-customer-address"
                 >
-                  {customerAddress}
+                  <Home className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span className="whitespace-pre-wrap break-words min-w-0">{customerAddress}</span>
                 </div>
               )}
             </div>
@@ -359,33 +363,33 @@ function CleanPreview({
 
         {/* Billed By / Billed To with a vertical divider */}
         <div className="grid grid-cols-2 gap-6 pb-6 border-b border-border relative">
-          <div className="sm:border-r border-border pr-6">
+          <div className="sm:border-r border-border pr-6 min-w-0">
             <div className="text-xs text-muted-foreground mb-2">Billed By</div>
-            <div className="text-base font-semibold" data-testid="preview-company-billed-by">
+            <div className="text-base font-semibold break-words" data-testid="preview-company-billed-by">
               {companyName || "Company Name"}
             </div>
             {companyAddress && (
               <div
-                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap"
+                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words"
                 data-testid="preview-company-address"
               >
                 {companyAddress}
               </div>
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="text-xs text-muted-foreground mb-2">Billed To</div>
-            <div className="text-base font-semibold" data-testid="preview-customer-name">
+            <div className="text-base font-semibold break-words" data-testid="preview-customer-name">
               {customerName || "Customer Name"}
             </div>
             {(customerEmail || customerPhone) && (
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-muted-foreground mt-1 break-words">
                 {[customerEmail, customerPhone].filter(Boolean).join("  •  ")}
               </div>
             )}
             {customerAddress && (
               <div
-                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap"
+                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words"
                 data-testid="preview-customer-address"
               >
                 {customerAddress}
@@ -566,48 +570,61 @@ function ModernPreview({
       <div className="p-8 space-y-6">
         {/* Billed By / Billed To / Category chips */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-lg bg-muted p-3">
+          <div className="rounded-lg bg-muted p-3 min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
               Billed By
             </div>
-            <div className="text-sm font-bold text-foreground" data-testid="preview-company-billed-by">
+            <div className="text-sm font-bold text-foreground break-words" data-testid="preview-company-billed-by">
               {companyName || "Company Name"}
             </div>
             {companyAddress && (
               <div
-                className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap"
+                className="flex items-start gap-1.5 text-[11px] text-muted-foreground mt-1.5"
                 data-testid="preview-company-address"
               >
-                {companyAddress}
+                <Home className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="whitespace-pre-wrap break-words min-w-0">{companyAddress}</span>
               </div>
             )}
           </div>
-          <div className="rounded-lg bg-muted p-3">
+          <div className="rounded-lg bg-muted p-3 min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
               Billed To
             </div>
-            <div className="text-sm font-bold text-foreground" data-testid="preview-customer-name">
+            <div className="text-sm font-bold text-foreground break-words" data-testid="preview-customer-name">
               {customerName || "Customer Name"}
             </div>
-            {(customerEmail || customerPhone) && (
-              <div className="text-[11px] text-muted-foreground mt-1">
-                {[customerEmail, customerPhone].filter(Boolean).join(" • ")}
-              </div>
-            )}
-            {customerAddress && (
-              <div
-                className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap"
-                data-testid="preview-customer-address"
-              >
-                {customerAddress}
+            {(customerEmail || customerPhone || customerAddress) && (
+              <div className="mt-1.5 space-y-1">
+                {customerEmail && (
+                  <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                    <Mail className="w-3 h-3 mt-0.5 shrink-0" />
+                    <span className="break-all min-w-0">{customerEmail}</span>
+                  </div>
+                )}
+                {customerPhone && (
+                  <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                    <Phone className="w-3 h-3 mt-0.5 shrink-0" />
+                    <span className="break-words min-w-0">{customerPhone}</span>
+                  </div>
+                )}
+                {customerAddress && (
+                  <div
+                    className="flex items-start gap-1.5 text-[11px] text-muted-foreground"
+                    data-testid="preview-customer-address"
+                  >
+                    <Home className="w-3 h-3 mt-0.5 shrink-0" />
+                    <span className="whitespace-pre-wrap break-words min-w-0">{customerAddress}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
-          <div className="rounded-lg bg-muted p-3">
+          <div className="rounded-lg bg-muted p-3 min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
               Category
             </div>
-            <div className="text-sm font-bold text-foreground" data-testid="preview-category">
+            <div className="text-sm font-bold text-foreground break-words" data-testid="preview-category">
               {category || "General"}
             </div>
           </div>
