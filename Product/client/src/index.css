@@ -260,3 +260,47 @@
     inset: -1px;
   }
 }
+/* react-toastify — unified popup/notification/error surface for the whole
+ * app. Re-themed to use the same HSL design tokens (and the same light/dark
+ * axis, driven by the .dark class on <html>) as every other component,
+ * rather than the library's default color scheme. */
+.Toastify__toast-container {
+  --toastify-color-light: hsl(var(--card));
+  --toastify-color-dark: hsl(var(--card));
+  --toastify-color-success: hsl(var(--primary));
+  --toastify-color-error: hsl(var(--destructive));
+  --toastify-text-color-light: hsl(var(--card-foreground));
+  --toastify-text-color-dark: hsl(var(--card-foreground));
+}
+
+.Toastify__toast {
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--card-border));
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-sans);
+}
+
+.Toastify__toast--success {
+  border-left: 4px solid hsl(var(--primary));
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid hsl(var(--destructive));
+}
+
+.Toastify__close-button {
+  color: hsl(var(--card-foreground));
+  opacity: 0.6;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.Toastify__progress-bar--success {
+  background: hsl(var(--primary));
+}
+
+.Toastify__progress-bar--error {
+  background: hsl(var(--destructive));
+}

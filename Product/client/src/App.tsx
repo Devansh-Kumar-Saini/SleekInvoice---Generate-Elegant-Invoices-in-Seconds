@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
-import { Toaster } from "@/components/ui/toaster";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { Header } from "@/components/header";
@@ -23,7 +24,19 @@ function App() {
           <Header />
           <Router />
         </div>
-        <Toaster />
+        {/* Single, app-wide notification surface. Every popup, toast, and
+         * error in the app goes through the toast() helper in
+         * hooks/use-toast.tsx, which calls into react-toastify — this is the
+         * one container that renders all of them. */}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="colored"
+          toastClassName="invoiceforge-toast"
+        />
       </TooltipProvider>
     </ThemeProvider>
   );
