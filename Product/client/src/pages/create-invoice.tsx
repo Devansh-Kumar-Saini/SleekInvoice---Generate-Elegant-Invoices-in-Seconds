@@ -24,12 +24,12 @@ import { Plus, Trash2, FileDown, Loader2, RotateCcw, Palette } from "lucide-reac
 import {
   INVOICE_TEMPLATES,
   TEMPLATE_COLOR_SLOTS,
+  normalizeHex,
   type InvoiceTemplate,
   type ColorizableTemplate,
   type CustomColors,
 } from "@/lib/pdf-templates";
 import { type InvoiceItem } from "@/types/invoice";
-import { useTheme } from "@/hooks/use-theme";
 import { formatCurrencyAmount } from "@/lib/invoice-format";
 
 /** Clean's palette auto-flips with the app theme rather than acting as a
@@ -84,6 +84,12 @@ type FormValues = {
    * templates recalls that template's own customization rather than sharing
    * one global accent. Slots left unset fall back to that template's default. */
   customColors: CustomColors;
+  /** The invoice's own light/dark background — only consulted by the Clean
+   * template. This is deliberately independent of the app's own UI theme
+   * toggle (see useTheme/header.tsx): a user browsing InvoiceForge in dark
+   * mode shouldn't be forced into a dark-background invoice with no way to
+   * override it. Defaults to "light" regardless of the app's UI theme. */
+  invoiceTheme: "light" | "dark";
 };
 
 function generateInvoiceNumber(): string {
@@ -105,7 +111,6 @@ export default function CreateInvoice() {
   // Only one form section is expanded at a time; "Company Information" opens first.
   const [openSection, setOpenSection] = useState<string>("company");
   const { toast } = useToast();
-  const { theme } = useTheme();
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -125,6 +130,7 @@ export default function CreateInvoice() {
       notes: "",
       template: "classic",
       customColors: {},
+      invoiceTheme: "light",
     },
   });
 
@@ -258,7 +264,7 @@ export default function CreateInvoice() {
       // are only needed once the user actually asks for a PDF, so keeping
       // this import dynamic keeps that weight out of the initial page load.
       const { generateInvoicePDF } = await import("@/lib/pdf-generator");
-      await generateInvoicePDF({
+      const { warning } = await generateInvoicePDF({
         companyName: data.companyName,
         companyLogo: logoPreview || undefined,
         companyAddress: data.companyAddress || undefined,
@@ -281,9 +287,20 @@ export default function CreateInvoice() {
         grandTotal,
         notes: data.notes || undefined,
         template: data.template,
-        isDarkMode: theme === "dark",
+        isDarkMode: data.invoiceTheme === "dark",
         customColors: data.customColors,
       });
+
+      if (warning) {
+        // The PDF still downloaded successfully — this is a heads-up about
+        // one non-fatal thing that was skipped (currently: the logo), not an
+        // error, so it doesn't block success feedback below.
+        toast({
+          title: "Invoice generated with a warning",
+          description: warning,
+          variant: "destructive",
+        });
+      }
 
       toast({
         title: "Invoice generated successfully",
@@ -529,6 +546,37 @@ export default function CreateInvoice() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 sm:px-8 pb-8">
+              <div className="space-y-6">
+                {/* Invoice theme — independent of the app's own light/dark UI
+                    toggle (see the header). Applies to every template's
+                    background, text, and chrome in both the live preview and
+                    the downloaded PDF. It lives here (not tied to whatever
+                    the app chrome happens to be set to) so a user browsing
+                    InvoiceForge in dark mode still gets a light invoice by
+                    default, with an explicit opt-in to dark. */}
+                <div className="space-y-2 pb-6 border-b border-border">
+                  <Label htmlFor="invoiceTheme" className="text-sm font-medium">
+                    Invoice Theme
+                  </Label>
+                  <Select
+                    value={values.invoiceTheme}
+                    onValueChange={(value) => form.setValue("invoiceTheme", value as "light" | "dark")}
+                  >
+                    <SelectTrigger id="invoiceTheme" data-testid="select-invoice-theme" className="h-12 max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light" data-testid="option-invoice-theme-light">Light</SelectItem>
+                      <SelectItem value="dark" data-testid="option-invoice-theme-dark">Dark</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Sets the background and text color of this invoice — applies to every template, in both the
+                    preview and the downloaded PDF. Independent of your app's own light/dark mode above — defaults
+                    to Light regardless.
+                  </p>
+                </div>
+
               {isColorizable(values.template) ? (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between gap-4">
@@ -562,7 +610,14 @@ export default function CreateInvoice() {
                             <input
                               id={`color-${values.template}-${slot.key}`}
                               type="color"
-                              value={current}
+                              // Native color inputs require an exact "#rrggbb" value and
+                              // silently reset to black if given anything else — e.g. the
+                              // hex text input below allows typing without a leading "#"
+                              // (or a 3-digit shorthand) while the user is still editing.
+                              // Normalize here so the swatch never breaks; fall back to the
+                              // slot's own default (never black) while the typed value is
+                              // incomplete/invalid.
+                              value={normalizeHex(current) ?? slot.default}
                               onChange={(e) =>
                                 setTemplateColor(values.template as ColorizableTemplate, slot.key, e.target.value)
                               }
@@ -587,9 +642,10 @@ export default function CreateInvoice() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  The Clean template automatically matches your app's light/dark mode and doesn't have customizable colors. Pick a different PDF Template above to customize its colors.
+                  The Clean template doesn't have customizable accent colors — its palette is just the Invoice Theme above (Light or Dark). Pick a different PDF Template to customize accent colors too.
                 </p>
               )}
+              </div>
                 </AccordionContent>
               </AccordionItem>
 
@@ -954,6 +1010,7 @@ export default function CreateInvoice() {
                   discount={discount}
                   grandTotal={grandTotal}
                   customColors={values.customColors}
+                  invoiceTheme={values.invoiceTheme}
                 />
               </div>
             </div>

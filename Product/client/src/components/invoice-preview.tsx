@@ -9,7 +9,6 @@ import {
   resolveColor,
 } from "@/lib/pdf-templates";
 import { amountToWords, formatCurrencyAmount } from "@/lib/invoice-format";
-import { useTheme } from "@/hooks/use-theme";
 
 interface InvoicePreviewProps {
   template?: InvoiceTemplate;
@@ -33,6 +32,10 @@ interface InvoicePreviewProps {
   /** Per-template color overrides from the "Customize Invoice" section —
    * see TEMPLATE_COLOR_SLOTS in pdf-templates.ts. Not consulted by Clean. */
   customColors?: CustomColors;
+  /** The invoice's own light/dark background, set via the "Customize Invoice"
+   * section — only consulted by the Clean template. Deliberately independent
+   * of the app's own UI theme (see useTheme/header.tsx); defaults to "light". */
+  invoiceTheme?: "light" | "dark";
 }
 
 /** Resolves a template's color slots to a plain object of CSS hex strings,
@@ -43,11 +46,12 @@ interface InvoicePreviewProps {
 function colorsFor(
   template: ColorizableTemplate,
   overrides: CustomColors | undefined,
-  slotKeys: string[]
+  slotKeys: string[],
+  isDark?: boolean
 ): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of slotKeys) {
-    result[key] = resolveColor(template, key, overrides);
+    result[key] = resolveColor(template, key, overrides, isDark);
   }
   return result;
 }
@@ -134,10 +138,15 @@ function ClassicPreview({
   grandTotal,
   formatCurrency,
   customColors,
+  invoiceTheme,
 }: SharedProps) {
-  const c = colorsFor("classic", customColors, ["primary", "dark", "muted", "border", "headerFill"]);
+  const isDark = invoiceTheme === "dark";
+  const c = colorsFor("classic", customColors, ["primary", "dark", "muted", "border", "headerFill"], isDark);
   return (
-    <Card className="p-8 bg-background shadow-sm w-full max-w-4xl" data-testid="invoice-preview">
+    <Card
+      className={`p-8 shadow-sm w-full max-w-4xl ${isDark ? "bg-[#18181a]" : "bg-white"}`}
+      data-testid="invoice-preview"
+    >
       <div className="space-y-8">
         {/* Header */}
         <div
@@ -153,8 +162,12 @@ function ClassicPreview({
                 data-testid="preview-company-logo"
               />
             ) : (
-              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-3">
-                <FileText className="w-8 h-8 text-muted-foreground" />
+              <div
+                className={`w-16 h-16 rounded-lg flex items-center justify-center mb-3 ${
+                  isDark ? "bg-white/10" : "bg-muted"
+                }`}
+              >
+                <FileText className="w-8 h-8" style={{ color: c.muted }} />
               </div>
             )}
             <h3
@@ -288,7 +301,7 @@ function ClassicPreview({
                   </div>
                 ))
             ) : (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm" style={{ color: c.muted }}>
                 No items added yet
               </div>
             )}
@@ -334,8 +347,8 @@ function ClassicPreview({
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-border">
-          <div className="text-xs text-muted-foreground text-center">
+        <div className="pt-6" style={{ borderTop: `1px solid ${c.border}` }}>
+          <div className="text-xs text-center" style={{ color: c.muted }}>
             Thank you for your business!
           </div>
         </div>
@@ -349,7 +362,8 @@ function ClassicPreview({
 // label/value metadata grid, Billed By/To split with a vertical divider,
 // borderless items table with plain-text headers, monospaced numeric
 // columns, and an "Invoice Total (in words)" line. The background flips
-// black/white with the app's own theme toggle rather than always being dark.
+// black/white with the invoice's own "Invoice Theme" setting (Customize
+// Invoice section) — independent of the app's own UI theme — defaulting to light.
 // ---------------------------------------------------------------------------
 function CleanPreview({
   companyName,
@@ -368,21 +382,23 @@ function CleanPreview({
   discount,
   grandTotal,
   formatCurrency,
+  invoiceTheme,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = invoiceTheme === "dark";
+  const muted = isDark ? "text-white/60" : "text-muted-foreground";
+  const border = isDark ? "border-white/15" : "border-border";
 
   return (
     <Card
-      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl border-border ${
+      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl ${border} ${
         isDark ? "bg-black text-white" : "bg-white text-black"
       }`}
       data-testid="invoice-preview"
     >
       <div className="space-y-8">
         {/* Giant, thin-weight title */}
-        <div className="pb-6 border-b border-border">
+        <div className={`pb-6 border-b ${border}`}>
           <h1
             className="text-3xl sm:text-4xl font-light tracking-tight break-words"
             data-testid="preview-company-name"
@@ -393,26 +409,26 @@ function CleanPreview({
 
         {/* Metadata label/value grid */}
         <div className="grid grid-cols-[auto,1fr] gap-x-6 gap-y-2 text-sm max-w-md">
-          <span className="text-muted-foreground">Serial Number</span>
+          <span className={muted}>Serial Number</span>
           <span data-testid="preview-invoice-number">
             {(invoiceNumber || "").replace(/^INV-?/i, "") || invoiceNumber || "—"}
           </span>
-          <span className="text-muted-foreground">Date</span>
+          <span className={muted}>Date</span>
           <span data-testid="preview-date">{date ? formatDateSlash(date) : "—"}</span>
-          <span className="text-muted-foreground">Currency</span>
+          <span className={muted}>Currency</span>
           <span>{currency}</span>
         </div>
 
         {/* Billed By / Billed To with a vertical divider */}
-        <div className="grid grid-cols-2 gap-6 pb-6 border-b border-border relative">
-          <div className="sm:border-r border-border pr-6 min-w-0">
-            <div className="text-xs text-muted-foreground mb-2">Billed By</div>
+        <div className={`grid grid-cols-2 gap-6 pb-6 border-b ${border} relative`}>
+          <div className={`sm:border-r ${border} pr-6 min-w-0`}>
+            <div className={`text-xs ${muted} mb-2`}>Billed By</div>
             <div className="text-base font-semibold break-words" data-testid="preview-company-billed-by">
               {companyName || "Company Name"}
             </div>
             {companyAddress && (
               <div
-                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words"
+                className={`text-xs ${muted} mt-1 whitespace-pre-wrap break-words`}
                 data-testid="preview-company-address"
               >
                 {companyAddress}
@@ -420,18 +436,18 @@ function CleanPreview({
             )}
           </div>
           <div className="min-w-0">
-            <div className="text-xs text-muted-foreground mb-2">Billed To</div>
+            <div className={`text-xs ${muted} mb-2`}>Billed To</div>
             <div className="text-base font-semibold break-words" data-testid="preview-customer-name">
               {customerName || "Customer Name"}
             </div>
             {(customerEmail || customerPhone) && (
-              <div className="text-xs text-muted-foreground mt-1 break-words">
+              <div className={`text-xs ${muted} mt-1 break-words`}>
                 {[customerEmail, customerPhone].filter(Boolean).join("  •  ")}
               </div>
             )}
             {customerAddress && (
               <div
-                className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words"
+                className={`text-xs ${muted} mt-1 whitespace-pre-wrap break-words`}
                 data-testid="preview-customer-address"
               >
                 {customerAddress}
@@ -442,7 +458,7 @@ function CleanPreview({
 
         {/* Items — no borders/fills on header, just a rule; monospaced numbers */}
         <div>
-          <div className="grid grid-cols-12 gap-4 pb-2 border-b border-border text-sm text-muted-foreground min-w-[600px]">
+          <div className={`grid grid-cols-12 gap-4 pb-2 border-b ${border} text-sm ${muted} min-w-[600px]`}>
             <div className="col-span-6">Item</div>
             <div className="col-span-2 text-right">Qty</div>
             <div className="col-span-2 text-right">Price</div>
@@ -459,7 +475,7 @@ function CleanPreview({
                 <div className="col-span-6">
                   <div className="text-sm break-words">{item.name}</div>
                   {item.details && (
-                    <div className="text-xs text-muted-foreground mt-0.5 break-words">
+                    <div className={`text-xs ${muted} mt-0.5 break-words`}>
                       {item.details}
                     </div>
                   )}
@@ -474,9 +490,9 @@ function CleanPreview({
               </div>
             ))
           ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+            <div className={`py-8 text-center text-sm ${muted}`}>No items added yet</div>
           )}
-          <div className="border-b border-border" />
+          <div className={`border-b ${border}`} />
         </div>
 
         {/* Large sparse gap, matching the reference's minimal layout */}
@@ -486,7 +502,7 @@ function CleanPreview({
         <div className="flex justify-end">
           <div className="w-full sm:w-72 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Subtotal</span>
+              <span className={`text-xs ${muted}`}>Subtotal</span>
               <span className="text-sm font-mono" data-testid="preview-subtotal">
                 {formatCurrency(subtotal)}
               </span>
@@ -497,7 +513,7 @@ function CleanPreview({
             {validItems.length <= 1 &&
               validItems.map((item, index) => (
                 <div key={index} className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground break-words pr-2">{item.name}</span>
+                  <span className={`text-xs ${muted} break-words pr-2`}>{item.name}</span>
                   <span className="text-sm font-mono whitespace-nowrap">
                     {formatCurrency(item.quantity * item.price)}
                   </span>
@@ -505,7 +521,7 @@ function CleanPreview({
               ))}
             {tax > 0 && (
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Tax ({taxPercentage}%)</span>
+                <span className={`text-xs ${muted}`}>Tax ({taxPercentage}%)</span>
                 <span className="text-sm font-mono" data-testid="preview-tax">
                   {formatCurrency(tax)}
                 </span>
@@ -513,20 +529,20 @@ function CleanPreview({
             )}
             {discount > 0 && (
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Discount</span>
+                <span className={`text-xs ${muted}`}>Discount</span>
                 <span className="text-sm font-mono" data-testid="preview-discount">
                   -{formatCurrency(discount)}
                 </span>
               </div>
             )}
-            <div className="flex justify-between items-center pt-2 border-t border-border">
-              <span className="text-sm text-muted-foreground">Total</span>
+            <div className={`flex justify-between items-center pt-2 border-t ${border}`}>
+              <span className={`text-sm ${muted}`}>Total</span>
               <span className="text-lg font-mono font-bold" data-testid="preview-total">
                 {formatCurrency(grandTotal)}
               </span>
             </div>
             <div className="pt-2">
-              <div className="text-[10px] text-muted-foreground">Invoice Total (in words)</div>
+              <div className={`text-[10px] ${muted}`}>Invoice Total (in words)</div>
               <div className="text-sm capitalize" data-testid="preview-total-words">
                 {amountToWords(grandTotal, currency)}
               </div>
@@ -535,7 +551,7 @@ function CleanPreview({
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-border flex justify-between text-[10px] text-muted-foreground uppercase tracking-widest">
+        <div className={`pt-6 border-t ${border} flex justify-between text-[10px] ${muted} uppercase tracking-widest`}>
           <span>Thank you for your business</span>
           <span>InvoiceForge</span>
         </div>
@@ -567,13 +583,15 @@ function ModernPreview({
   grandTotal,
   formatCurrency,
   customColors,
+  invoiceTheme,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
-  const c = colorsFor("modern", customColors, ["accent", "pop", "ink", "muted"]);
+  const isDark = invoiceTheme === "dark";
+  const c = colorsFor("modern", customColors, ["accent", "pop", "ink", "muted"], isDark);
 
   return (
     <Card
-      className="p-0 bg-background shadow-sm w-full max-w-4xl overflow-hidden"
+      className={`p-0 shadow-sm w-full max-w-4xl overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       {/* Banner header */}
@@ -614,7 +632,9 @@ function ModernPreview({
       <div className="p-8 space-y-6">
         {/* Billed By / Billed To / Category chips */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-lg bg-muted p-3 min-w-0">
+          <div
+            className={`rounded-lg p-3 min-w-0 ${isDark ? "bg-white/5" : "bg-muted"}`}
+          >
             <div className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: c.muted }}>
               Billed By
             </div>
@@ -632,7 +652,9 @@ function ModernPreview({
               </div>
             )}
           </div>
-          <div className="rounded-lg bg-muted p-3 min-w-0">
+          <div
+            className={`rounded-lg p-3 min-w-0 ${isDark ? "bg-white/5" : "bg-muted"}`}
+          >
             <div className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: c.muted }}>
               Billed To
             </div>
@@ -666,7 +688,9 @@ function ModernPreview({
               </div>
             )}
           </div>
-          <div className="rounded-lg bg-muted p-3 min-w-0">
+          <div
+            className={`rounded-lg p-3 min-w-0 ${isDark ? "bg-white/5" : "bg-muted"}`}
+          >
             <div className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: c.muted }}>
               Category
             </div>
@@ -677,7 +701,7 @@ function ModernPreview({
         </div>
 
         {/* Items */}
-        <div className="rounded-lg overflow-hidden border border-border">
+        <div className="rounded-lg overflow-hidden border" style={{ borderColor: isDark ? "#3a3a3e" : undefined }}>
           <div
             className="grid grid-cols-12 gap-4 px-4 py-3 text-white text-xs font-bold uppercase tracking-wide min-w-[600px]"
             style={{ backgroundColor: c.accent }}
@@ -692,7 +716,10 @@ function ModernPreview({
             validItems.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-12 gap-4 px-4 py-3 border-t border-border min-w-[600px] odd:bg-muted/40"
+                className={`grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[600px] ${
+                  isDark ? "odd:bg-white/5" : "odd:bg-muted/40"
+                }`}
+                style={{ borderColor: isDark ? "#3a3a3e" : undefined }}
                 data-testid={`preview-item-${index}`}
               >
                 <div className="col-span-6">
@@ -713,7 +740,7 @@ function ModernPreview({
               </div>
             ))
           ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+            <div className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</div>
           )}
         </div>
 
@@ -760,7 +787,10 @@ function ModernPreview({
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-border flex justify-between text-xs" style={{ color: c.muted }}>
+        <div
+          className="pt-4 border-t flex justify-between text-xs"
+          style={{ borderColor: isDark ? "#3a3a3e" : undefined, color: c.muted }}
+        >
           <span>Thank you for your business!</span>
           <span className="font-bold" style={{ color: c.pop }}>InvoiceForge</span>
         </div>
@@ -794,13 +824,15 @@ function ElegantPreview({
   grandTotal,
   formatCurrency,
   customColors,
+  invoiceTheme,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
-  const c = colorsFor("elegant", customColors, ["ink", "muted", "gold", "rule"]);
+  const isDark = invoiceTheme === "dark";
+  const c = colorsFor("elegant", customColors, ["ink", "muted", "gold", "rule"], isDark);
 
   return (
     <Card
-      className="p-8 sm:p-10 bg-background shadow-sm w-full max-w-4xl"
+      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl ${isDark ? "bg-[#1a1917]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       <div className="space-y-8">
@@ -919,7 +951,7 @@ function ElegantPreview({
               </div>
             ))
           ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+            <div className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</div>
           )}
         </div>
 
@@ -1001,13 +1033,15 @@ function SidebarPreview({
   grandTotal,
   formatCurrency,
   customColors,
+  invoiceTheme,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
-  const c = colorsFor("sidebar", customColors, ["sidebar", "pop", "ink", "muted"]);
+  const isDark = invoiceTheme === "dark";
+  const c = colorsFor("sidebar", customColors, ["sidebar", "pop", "ink", "muted"], isDark);
 
   return (
     <Card
-      className="p-0 bg-background shadow-sm w-full max-w-4xl overflow-hidden"
+      className={`p-0 shadow-sm w-full max-w-4xl overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       <div className="flex flex-col sm:flex-row">
@@ -1098,8 +1132,13 @@ function SidebarPreview({
         <div className="flex-1 p-6 sm:p-8 space-y-6 min-w-0">
           <h3 className="text-3xl font-extrabold tracking-tight" style={{ color: c.ink }}>Invoice</h3>
 
-          <div className="border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium uppercase tracking-wider text-muted-foreground min-w-[500px]">
+          <div className="border rounded-lg overflow-hidden" style={{ borderColor: isDark ? "#3a3a3e" : undefined }}>
+            <div
+              className={`grid grid-cols-12 gap-4 px-4 py-3 text-sm font-medium uppercase tracking-wider min-w-[500px] ${
+                isDark ? "bg-white/5" : "bg-muted/50"
+              }`}
+              style={{ color: c.muted }}
+            >
               <div className="col-span-6">Item</div>
               <div className="col-span-2 text-right">Qty</div>
               <div className="col-span-2 text-right">Price</div>
@@ -1110,7 +1149,10 @@ function SidebarPreview({
               validItems.map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[500px] odd:bg-muted/20"
+                  className={`grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[500px] ${
+                    isDark ? "odd:bg-white/5" : "odd:bg-muted/20"
+                  }`}
+                  style={{ borderColor: isDark ? "#3a3a3e" : undefined }}
                   data-testid={`preview-item-${index}`}
                 >
                   <div className="col-span-6">
@@ -1133,7 +1175,7 @@ function SidebarPreview({
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-sm text-muted-foreground">No items added yet</div>
+              <div className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</div>
             )}
           </div>
 
@@ -1178,7 +1220,10 @@ function SidebarPreview({
             </div>
           </div>
 
-          <div className="pt-4 border-t border-border text-xs text-muted-foreground">
+          <div
+            className="pt-4 border-t text-xs"
+            style={{ borderColor: isDark ? "#3a3a3e" : undefined, color: c.muted }}
+          >
             Thank you for your business!
           </div>
         </div>

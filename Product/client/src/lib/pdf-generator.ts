@@ -17,6 +17,7 @@ import {
   type InvoiceTemplate,
   type CustomColors,
   INVOICE_TEMPLATES,
+  TEMPLATE_DARK_SURFACES,
   hexToRgb,
   resolveColor,
 } from "./pdf-templates";
@@ -78,8 +79,10 @@ export interface InvoicePdfData {
   grandTotal: number;
   notes?: string;
   template?: InvoiceTemplate;
-  /** Current app theme — only consulted by the Clean template, whose
-   * background flips black/white to match the app's own dark/light toggle. */
+  /** The invoice's own "Invoice Theme" setting from the "Customize Invoice"
+   * section (independent of the app's own UI theme) — only consulted by the
+   * Clean template, whose background flips black/white based on this.
+   * Defaults to light (false) when unset. */
   isDarkMode?: boolean;
   /** Per-template color overrides from the "Customize Invoice" section.
    * Slots left unset fall back to that template's built-in default —
@@ -164,30 +167,50 @@ interface LoadedLogo {
   height: number;
 }
 
+type LogoAttemptResult =
+  | { status: "ok"; logo: LoadedLogo }
+  | { status: "failed-to-load" }
+  /** Image loaded and displays fine, but the browser won't let JS read its pixel
+   * data back out (see loadLogo's doc comment for why) — a real, unrecoverable
+   * browser restriction, not a bug we can work around client-side. */
+  | { status: "tainted" };
+
 /**
- * Loads a logo from any URL/data-URL and rasterizes it to a PNG data URL via canvas.
- * This sidesteps jsPDF's limited native image support (no SVG, finicky format sniffing)
- * by always handing jsPDF a plain PNG it can embed without guessing. Resolves with null
- * (rather than rejecting) on failure/timeout so a bad logo URL never breaks PDF generation.
+ * Attempts one image load + canvas rasterization pass. `useCrossOrigin` controls
+ * whether `crossOrigin="anonymous"` is set before assigning `src`:
+ *  - true:  needed so `canvas.toDataURL()` can read pixel data back out for a
+ *           *cross-origin* image, but only succeeds if the remote host sends
+ *           CORS headers (`Access-Control-Allow-Origin`) — most image hosts/CDNs
+ *           a user might paste a logo URL from do not, and the browser fails the
+ *           request outright (onerror fires) rather than degrading gracefully.
+ *  - false: works for same-origin URLs and data: URLs (the common case — a
+ *           locally-uploaded logo file is base64-encoded into a data: URL and
+ *           never touches the network at all), and also for cross-origin hosts
+ *           that don't require CORS just to *display* an image — but the
+ *           resulting canvas is "tainted" and `toDataURL()` throws.
+ * `loadLogo` below tries both passes so both kinds of host work, and tells the
+ * two failure modes apart so it can report a clear reason when neither works.
  */
-function loadLogo(src: string, timeoutMs = 6000): Promise<LoadedLogo | null> {
+function attemptLoadLogo(src: string, useCrossOrigin: boolean, timeoutMs: number): Promise<LogoAttemptResult> {
   return new Promise((resolve) => {
     const img = new Image();
     let settled = false;
 
-    const finish = (result: LoadedLogo | null) => {
+    const finish = (result: LogoAttemptResult) => {
       if (settled) return;
       settled = true;
       resolve(result);
     };
 
-    const timer = setTimeout(() => finish(null), timeoutMs);
+    const timer = setTimeout(() => finish({ status: "failed-to-load" }), timeoutMs);
 
-    img.crossOrigin = "anonymous";
+    if (useCrossOrigin) {
+      img.crossOrigin = "anonymous";
+    }
     img.onload = () => {
       clearTimeout(timer);
       if (img.naturalWidth <= 0 || img.naturalHeight <= 0) {
-        finish(null);
+        finish({ status: "failed-to-load" });
         return;
       }
       try {
@@ -196,23 +219,76 @@ function loadLogo(src: string, timeoutMs = 6000): Promise<LoadedLogo | null> {
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext("2d");
         if (!ctx) {
-          finish(null);
+          finish({ status: "failed-to-load" });
           return;
         }
         ctx.drawImage(img, 0, 0);
         const dataUrl = canvas.toDataURL("image/png");
-        finish({ dataUrl, width: img.naturalWidth, height: img.naturalHeight });
+        finish({ status: "ok", logo: { dataUrl, width: img.naturalWidth, height: img.naturalHeight } });
       } catch {
         // Cross-origin images without CORS headers taint the canvas and throw on toDataURL.
-        finish(null);
+        finish({ status: "tainted" });
       }
     };
     img.onerror = () => {
       clearTimeout(timer);
-      finish(null);
+      finish({ status: "failed-to-load" });
     };
     img.src = src;
   });
+}
+
+/**
+ * Loads a logo from any URL/data-URL and rasterizes it to a PNG data URL via canvas.
+ * This sidesteps jsPDF's limited native image support (no SVG, finicky format sniffing)
+ * by always handing jsPDF a plain PNG it can embed without guessing.
+ *
+ * Tries a CORS-mode load first (works for cross-origin hosts that do send CORS
+ * headers, and lets toDataURL succeed cleanly), then falls back to a plain,
+ * non-CORS load if that fails (works for data: URLs, same-origin URLs, and
+ * cross-origin hosts that serve images fine but don't set CORS headers).
+ *
+ * If BOTH attempts fail, the reason is reported via `warning` rather than just
+ * silently dropping the logo: a browser will happily *display* almost any
+ * image via a plain <img> tag (which is why the on-screen preview always shows
+ * a pasted logo URL fine), but reading that image's pixel data back out via
+ * canvas — required to embed it in the PDF — is a genuine browser security
+ * restriction (the Canvas "tainted" rule) for any cross-origin image whose
+ * server doesn't opt in with CORS headers. Most ordinary image hosts don't.
+ * There is no client-side workaround for this; the actionable fix is to
+ * upload the logo file directly instead of pasting a URL, since an uploaded
+ * file becomes a data: URL that never touches the network and never taints.
+ */
+async function loadLogo(
+  src: string,
+  timeoutMs = 6000
+): Promise<{ logo: LoadedLogo | null; warning: string | null }> {
+  // data: URLs never touch the network and are never cross-origin — skip the
+  // CORS-mode attempt entirely so a locally-uploaded logo resolves in one pass.
+  if (src.startsWith("data:")) {
+    const result = await attemptLoadLogo(src, false, timeoutMs);
+    return result.status === "ok"
+      ? { logo: result.logo, warning: null }
+      : { logo: null, warning: "The logo image couldn't be read — it may be corrupted. It was left out of the PDF." };
+  }
+
+  const viaCors = await attemptLoadLogo(src, true, timeoutMs);
+  if (viaCors.status === "ok") return { logo: viaCors.logo, warning: null };
+
+  const viaPlain = await attemptLoadLogo(src, false, timeoutMs);
+  if (viaPlain.status === "ok") return { logo: viaPlain.logo, warning: null };
+
+  if (viaPlain.status === "tainted" || viaCors.status === "tainted") {
+    return {
+      logo: null,
+      warning:
+        "The logo couldn't be embedded because that image's host doesn't allow cross-origin access. It was left out of the PDF — try uploading the logo file directly instead of pasting a URL.",
+    };
+  }
+  return {
+    logo: null,
+    warning: "The logo URL couldn't be loaded (it may be unreachable or invalid). It was left out of the PDF.",
+  };
 }
 
 interface TemplateContext {
@@ -229,8 +305,14 @@ interface TemplateContext {
   validItems: InvoiceItem[];
   /** Resolves a template's color slot (see TEMPLATE_COLOR_SLOTS) to a jsPDF
    * [r, g, b] triple, applying the invoice's customColors override if set,
-   * else that slot's built-in default. Not used by the Clean renderer. */
+   * else that slot's built-in default — using the slot's darkDefault instead
+   * when Invoice Theme is Dark and there's no override. Not used by Clean. */
   color: (template: ColorizableTemplateArg, slotKey: string) => [number, number, number];
+  /** The invoice's own "Invoice Theme" setting (Customize Invoice section) —
+   * true when Dark. Independent of the app's own UI theme. Every colorizable
+   * template (all but Clean, which has its own isDarkMode handling) uses
+   * this to paint a dark page background and flip neutral chrome. */
+  isDark: boolean;
 }
 
 // Local alias so TemplateContext doesn't need to import ColorizableTemplate
@@ -255,6 +337,17 @@ function renderClassicTemplate(ctx: TemplateContext) {
     border: ctx.color("classic", "border"),
     headerFill: ctx.color("classic", "headerFill"),
   };
+  const SURFACES = TEMPLATE_DARK_SURFACES.classic;
+  const PAGE_BG = hexToRgb(SURFACES.pageBg);
+  const ZEBRA = ctx.isDark ? hexToRgb(SURFACES.surface) : ([248, 248, 248] as [number, number, number]);
+
+  const paintBackground = (targetPage?: number) => {
+    if (!ctx.isDark) return;
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...PAGE_BG);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  };
+  paintBackground();
 
   let yPos = margin + 4;
   const headerTop = yPos;
@@ -372,6 +465,12 @@ function renderClassicTemplate(ctx: TemplateContext) {
     formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
+  // See the identical comment in renderSidebarTemplate: didDrawPage fires for
+  // every page the table touches, including the page the header/billing
+  // section above was already drawn on — repainting that page's background
+  // there would draw over that content. Only repaint pages autoTable adds.
+  const tableStartPage = doc.getCurrentPageInfo().pageNumber;
+
   autoTable(doc, {
     startY: yPos,
     head: [["Item Description", "Qty", "Unit Price", "Total"]],
@@ -392,7 +491,7 @@ function renderClassicTemplate(ctx: TemplateContext) {
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
     },
     alternateRowStyles: {
-      fillColor: [248, 248, 248],
+      fillColor: ZEBRA,
     },
     styles: {
       font: FONT_FAMILY,
@@ -400,6 +499,7 @@ function renderClassicTemplate(ctx: TemplateContext) {
       lineColor: BRAND.border,
       lineWidth: 0.3,
       overflow: "linebreak",
+      textColor: BRAND.dark,
     },
     columnStyles: {
       0: { cellWidth: "auto", halign: "left" },
@@ -415,6 +515,12 @@ function renderClassicTemplate(ctx: TemplateContext) {
         }
       }
     },
+    didDrawPage: () => {
+      const currentPage = doc.getCurrentPageInfo().pageNumber;
+      if (currentPage !== tableStartPage) {
+        paintBackground(currentPage);
+      }
+    },
   });
 
   yPos = getLastAutoTableFinalY(doc) + 10;
@@ -422,6 +528,7 @@ function renderClassicTemplate(ctx: TemplateContext) {
   const summaryBlockHeight = 55;
   if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
     doc.addPage();
+    paintBackground();
     yPos = margin + 8;
   }
 
@@ -485,6 +592,7 @@ function renderClassicTemplate(ctx: TemplateContext) {
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {
       doc.addPage();
+      paintBackground();
       yPos = margin + 8;
     }
     doc.setFont(FONT_FAMILY, "bold");
@@ -524,8 +632,9 @@ function renderClassicTemplate(ctx: TemplateContext) {
 // giant thin page title, a label/value metadata grid, a two-column Billed
 // By/To split with a vertical divider, a borderless items table with plain
 // text headers, monospaced numeric columns, and an "Invoice Total (in
-// words)" line. Background flips black/white with the app's own theme
-// toggle (invoice.isDarkMode), rather than always being black.
+// words)" line. Background flips black/white with the invoice's own
+// "Invoice Theme" setting (invoice.isDarkMode) — independent of the app's
+// own UI theme — defaulting to light rather than always being black.
 // ---------------------------------------------------------------------------
 function renderCleanTemplate(ctx: TemplateContext) {
   const { doc, invoice, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
@@ -843,7 +952,17 @@ function renderModernTemplate(ctx: TemplateContext) {
   const POP = ctx.color("modern", "pop"); // vivid accent for total/highlights
   const INK = ctx.color("modern", "ink");
   const MUTED = ctx.color("modern", "muted");
-  const SOFT_FILL = [244, 244, 246] as [number, number, number];
+  const SURFACES = TEMPLATE_DARK_SURFACES.modern;
+  const PAGE_BG = hexToRgb(SURFACES.pageBg);
+  const SOFT_FILL = ctx.isDark ? hexToRgb(SURFACES.surface) : ([244, 244, 246] as [number, number, number]);
+
+  const paintBackground = (targetPage?: number) => {
+    if (!ctx.isDark) return;
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...PAGE_BG);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  };
+  paintBackground();
 
   const bannerHeight = 46;
   doc.setFillColor(...ACCENT);
@@ -980,6 +1099,11 @@ function renderModernTemplate(ctx: TemplateContext) {
     formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
+  // See the identical comment in renderSidebarTemplate: didDrawPage fires for
+  // every page the table touches, including the page the banner/chips above
+  // were already drawn on — only repaint pages autoTable itself adds.
+  const tableStartPage = doc.getCurrentPageInfo().pageNumber;
+
   autoTable(doc, {
     startY: yPos,
     head: [["ITEM", "QTY", "PRICE", "TOTAL"]],
@@ -1024,6 +1148,12 @@ function renderModernTemplate(ctx: TemplateContext) {
         }
       }
     },
+    didDrawPage: () => {
+      const currentPage = doc.getCurrentPageInfo().pageNumber;
+      if (currentPage !== tableStartPage) {
+        paintBackground(currentPage);
+      }
+    },
   });
 
   yPos = getLastAutoTableFinalY(doc) + 10;
@@ -1031,6 +1161,7 @@ function renderModernTemplate(ctx: TemplateContext) {
   const summaryBlockHeight = 60;
   if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
     doc.addPage();
+    paintBackground();
     yPos = margin + 8;
   }
 
@@ -1094,6 +1225,7 @@ function renderModernTemplate(ctx: TemplateContext) {
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {
       doc.addPage();
+      paintBackground();
       yPos = margin + 8;
     }
     doc.setFont(FONT_FAMILY, "bold");
@@ -1108,10 +1240,11 @@ function renderModernTemplate(ctx: TemplateContext) {
     doc.text(noteLines, margin, yPos);
   }
 
+  const FOOTER_LINE = ctx.isDark ? ([50, 50, 54] as [number, number, number]) : ([230, 230, 235] as [number, number, number]);
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setDrawColor(230, 230, 235);
+    doc.setDrawColor(...FOOTER_LINE);
     doc.setLineWidth(0.3);
     doc.line(margin, pageHeight - 16, pageWidth - margin, pageHeight - 16);
 
@@ -1143,7 +1276,17 @@ function renderElegantTemplate(ctx: TemplateContext) {
   const MUTED = ctx.color("elegant", "muted");
   const GOLD = ctx.color("elegant", "gold");
   const RULE = ctx.color("elegant", "rule");
-  const FAINT_FILL = [250, 248, 244] as [number, number, number];
+  const SURFACES = TEMPLATE_DARK_SURFACES.elegant;
+  const PAGE_BG = hexToRgb(SURFACES.pageBg);
+  const FAINT_FILL = ctx.isDark ? hexToRgb(SURFACES.surface) : ([250, 248, 244] as [number, number, number]);
+
+  const paintBackground = (targetPage?: number) => {
+    if (!ctx.isDark) return;
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...PAGE_BG);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  };
+  paintBackground();
 
   let yPos = margin + 2;
 
@@ -1267,6 +1410,11 @@ function renderElegantTemplate(ctx: TemplateContext) {
     formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
+  // See the identical comment in renderSidebarTemplate: didDrawPage fires for
+  // every page the table touches, including the page the letterhead/billing
+  // section above was already drawn on — only repaint pages autoTable adds.
+  const tableStartPage = doc.getCurrentPageInfo().pageNumber;
+
   autoTable(doc, {
     startY: yPos,
     head: [["Description", "Qty", "Rate", "Amount"]],
@@ -1319,6 +1467,12 @@ function renderElegantTemplate(ctx: TemplateContext) {
         doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
       }
     },
+    didDrawPage: () => {
+      const currentPage = doc.getCurrentPageInfo().pageNumber;
+      if (currentPage !== tableStartPage) {
+        paintBackground(currentPage);
+      }
+    },
   });
 
   yPos = getLastAutoTableFinalY(doc) + 10;
@@ -1326,6 +1480,7 @@ function renderElegantTemplate(ctx: TemplateContext) {
   const summaryBlockHeight = 62;
   if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
     doc.addPage();
+    paintBackground();
     yPos = margin + 8;
   }
 
@@ -1391,6 +1546,7 @@ function renderElegantTemplate(ctx: TemplateContext) {
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {
       doc.addPage();
+      paintBackground();
       yPos = margin + 8;
     }
     doc.setFillColor(...FAINT_FILL);
@@ -1441,7 +1597,11 @@ function renderSidebarTemplate(ctx: TemplateContext) {
   const POP = ctx.color("sidebar", "pop"); // warm amber accent by default
   const INK = ctx.color("sidebar", "ink");
   const MUTED = ctx.color("sidebar", "muted");
-  const LINE = [228, 228, 228] as [number, number, number];
+  const SURFACES = TEMPLATE_DARK_SURFACES.sidebar;
+  const MAIN_BG = hexToRgb(SURFACES.pageBg);
+  const TABLE_HEAD_FILL = ctx.isDark ? hexToRgb(SURFACES.surface) : ([244, 244, 242] as [number, number, number]);
+  const ZEBRA = ctx.isDark ? hexToRgb(SURFACES.surfaceAlt) : ([250, 250, 249] as [number, number, number]);
+  const LINE = ctx.isDark ? ([55, 55, 58] as [number, number, number]) : ([228, 228, 228] as [number, number, number]);
 
   const sidebarWidth = 58;
   const mainMargin = margin;
@@ -1453,7 +1613,18 @@ function renderSidebarTemplate(ctx: TemplateContext) {
     doc.setFillColor(...SIDEBAR);
     doc.rect(0, 0, sidebarWidth, pageHeight, "F");
   };
+  // The main (right) column is plain white in light mode (the page's own
+  // background, left unpainted), but needs an explicit dark fill of its own
+  // in dark mode — separate from the sidebar strip, which is already always
+  // colored regardless of theme.
+  const paintMain = (targetPage?: number) => {
+    if (!ctx.isDark) return;
+    if (typeof targetPage === "number") doc.setPage(targetPage);
+    doc.setFillColor(...MAIN_BG);
+    doc.rect(sidebarWidth, 0, pageWidth - sidebarWidth, pageHeight, "F");
+  };
   paintSidebar();
+  paintMain();
 
   let sy = margin + 2;
   const sPad = 10;
@@ -1583,6 +1754,17 @@ function renderSidebarTemplate(ctx: TemplateContext) {
     formatCurrency(item.quantity * item.price, currency, currencyCode),
   ]);
 
+  // autoTable's didDrawPage callback fires once for EVERY page the table
+  // touches, including the page it started on — which, here, already has the
+  // sidebar's logo/company name/metadata/Bill To manually drawn on it above.
+  // Repainting that page's sidebar again would draw a solid fill rectangle
+  // directly on top of that text, silently erasing it. Capture the starting
+  // page number and only repaint pages *after* it — i.e. pages autoTable
+  // actually added itself when the table overflowed — which is the only
+  // case this repaint is meant to handle (addPage() otherwise leaves those
+  // pages' sidebar area blank white).
+  const tableStartPage = doc.getCurrentPageInfo().pageNumber;
+
   autoTable(doc, {
     startY: yPos,
     head: [["Item", "Qty", "Price", "Total"]],
@@ -1591,7 +1773,7 @@ function renderSidebarTemplate(ctx: TemplateContext) {
     theme: "plain",
     tableWidth: mainWidth,
     headStyles: {
-      fillColor: [244, 244, 242],
+      fillColor: TABLE_HEAD_FILL,
       textColor: INK,
       fontStyle: "bold",
       fontSize: 9,
@@ -1603,7 +1785,7 @@ function renderSidebarTemplate(ctx: TemplateContext) {
       cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
     },
     alternateRowStyles: {
-      fillColor: [250, 250, 249],
+      fillColor: ZEBRA,
     },
     styles: {
       font: FONT_FAMILY,
@@ -1626,11 +1808,17 @@ function renderSidebarTemplate(ctx: TemplateContext) {
         }
       }
     },
-    // Repaint the sidebar on any page autoTable adds internally (e.g. when a
-    // large items table spans multiple pages), since addPage() would
-    // otherwise leave subsequent pages blank-white.
+    // Repaint the sidebar (and, in dark mode, the main column) only on pages
+    // autoTable added internally (e.g. when a large items table spans
+    // multiple pages), since addPage() would otherwise leave those pages'
+    // sidebar/main area blank white. Never repaint the starting page — see
+    // comment above.
     didDrawPage: () => {
-      paintSidebar(doc.getCurrentPageInfo().pageNumber);
+      const currentPage = doc.getCurrentPageInfo().pageNumber;
+      if (currentPage !== tableStartPage) {
+        paintSidebar(currentPage);
+        paintMain(currentPage);
+      }
     },
   });
 
@@ -1640,6 +1828,7 @@ function renderSidebarTemplate(ctx: TemplateContext) {
   if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
     doc.addPage();
     paintSidebar();
+    paintMain();
     yPos = margin + 8;
   }
 
@@ -1701,6 +1890,7 @@ function renderSidebarTemplate(ctx: TemplateContext) {
     if (yPos + 20 > pageHeight - footerReserve) {
       doc.addPage();
       paintSidebar();
+      paintMain();
       yPos = margin + 8;
     }
     doc.setFont(FONT_FAMILY, "bold");
@@ -1732,7 +1922,13 @@ function renderSidebarTemplate(ctx: TemplateContext) {
   }
 }
 
-export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void> {
+/**
+ * Generates and downloads the invoice PDF. Resolves with `{ warning }` set to
+ * a user-facing message when something non-fatal was skipped (currently: the
+ * logo couldn't be embedded) — the caller is expected to surface this (e.g.
+ * as a toast) so a missing logo is never a silent, confusing surprise.
+ */
+export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ warning: string | null }> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   registerFonts(doc);
   doc.setFont(FONT_FAMILY, "normal");
@@ -1744,11 +1940,15 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
   const footerReserve = 20;
 
   let logo: LoadedLogo | null = null;
+  let logoWarning: string | null = null;
   if (invoice.companyLogo) {
-    logo = await loadLogo(invoice.companyLogo);
+    const result = await loadLogo(invoice.companyLogo);
+    logo = result.logo;
+    logoWarning = result.warning;
   }
 
   const validItems = invoice.items.filter((item) => item.name && item.name.trim() !== "");
+  const isDark = !!invoice.isDarkMode;
 
   const ctx: TemplateContext = {
     doc,
@@ -1762,7 +1962,8 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
     currency: invoice.currencySymbol,
     currencyCode: invoice.currencyCode,
     validItems,
-    color: (template, slotKey) => hexToRgb(resolveColor(template, slotKey, invoice.customColors)),
+    color: (template, slotKey) => hexToRgb(resolveColor(template, slotKey, invoice.customColors, isDark)),
+    isDark,
   };
 
   switch (invoice.template) {
@@ -1786,4 +1987,6 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<void>
 
   const safeInvoiceNumber = (invoice.invoiceNumber || "invoice").replace(/[^a-zA-Z0-9-_]/g, "");
   doc.save(`${safeInvoiceNumber}.pdf`);
+
+  return { warning: logoWarning };
 }
