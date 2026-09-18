@@ -4,12 +4,7 @@ import Reveal from './Reveal'
 import { GALLERY_ITEMS } from '../data/content'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ZoomIcon } from './Icons'
 
-const IMAGE_MODULES = import.meta.glob('../Assets/*.png', { eager: true, import: 'default' })
-
-function resolveImage(filename) {
-  const match = Object.entries(IMAGE_MODULES).find(([path]) => path.endsWith(`/${filename}`))
-  return match ? match[1] : ''
-}
+const resolveImage = (filename) => new URL(`../Assets/${filename}`, import.meta.url).href
 
 export default function Gallery() {
   const [activeIndex, setActiveIndex] = useState(null)

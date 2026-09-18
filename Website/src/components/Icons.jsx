@@ -51,14 +51,6 @@ export function ArrowRightIcon({ size = 17 }) {
   )
 }
 
-export function PlayIcon({ size = 10 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  )
-}
-
 export function BoltIcon({ size = 13 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--amber-ink)" stroke="none">
@@ -185,23 +177,6 @@ export function UpdatesIcon({ size = 15 }) {
       <line x1="17" y1="3" x2="15" y2="21" />
       <line x1="4" y1="9" x2="20" y2="9" />
       <line x1="3" y1="15" x2="19" y2="15" />
-    </svg>
-  )
-}
-
-export function MinusIcon({ size = 12 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  )
-}
-
-export function PlusIcon({ size = 12 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   )
 }

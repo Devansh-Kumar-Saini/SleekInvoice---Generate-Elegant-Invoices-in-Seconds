@@ -1,13 +1,28 @@
-import React from 'react'
-import { useReveal } from '../hooks/useReveal'
+import React, { useEffect, useRef, useState } from 'react'
 
-/**
- * Wraps children in a scroll-triggered fade/slide-up reveal.
- * Pass `as` to change the wrapper element, `delay` (1|2|3) to stagger,
- * and `className`/`style` are merged onto the wrapper.
- */
 export default function Reveal({ as: Tag = 'div', delay, className = '', style, children, ...rest }) {
-  const [ref, visible] = useReveal()
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const delayClass = delay ? ` reveal-d${delay}` : ''
   const classes = `reveal${delayClass}${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`
 

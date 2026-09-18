@@ -77,14 +77,3 @@ export const FAQS = [
   { q: 'Can I add my own logo and branding?', a: 'Absolutely. Drop in your logo and brand color on any plan — Forge Pro unlocks full custom themes and saved branding presets.' },
   { q: 'Can I cancel Forge Pro anytime?', a: 'Yes. It is a simple monthly plan with no contracts — cancel anytime and keep using the Free plan.' },
 ]
-
-export const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£' }
-
-export const DEFAULT_LINE_ITEMS = [
-  { id: 1, name: 'Landing page design', rate: 650, qty: 1 },
-  { id: 2, name: 'Extra revision round', rate: 120, qty: 2 },
-]
-
-export function formatMoney(n) {
-  return n.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
-}

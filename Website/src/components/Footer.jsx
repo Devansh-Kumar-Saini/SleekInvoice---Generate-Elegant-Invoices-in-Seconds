@@ -95,7 +95,7 @@ export default function Footer() {
             aria-hidden="true"
             style={{
               fontFamily: "'Outfit',sans-serif", fontWeight: 800,
-              fontSize: 'clamp(4.5rem, 15vw, 11.5rem)', lineHeight: 0.8,
+              fontSize: 'clamp(4.5rem, 15vw, 8rem)', lineHeight: 0.8,
               letterSpacing: '-0.02em', textAlign: 'center',
               color: 'var(--text-primary)', opacity: 0.08,
               whiteSpace: 'nowrap', userSelect: 'none',
