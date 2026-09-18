@@ -1,4 +1,3 @@
-import { Link } from "wouter";
 import { FileStack, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
@@ -10,7 +9,7 @@ export function Header() {
     <header className="border-b border-border bg-card sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          <Link href="/">
+          <a href="/">
             <div
               className="flex items-center gap-2.5 hover-elevate rounded-md px-3 py-2 -ml-3 cursor-pointer"
               data-testid="link-home"
@@ -22,7 +21,7 @@ export function Header() {
                 Invoice<span className="text-primary">Forge</span>
               </span>
             </div>
-          </Link>
+          </a>
 
           <Button
             variant="outline"

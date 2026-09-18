@@ -3,32 +3,15 @@
  * on-screen preview and the PDF generator so the two always agree.
  */
 
-// Currencies whose customary digit grouping is the Indian lakh/crore system
-// (1,00,000 instead of 100,000) rather than the international thousands system.
-const LAKH_GROUPED_CURRENCY_CODES = new Set(["INR"]);
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-/**
- * Groups the integer part of a number using the Indian numbering system:
- * the last 3 digits form one group, then every group after that is 2 digits
- * (10,00,000 = ten lakh; 1,00,00,000 = one crore). Assumes a non-negative,
- * already-rounded integer string (no sign, no decimal point).
- */
-function groupIndian(integerDigits: string): string {
-  if (integerDigits.length <= 3) return integerDigits;
-  const last3 = integerDigits.slice(-3);
-  let rest = integerDigits.slice(0, -3);
-  const groups: string[] = [];
-  while (rest.length > 2) {
-    groups.unshift(rest.slice(-2));
-    rest = rest.slice(0, -2);
-  }
-  if (rest.length > 0) groups.unshift(rest);
-  return `${groups.join(",")},${last3}`;
-}
-
-function groupInternational(integerDigits: string): string {
-  return integerDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+const intlFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 /**
  * Formats a currency amount, choosing Indian lakh/crore grouping for INR and
@@ -42,12 +25,8 @@ export function formatCurrencyAmount(
 ): string {
   const safe = Number.isFinite(amount) ? Math.abs(amount) : 0;
   const sign = amount < 0 ? "-" : "";
-  const [intPart, decPart] = safe.toFixed(2).split(".");
-  const grouped =
-    currencyCode && LAKH_GROUPED_CURRENCY_CODES.has(currencyCode)
-      ? groupIndian(intPart)
-      : groupInternational(intPart);
-  return `${sign}${symbol}${grouped}.${decPart}`;
+  const formatter = currencyCode === "INR" ? inrFormatter : intlFormatter;
+  return `${sign}${symbol}${formatter.format(safe)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +111,7 @@ function integerToWordsInternational(n: number): string {
 export function amountToWords(amount: number, currencyCode?: string): string {
   const whole = Math.floor(Math.abs(amount));
   const words =
-    currencyCode && LAKH_GROUPED_CURRENCY_CODES.has(currencyCode)
+    currencyCode === "INR"
       ? integerToWordsIndian(whole)
       : integerToWordsInternational(whole);
   return amount < 0 ? `negative ${words}` : words;

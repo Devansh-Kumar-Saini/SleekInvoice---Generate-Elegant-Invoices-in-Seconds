@@ -1,4 +1,3 @@
-import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Home } from "lucide-react";
@@ -17,12 +16,12 @@ export default function NotFound() {
             The page you're looking for doesn't exist.
           </p>
 
-          <Link href="/">
+          <a href="/">
             <Button variant="default" className="mt-6 w-full" data-testid="button-go-home">
               <Home className="w-4 h-4 mr-2" />
               Back to InvoiceForge
             </Button>
-          </Link>
+          </a>
         </CardContent>
       </Card>
     </div>

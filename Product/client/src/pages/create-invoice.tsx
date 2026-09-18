@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -101,6 +100,26 @@ function generateInvoiceNumber(): string {
   return `INV-${y}${m}${d}-${rand}`;
 }
 
+const initialFormValues: FormValues = {
+  companyName: "",
+  companyLogo: "",
+  companyAddress: "",
+  date: new Date().toISOString().split("T")[0],
+  customerName: "",
+  customerEmail: "",
+  customerPhone: "",
+  customerAddress: "",
+  category: "",
+  currency: "USD",
+  taxPercentage: 10,
+  discountType: "none",
+  discountValue: 0,
+  notes: "",
+  template: "classic",
+  customColors: {},
+  invoiceTheme: "light",
+};
+
 export default function CreateInvoice() {
   const [items, setItems] = useState<InvoiceItem[]>([
     { name: "", quantity: 1, price: 0, details: "" },
@@ -112,25 +131,17 @@ export default function CreateInvoice() {
   const [openSection, setOpenSection] = useState<string>("company");
   const { toast } = useToast();
 
-  const form = useForm<FormValues>({
-    defaultValues: {
-      companyName: "",
-      companyLogo: "",
-      companyAddress: "",
-      date: new Date().toISOString().split("T")[0],
-      customerName: "",
-      customerEmail: "",
-      customerPhone: "",
-      customerAddress: "",
-      category: "",
-      currency: "USD",
-      taxPercentage: 10,
-      discountType: "none",
-      discountValue: 0,
-      notes: "",
-      template: "classic",
-      customColors: {},
-      invoiceTheme: "light",
+  const [values, setValues] = useState<FormValues>(initialFormValues);
+
+  const updateField = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
+    setValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const register = (field: keyof FormValues, isNumber = false) => ({
+    value: values[field] as any,
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const val = isNumber ? (e.target.value === "" ? 0 : Number(e.target.value)) : e.target.value;
+      updateField(field, val as any);
     },
   });
 
@@ -139,20 +150,26 @@ export default function CreateInvoice() {
   // is what makes each template "remember" its own customization
   // independently rather than sharing one global accent.
   const setTemplateColor = (template: ColorizableTemplate, slotKey: string, value: string) => {
-    const current = form.getValues("customColors");
-    form.setValue("customColors", {
-      ...current,
-      [template]: { ...current[template], [slotKey]: value },
+    setValues((prev) => {
+      const current = prev.customColors;
+      return {
+        ...prev,
+        customColors: {
+          ...current,
+          [template]: { ...current[template], [slotKey]: value },
+        },
+      };
     });
   };
 
   // Clears all overrides for one template, reverting every one of its slots
   // back to that template's built-in defaults.
   const resetTemplateColors = (template: ColorizableTemplate) => {
-    const current = form.getValues("customColors");
-    const next = { ...current };
-    delete next[template];
-    form.setValue("customColors", next);
+    setValues((prev) => {
+      const next = { ...prev.customColors };
+      delete next[template];
+      return { ...prev, customColors: next };
+    });
   };
 
   // Functional setState updaters (rather than closing over the current
@@ -175,7 +192,7 @@ export default function CreateInvoice() {
   };
 
   const handleLogoUrlChange = (url: string) => {
-    form.setValue("companyLogo", url);
+    updateField("companyLogo", url);
     setLogoPreview(url);
   };
 
@@ -184,7 +201,7 @@ export default function CreateInvoice() {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      form.setValue("companyLogo", dataUrl);
+      updateField("companyLogo", dataUrl);
       setLogoPreview(dataUrl);
     };
     reader.onerror = () => {
@@ -197,13 +214,6 @@ export default function CreateInvoice() {
     reader.readAsDataURL(file);
   };
 
-  // A single watch() subscription for the whole render, rather than the ~15
-  // separate form.watch("field") calls previously scattered through this
-  // component and its JSX. Behavior is identical (the component still
-  // re-renders on every field change, same as before) but each render now
-  // reads from one already-computed object instead of re-invoking the
-  // watch proxy over a dozen times.
-  const values = form.watch();
   const { category, taxPercentage: watchedTax, discountType, discountValue: watchedDiscountValue, currency } = values;
 
   // For Consulting/Services, Qty isn't a natural fit (e.g. a flat-fee
@@ -236,7 +246,7 @@ export default function CreateInvoice() {
     return formatCurrencyAmount(amount, selectedCurrency?.symbol || "$", selectedCurrency?.code);
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
+  const handleSubmit = async () => {
     const validItems = items.filter((item) => item.name.trim() !== "");
     if (validItems.length === 0) {
       toast({
@@ -247,7 +257,7 @@ export default function CreateInvoice() {
       return;
     }
 
-    if (!data.companyName.trim() || !data.customerName.trim()) {
+    if (!values.companyName.trim() || !values.customerName.trim()) {
       toast({
         title: "Missing required details",
         description: "Company name and customer name are required.",
@@ -265,16 +275,16 @@ export default function CreateInvoice() {
       // this import dynamic keeps that weight out of the initial page load.
       const { generateInvoicePDF } = await import("@/lib/pdf-generator");
       const { warning } = await generateInvoicePDF({
-        companyName: data.companyName,
+        companyName: values.companyName,
         companyLogo: logoPreview || undefined,
-        companyAddress: data.companyAddress || undefined,
+        companyAddress: values.companyAddress || undefined,
         invoiceNumber,
-        date: data.date,
-        customerName: data.customerName,
-        customerEmail: data.customerEmail || undefined,
-        customerPhone: data.customerPhone || undefined,
-        customerAddress: data.customerAddress || undefined,
-        category: data.category || undefined,
+        date: values.date,
+        customerName: values.customerName,
+        customerEmail: values.customerEmail || undefined,
+        customerPhone: values.customerPhone || undefined,
+        customerAddress: values.customerAddress || undefined,
+        category: values.category || undefined,
         currencySymbol: selectedCurrency?.symbol || "$",
         currencyCode: selectedCurrency?.code,
         items: validItems,
@@ -285,10 +295,10 @@ export default function CreateInvoice() {
           discountType === "percentage" ? `Discount (${discountValue}%)` : "Discount",
         discount,
         grandTotal,
-        notes: data.notes || undefined,
-        template: data.template,
-        isDarkMode: data.invoiceTheme === "dark",
-        customColors: data.customColors,
+        notes: values.notes || undefined,
+        template: values.template,
+        isDarkMode: values.invoiceTheme === "dark",
+        customColors: values.customColors,
       });
 
       if (warning) {
@@ -316,10 +326,13 @@ export default function CreateInvoice() {
     } finally {
       setIsGenerating(false);
     }
-  });
+  };
 
   const handleClearForm = () => {
-    form.reset();
+    setValues({
+      ...initialFormValues,
+      date: new Date().toISOString().split("T")[0],
+    });
     setItems([{ name: "", quantity: 1, price: 0, details: "" }]);
     setLogoPreview("");
     setInvoiceNumber(generateInvoiceNumber());
@@ -365,7 +378,7 @@ export default function CreateInvoice() {
                     id="companyName"
                     data-testid="input-company-name"
                     placeholder="Enter your company name"
-                    {...form.register("companyName")}
+                    {...register("companyName")}
                     className="h-12"
                   />
                 </div>
@@ -418,7 +431,7 @@ export default function CreateInvoice() {
                     id="companyAddress"
                     data-testid="input-company-address"
                     placeholder="Enter your company address"
-                    {...form.register("companyAddress")}
+                    {...register("companyAddress")}
                     className="min-h-24 resize-none"
                   />
                 </div>
@@ -454,7 +467,7 @@ export default function CreateInvoice() {
                     id="date"
                     data-testid="input-date"
                     type="date"
-                    {...form.register("date")}
+                    {...register("date")}
                     className="h-12"
                   />
                 </div>
@@ -465,7 +478,7 @@ export default function CreateInvoice() {
                   </Label>
                   <Select
                     value={values.category}
-                    onValueChange={(value) => form.setValue("category", value)}
+                    onValueChange={(value) => updateField("category", value)}
                   >
                     <SelectTrigger id="category" data-testid="select-category" className="h-12">
                       <SelectValue placeholder="Select category" />
@@ -490,7 +503,7 @@ export default function CreateInvoice() {
                   </Label>
                   <Select
                     value={values.currency}
-                    onValueChange={(value) => form.setValue("currency", value)}
+                    onValueChange={(value) => updateField("currency", value)}
                   >
                     <SelectTrigger id="currency" data-testid="select-currency" className="h-12">
                       <SelectValue />
@@ -515,7 +528,7 @@ export default function CreateInvoice() {
                   </Label>
                   <Select
                     value={values.template}
-                    onValueChange={(value) => form.setValue("template", value as InvoiceTemplate)}
+                    onValueChange={(value) => updateField("template", value as InvoiceTemplate)}
                   >
                     <SelectTrigger id="template" data-testid="select-template" className="h-12">
                       <SelectValue />
@@ -560,7 +573,7 @@ export default function CreateInvoice() {
                   </Label>
                   <Select
                     value={values.invoiceTheme}
-                    onValueChange={(value) => form.setValue("invoiceTheme", value as "light" | "dark")}
+                    onValueChange={(value) => updateField("invoiceTheme", value as "light" | "dark")}
                   >
                     <SelectTrigger id="invoiceTheme" data-testid="select-invoice-theme" className="h-12 max-w-xs">
                       <SelectValue />
@@ -664,7 +677,7 @@ export default function CreateInvoice() {
                     id="customerName"
                     data-testid="input-customer-name"
                     placeholder="Enter customer name"
-                    {...form.register("customerName")}
+                    {...register("customerName")}
                     className="h-12"
                   />
                 </div>
@@ -679,7 +692,7 @@ export default function CreateInvoice() {
                       data-testid="input-customer-email"
                       type="email"
                       placeholder="customer@example.com"
-                      {...form.register("customerEmail")}
+                      {...register("customerEmail")}
                       className="h-12"
                     />
                   </div>
@@ -692,7 +705,7 @@ export default function CreateInvoice() {
                       id="customerPhone"
                       data-testid="input-customer-phone"
                       placeholder="+1 (555) 123-4567"
-                      {...form.register("customerPhone")}
+                      {...register("customerPhone")}
                       className="h-12"
                     />
                   </div>
@@ -706,7 +719,7 @@ export default function CreateInvoice() {
                     id="customerAddress"
                     data-testid="input-customer-address"
                     placeholder="Enter customer address"
-                    {...form.register("customerAddress")}
+                    {...register("customerAddress")}
                     className="min-h-24 resize-none"
                   />
                 </div>
@@ -840,9 +853,7 @@ export default function CreateInvoice() {
                       min="0"
                       max="100"
                       step="0.01"
-                      {...form.register("taxPercentage", {
-                        valueAsNumber: true,
-                      })}
+                      {...register("taxPercentage", true)}
                       className="h-12"
                     />
                   </div>
@@ -853,7 +864,7 @@ export default function CreateInvoice() {
                     </Label>
                     <Select
                       value={values.discountType}
-                      onValueChange={(value) => form.setValue("discountType", value as any)}
+                      onValueChange={(value) => updateField("discountType", value as any)}
                     >
                       <SelectTrigger
                         id="discountType"
@@ -883,9 +894,7 @@ export default function CreateInvoice() {
                       type="number"
                       min="0"
                       step="0.01"
-                      {...form.register("discountValue", {
-                        valueAsNumber: true,
-                      })}
+                      {...register("discountValue", true)}
                       className="h-12"
                     />
                   </div>
@@ -899,7 +908,7 @@ export default function CreateInvoice() {
                     id="notes"
                     data-testid="input-notes"
                     placeholder="Payment terms, thank-you message, etc."
-                    {...form.register("notes")}
+                    {...register("notes")}
                     className="min-h-20 resize-none"
                   />
                 </div>
