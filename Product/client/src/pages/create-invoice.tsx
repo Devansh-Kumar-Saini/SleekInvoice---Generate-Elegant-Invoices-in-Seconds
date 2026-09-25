@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Accordion } from "@/components/ui/accordion";
 import { InvoicePreview } from "@/components/invoice-preview";
 import {
@@ -28,10 +28,7 @@ export default function CreateInvoice() {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
-  // Only one form section is expanded at a time; "Company Information" opens first.
   const [openSection, setOpenSection] = useState<string>("company");
-  const { toast } = useToast();
-
   const [values, setValues] = useState<FormValues>(initialFormValues);
 
   const updateField = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
@@ -150,7 +147,7 @@ export default function CreateInvoice() {
     setIsGenerating(true);
 
     try {
-      const { generateInvoicePDF } = await import("@/lib/pdf-generator");
+      const { generateInvoicePDF } = await import("@/lib/pdf");
       const { warning } = await generateInvoicePDF({
         companyName: values.companyName,
         companyLogo: logoPreview || undefined,

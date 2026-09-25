@@ -2,13 +2,7 @@ import { Palette, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   INVOICE_TEMPLATES,
@@ -55,20 +49,18 @@ export function CustomizeSection({
               Invoice Theme
             </Label>
             <Select
+              id="invoiceTheme"
+              data-testid="select-invoice-theme"
               value={values.invoiceTheme}
-              onValueChange={(value) => updateField("invoiceTheme", value as "light" | "dark")}
+              onChange={(e) => updateField("invoiceTheme", e.target.value as "light" | "dark")}
+              className="h-12 max-w-xs"
             >
-              <SelectTrigger id="invoiceTheme" data-testid="select-invoice-theme" className="h-12 max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light" data-testid="option-invoice-theme-light">
-                  Light
-                </SelectItem>
-                <SelectItem value="dark" data-testid="option-invoice-theme-dark">
-                  Dark
-                </SelectItem>
-              </SelectContent>
+              <option value="light" data-testid="option-invoice-theme-light">
+                Light
+              </option>
+              <option value="dark" data-testid="option-invoice-theme-dark">
+                Dark
+              </option>
             </Select>
             <p className="text-xs text-muted-foreground">
               Sets the background and text color of this invoice — applies to every template, in both the

@@ -1,4 +1,4 @@
-import { type InvoiceItem } from "@/types/invoice";
+import { type InvoiceItem, currencies as currencyList } from "@/types/invoice";
 import {
   type InvoiceTemplate,
   type ColorizableTemplate,
@@ -55,32 +55,8 @@ export function colorsFor(
   }
   return result;
 }
+export const currencies: Record<string, string> = Object.fromEntries(
+  currencyList.map((c) => [c.code, c.symbol])
+);
 
-export const currencies: Record<string, string> = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  JPY: "¥",
-  INR: "₹",
-};
-
-export function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-/** DD/MM/YYYY, matching the Clean template's metadata grid date format. */
-export function formatDateSlash(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const year = d.getUTCFullYear();
-  return `${day}/${month}/${year}`;
-}
+export { formatDate, formatDateSlash } from "@/lib/invoice-format";

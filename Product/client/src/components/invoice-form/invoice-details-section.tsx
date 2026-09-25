@@ -1,12 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { INVOICE_TEMPLATES, type InvoiceTemplate } from "@/lib/pdf-templates";
 import { categories, currencies, type FormValues } from "@/types/invoice";
@@ -66,23 +60,22 @@ export function InvoiceDetailsSection({
               Category
             </Label>
             <Select
+              id="category"
+              data-testid="select-category"
               value={values.category}
-              onValueChange={(value) => updateField("category", value)}
+              onChange={(e) => updateField("category", e.target.value)}
+              className="h-12"
             >
-              <SelectTrigger id="category" data-testid="select-category" className="h-12">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem
-                    key={cat}
-                    value={cat}
-                    data-testid={`option-category-${cat.toLowerCase()}`}
-                  >
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              <option value="" disabled>Select category</option>
+              {categories.map((cat) => (
+                <option
+                  key={cat}
+                  value={cat}
+                  data-testid={`option-category-${cat.toLowerCase()}`}
+                >
+                  {cat}
+                </option>
+              ))}
             </Select>
           </div>
 
@@ -91,23 +84,21 @@ export function InvoiceDetailsSection({
               Currency *
             </Label>
             <Select
+              id="currency"
+              data-testid="select-currency"
               value={values.currency}
-              onValueChange={(value) => updateField("currency", value)}
+              onChange={(e) => updateField("currency", e.target.value)}
+              className="h-12"
             >
-              <SelectTrigger id="currency" data-testid="select-currency" className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((curr) => (
-                  <SelectItem
-                    key={curr.code}
-                    value={curr.code}
-                    data-testid={`option-currency-${curr.code.toLowerCase()}`}
-                  >
-                    {curr.symbol} {curr.code} - {curr.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              {currencies.map((curr) => (
+                <option
+                  key={curr.code}
+                  value={curr.code}
+                  data-testid={`option-currency-${curr.code.toLowerCase()}`}
+                >
+                  {curr.symbol} {curr.code} - {curr.name}
+                </option>
+              ))}
             </Select>
           </div>
 
@@ -116,23 +107,21 @@ export function InvoiceDetailsSection({
               PDF Template
             </Label>
             <Select
+              id="template"
+              data-testid="select-template"
               value={values.template}
-              onValueChange={(value) => updateField("template", value as InvoiceTemplate)}
+              onChange={(e) => updateField("template", e.target.value as InvoiceTemplate)}
+              className="h-12"
             >
-              <SelectTrigger id="template" data-testid="select-template" className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {INVOICE_TEMPLATES.map((tpl) => (
-                  <SelectItem
-                    key={tpl.id}
-                    value={tpl.id}
-                    data-testid={`option-template-${tpl.id}`}
-                  >
-                    {tpl.label} — {tpl.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              {INVOICE_TEMPLATES.map((tpl) => (
+                <option
+                  key={tpl.id}
+                  value={tpl.id}
+                  data-testid={`option-template-${tpl.id}`}
+                >
+                  {tpl.label} — {tpl.description}
+                </option>
+              ))}
             </Select>
           </div>
         </div>

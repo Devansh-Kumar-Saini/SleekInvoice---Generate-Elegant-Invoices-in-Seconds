@@ -1,13 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { type FormValues, type CurrencyOption } from "@/types/invoice";
 
@@ -71,17 +65,15 @@ export function CalculationsSection({
                 Discount Type
               </Label>
               <Select
+                id="discountType"
+                data-testid="select-discount-type"
                 value={values.discountType}
-                onValueChange={(value) => updateField("discountType", value as any)}
+                onChange={(e) => updateField("discountType", e.target.value as any)}
+                className="h-12"
               >
-                <SelectTrigger id="discountType" data-testid="select-discount-type" className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Discount</SelectItem>
-                  <SelectItem value="flat">Flat Amount</SelectItem>
-                  <SelectItem value="percentage">Percentage</SelectItem>
-                </SelectContent>
+                <option value="none">No Discount</option>
+                <option value="flat">Flat Amount</option>
+                <option value="percentage">Percentage</option>
               </Select>
             </div>
           </div>

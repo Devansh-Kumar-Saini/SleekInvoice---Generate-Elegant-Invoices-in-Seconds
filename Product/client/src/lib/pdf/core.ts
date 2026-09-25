@@ -7,7 +7,7 @@ import {
   SPACE_MONO_BOLD_BASE64,
   SPACE_MONO_REGULAR_BASE64,
 } from "../pdf-fonts";
-import { formatCurrencyAmount } from "../invoice-format";
+import { formatCurrencyAmount, formatDate, formatDateSlash } from "../invoice-format";
 import {
   type InvoiceTemplate,
   type CustomColors,
@@ -15,7 +15,7 @@ import {
 } from "../pdf-templates";
 
 export type { InvoiceTemplate, CustomColors };
-export { INVOICE_TEMPLATES };
+export { INVOICE_TEMPLATES, formatCurrencyAmount as formatCurrency, formatDate, formatDateSlash };
 
 export const FONT_FAMILY = "NotoSans";
 export const FONT_FAMILY_MONO = "SpaceMono";
@@ -81,31 +81,6 @@ export interface InvoicePdfData {
   customColors?: CustomColors;
 }
 
-export function formatCurrency(amount: number, symbol: string, currencyCode?: string): string {
-  return formatCurrencyAmount(amount, symbol, currencyCode);
-}
-
-export function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-/** DD/MM/YYYY, matching the reference invoice's metadata grid date format. */
-export function formatDateSlash(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const year = d.getUTCFullYear();
-  return `${day}/${month}/${year}`;
-}
 
 // ---------------------------------------------------------------------------
 // Small vector icons drawn with jsPDF's own line/shape primitives (mail,

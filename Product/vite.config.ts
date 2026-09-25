@@ -8,8 +8,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client/src"),
-      "@assets": path.resolve(__dirname, "attached_assets")
+      "@": path.resolve(__dirname, "client/src")
     }
   },
   root: path.resolve(__dirname, "client"),
@@ -18,16 +17,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        // Split the eagerly-loaded entry chunk so the browser can cache
-        // slow-changing vendor code (React, Radix UI primitives) separately
-        // from app code that changes on every deploy.
         manualChunks: {
           "vendor-react": ["react", "react-dom"],
-          "vendor-radix": [
-            "@radix-ui/react-select",
-            "@radix-ui/react-label",
-          ],
-          "vendor-toast": ["react-toastify"],
         },
       },
     },

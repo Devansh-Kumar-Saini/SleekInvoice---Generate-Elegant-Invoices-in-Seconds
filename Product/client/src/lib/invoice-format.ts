@@ -29,6 +29,27 @@ export function formatCurrencyAmount(
   return `${sign}${symbol}${formatter.format(safe)}`;
 }
 
+export function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/** DD/MM/YYYY, matching the Clean template's metadata grid date format. */
+export function formatDateSlash(dateStr: string): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 // ---------------------------------------------------------------------------
 // Number to words (Indian numbering scale: lakh/crore) — used for the
 // "Invoice Total (in words)" line shown on the reference invoice.

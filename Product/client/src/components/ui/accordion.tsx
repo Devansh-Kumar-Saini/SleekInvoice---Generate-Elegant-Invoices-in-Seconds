@@ -1,28 +1,19 @@
-import * as React from "react"
-import { ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface AccordionContextValue {
-  value: string;
-  onValueChange: (val: string) => void;
+interface AccordionContextType {
+  value?: string;
+  onValueChange?: (val: string) => void;
 }
 
-const AccordionContext = React.createContext<AccordionContextValue>({
-  value: "",
-  onValueChange: () => {},
-});
-
-const AccordionItemContext = React.createContext<{ value: string; isOpen: boolean }>({
-  value: "",
-  isOpen: false,
-});
+const AccordionContext = React.createContext<AccordionContextType>({});
 
 export function Accordion({
   value,
   onValueChange,
   className,
   children,
-  ...props
 }: {
   value?: string;
   onValueChange?: (val: string) => void;
@@ -31,28 +22,26 @@ export function Accordion({
   [key: string]: any;
 }) {
   return (
-    <AccordionContext.Provider
-      value={{
-        value: value || "",
-        onValueChange: onValueChange || (() => {}),
-      }}
-    >
-      <div className={className} {...props}>
-        {children}
-      </div>
+    <AccordionContext.Provider value={{ value, onValueChange }}>
+      <div className={className}>{children}</div>
     </AccordionContext.Provider>
   );
 }
+
+const ItemContext = React.createContext<{ value: string; isOpen: boolean }>({
+  value: "",
+  isOpen: false,
+});
 
 export const AccordionItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { value: string }
 >(({ value, className, children, ...props }, ref) => {
-  const { value: activeValue } = React.useContext(AccordionContext);
-  const isOpen = activeValue === value;
+  const { value: active } = React.useContext(AccordionContext);
+  const isOpen = active === value;
 
   return (
-    <AccordionItemContext.Provider value={{ value, isOpen }}>
+    <ItemContext.Provider value={{ value, isOpen }}>
       <div
         ref={ref}
         className={cn("border-b", className)}
@@ -61,7 +50,7 @@ export const AccordionItem = React.forwardRef<
       >
         {children}
       </div>
-    </AccordionItemContext.Provider>
+    </ItemContext.Provider>
   );
 });
 AccordionItem.displayName = "AccordionItem";
@@ -71,26 +60,28 @@ export const AccordionTrigger = React.forwardRef<
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, children, ...props }, ref) => {
   const { onValueChange } = React.useContext(AccordionContext);
-  const { value, isOpen } = React.useContext(AccordionItemContext);
+  const { value, isOpen } = React.useContext(ItemContext);
 
   return (
-    <div className="flex">
-      <button
-        ref={ref}
-        type="button"
-        onClick={() => onValueChange(isOpen ? "" : value)}
+    <button
+      ref={ref}
+      type="button"
+      onClick={() => onValueChange?.(isOpen ? "" : value)}
+      className={cn(
+        "flex w-full items-center justify-between py-4 font-medium transition-all hover:underline",
+        className
+      )}
+      data-state={isOpen ? "open" : "closed"}
+      {...props}
+    >
+      {children}
+      <ChevronDown
         className={cn(
-          "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline",
-          isOpen && "[&>svg]:rotate-180",
-          className
+          "h-4 w-4 shrink-0 transition-transform duration-200",
+          isOpen && "rotate-180"
         )}
-        data-state={isOpen ? "open" : "closed"}
-        {...props}
-      >
-        {children}
-        <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform duration-200", isOpen && "rotate-180")} />
-      </button>
-    </div>
+      />
+    </button>
   );
 });
 AccordionTrigger.displayName = "AccordionTrigger";
@@ -99,17 +90,12 @@ export const AccordionContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => {
-  const { isOpen } = React.useContext(AccordionItemContext);
+  const { isOpen } = React.useContext(ItemContext);
   if (!isOpen) return null;
 
   return (
-    <div
-      ref={ref}
-      className="overflow-hidden text-sm transition-all"
-      data-state="open"
-      {...props}
-    >
-      <div className={cn("pb-4 pt-0", className)}>{children}</div>
+    <div ref={ref} className={className} data-state="open" {...props}>
+      {children}
     </div>
   );
 });
