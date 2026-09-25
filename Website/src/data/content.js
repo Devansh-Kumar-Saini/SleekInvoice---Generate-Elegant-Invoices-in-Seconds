@@ -76,7 +76,8 @@ export const FAQS = [
   { q: 'Do I need to create an account to use InvoiceForge?', a: 'No. Build and download your first invoice with zero sign-up. Create an account only if you want to save clients, templates, or enable recurring invoices.' },
   { q: 'What formats can I export to?', a: 'Every invoice exports as a crisp, print-ready PDF in under a second. CSV export and shareable payment links are on the roadmap.' },
   { q: 'Does it handle multiple currencies and tax rules?', a: 'Yes — choose from 30+ currencies and InvoiceForge automatically calculates VAT, GST, and custom tax or discount rates per line item.' },
-  { q: 'Is my invoice data stored anywhere?', a: 'Free plan invoices stay local to your browser. Forge Pro securely syncs your clients, catalog, and invoice history so you can access them anywhere.' },
-  { q: 'Can I add my own logo and branding?', a: 'Absolutely. Drop in your logo and brand color on any plan — Forge Pro unlocks full custom themes and saved branding presets.' },
-  { q: 'Can I cancel Forge Pro anytime?', a: 'Yes. It is a simple monthly plan with no contracts — cancel anytime and keep using the Free plan.' },
+  { q: 'Is my invoice data stored anywhere?', a: 'Free plan invoices stay local to your browser.' },
+  // { q: 'Is my invoice data stored anywhere?', a: 'Free plan invoices stay local to your browser. Forge Pro securely syncs your clients, catalog, and invoice history so you can access them anywhere.' },
+  { q: 'Can I add my own logo and branding?', a: 'Absolutely. Drop in your logo and brand color for custom branding.' },
+  // { q: 'Can I cancel Forge Pro anytime?', a: 'Yes. It is a simple monthly plan with no contracts — cancel anytime and keep using the Free plan.' },
 ]
