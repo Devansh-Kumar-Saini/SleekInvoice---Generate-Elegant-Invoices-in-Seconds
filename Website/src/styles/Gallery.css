@@ -4,7 +4,7 @@
   z-index: 1;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 80px 16px 70px;
+  padding: 60px 15px 60px;
   overflow: hidden;
 }
 
@@ -233,13 +233,13 @@
 .gallery-dots {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 30px;
 }
 
 .gallery-dot {
-  height: 8px;
-  width: 8px;
-  border-radius: 4px;
+  height: 15px;
+  width: 20px;
+  border-radius: 10px;
   background: var(--text-tertiary);
   opacity: 0.4;
   border: none;
@@ -249,7 +249,7 @@
 }
 
 .gallery-dot.is-active {
-  width: 26px;
+  width: 40px;
   background: var(--blue);
   opacity: 1;
 }

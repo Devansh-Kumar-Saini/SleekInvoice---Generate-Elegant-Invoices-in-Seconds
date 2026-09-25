@@ -7,10 +7,17 @@ export default function Hero() {
   return (
     <section className="hero-section">
       <Reveal>
-        <div className="hero-badge">
+        {/* <div className="hero-badge">
           <BoltIcon />
           <span className="hero-badge-text">
             GENERATE ELEGANT INVOICES IN SECONDS
+          </span>
+          <span className="hero-badge-dot" />
+        </div> */}
+        <div className="hero-badge">
+          {/* <BoltIcon /> */}
+          <span className="hero-badge-text">
+            No login required
           </span>
           <span className="hero-badge-dot" />
         </div>
@@ -18,7 +25,10 @@ export default function Hero() {
           Professional Invoices.<br />Effortlessly Built.<br /><span className="hero-title-highlight">Instantly Paid.</span>
         </h1>
         <p className="hero-description">
-          The fastest invoice builder for freelancers, consultants, and teams. No login required, automatic tax math, and instant client-ready PDF downloads.
+          Fast invoices ● Zero friction
+          <br />
+          Create professional invoices in seconds with automatic tax calculations and instant client-ready PDF downloads.
+
         </p>
         <div className="hero-actions">
           <a href="https://allfreeinvoice.vercel.app/" className="btn-primary">
@@ -31,7 +41,7 @@ export default function Hero() {
         </div>
         <div className="hero-trusted">
           <div className="hero-avatars">
-            {['NC', 'CR', 'M'].map((initials) => (
+            {['NC', 'CR', 'M', 'PG'].map((initials) => (
               <span
                 key={initials}
                 className="hero-avatar"

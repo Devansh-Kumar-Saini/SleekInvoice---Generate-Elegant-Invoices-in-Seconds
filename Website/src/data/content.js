@@ -13,6 +13,9 @@ export const TRUSTED_LOGOS = [
   'Pass Guard',
   'Rehabit',
   'Talk2SQL',
+  'API Gen',
+  'Goal Invest AI',
+  'OCC Mobiles'
 ]
 
 export const HOW_IT_WORKS = [

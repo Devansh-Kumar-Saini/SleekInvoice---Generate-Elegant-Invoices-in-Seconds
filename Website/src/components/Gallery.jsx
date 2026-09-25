@@ -158,7 +158,7 @@ export default function Gallery() {
       <SectionHeading
         eyebrow="Invoice Gallery"
         title="See InvoiceForge in action"
-        subtitle="Explore our live builder, crafted invoice templates, and branding tools in a 3D panorama — drag or use arrows to spin."
+        subtitle="Explore our live builder, crafted invoice templates, and branding tools."
         maxWidth={640}
       />
 
@@ -344,9 +344,9 @@ export default function Gallery() {
         </div>
 
         {/* Interaction Hint */}
-        <p className="gallery-hint">
+        {/* <p className="gallery-hint">
           Drag horizontally, click &lt; &gt; or use arrow keys • Click center invoice to zoom
-        </p>
+        </p> */}
       </div>
 
       {/* Fullscreen Lightbox Modal */}
