@@ -11,6 +11,7 @@ import {
   drawPhoneIcon,
   drawHomeIcon,
   getLastAutoTableFinalY,
+  calculateItemColumnWidths,
 } from "@/lib/pdf/core";
 
 export function renderSidebarTemplate(ctx: TemplateContext) {
@@ -55,8 +56,9 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
   const sPad = 10;
 
   if (logo) {
-    const LOGO_MAX_W = sidebarWidth - sPad * 2;
-    const LOGO_MAX_H = 16;
+    const logoSize = invoice.logoSize || "medium";
+    const LOGO_MAX_W = logoSize === "small" ? 28 : sidebarWidth - sPad * 2;
+    const LOGO_MAX_H = logoSize === "small" ? 11 : logoSize === "large" ? 24 : 16;
     const aspect = logo.width / logo.height;
     let drawW = LOGO_MAX_W;
     let drawH = drawW / aspect;
@@ -175,9 +177,20 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
   const itemsData = ctx.validItems.map((item) => [
     item.details ? `${item.name}\n${item.details}` : item.name,
     String(item.quantity),
-    formatCurrency(item.price, currency, currencyCode),
-    formatCurrency(item.quantity * item.price, currency, currencyCode),
+    formatCurrency(Number(item.price) || 0, currency, currencyCode),
+    formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0), currency, currencyCode),
   ]);
+
+  const colWidths = calculateItemColumnWidths(
+    doc,
+    ctx.validItems,
+    currency,
+    currencyCode,
+    { qty: 16, price: 32, total: 32 },
+    8,
+    9.5,
+    FONT_FAMILY
+  );
 
   // autoTable's didDrawPage callback fires once for EVERY page the table
   // touches, including the page it started on — which, here, already has the
@@ -221,9 +234,9 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
     },
     columnStyles: {
       0: { cellWidth: "auto", halign: "left" },
-      1: { cellWidth: 16, halign: "center" },
-      2: { cellWidth: 32, halign: "right" },
-      3: { cellWidth: 32, halign: "right" },
+      1: { cellWidth: colWidths.qtyWidth, halign: "center" },
+      2: { cellWidth: colWidths.priceWidth, halign: "right" },
+      3: { cellWidth: colWidths.totalWidth, halign: "right" },
     },
     didParseCell: (data) => {
       if (data.section === "body" && data.column.index === 0) {

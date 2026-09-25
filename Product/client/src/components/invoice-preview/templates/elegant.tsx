@@ -6,6 +6,7 @@ import { SharedProps, colorsFor, formatDate } from "../types";
 export function ElegantPreview({
   companyName,
   companyLogo,
+  logoSize = "medium",
   companyAddress,
   invoiceNumber,
   date,
@@ -28,6 +29,9 @@ export function ElegantPreview({
   const isDark = invoiceTheme === "dark";
   const c = colorsFor("elegant", customColors, ["ink", "muted", "gold", "rule"], isDark);
 
+  const logoHeightClass =
+    logoSize === "small" ? "max-h-9" : logoSize === "large" ? "max-h-20" : "max-h-14";
+
   return (
     <Card
       className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl mx-auto ${isDark ? "bg-[#1a1917]" : "bg-white"}`}
@@ -40,7 +44,7 @@ export function ElegantPreview({
             <img
               src={companyLogo}
               alt={companyName}
-              className="max-h-14 w-auto object-contain mb-3"
+              className={`${logoHeightClass} w-auto object-contain mb-3`}
               data-testid="preview-company-logo"
             />
           ) : null}
@@ -112,45 +116,51 @@ export function ElegantPreview({
         </div>
 
         {/* Items — bordered table, gold rule under header */}
-        <div>
-          <div
-            className="grid grid-cols-12 gap-4 pb-2 text-xs font-bold uppercase tracking-wide min-w-[600px]"
-            style={{ borderBottom: `2px solid ${c.gold}`, color: c.gold }}
-          >
-            <div className="col-span-6">Description</div>
-            <div className="col-span-2 text-right">Qty</div>
-            <div className="col-span-2 text-right">Rate</div>
-            <div className="col-span-2 text-right">Amount</div>
-          </div>
-
-          {validItems.length > 0 ? (
-            validItems.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-12 gap-4 py-3 min-w-[600px]"
-                style={{ borderBottom: `1px solid ${c.rule}` }}
-                data-testid={`preview-item-${index}`}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[500px]">
+            <thead>
+              <tr
+                className="text-xs font-bold uppercase tracking-wide"
+                style={{ borderBottom: `2px solid ${c.gold}`, color: c.gold }}
               >
-                <div className="col-span-6">
-                  <div className="text-sm break-words" style={{ color: c.ink }}>{item.name}</div>
-                  {item.details && (
-                    <div className="text-xs mt-0.5 break-words" style={{ color: c.muted }}>
-                      {item.details}
-                    </div>
-                  )}
-                </div>
-                <div className="col-span-2 text-right text-sm" style={{ color: c.ink }}>{item.quantity}</div>
-                <div className="col-span-2 text-right text-sm" style={{ color: c.ink }}>
-                  {formatCurrency(item.price)}
-                </div>
-                <div className="col-span-2 text-right text-sm" style={{ color: c.ink }}>
-                  {formatCurrency(item.quantity * item.price)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</div>
-          )}
+                <th className="pb-2 text-left font-bold">Description</th>
+                <th className="pb-2 px-4 text-right font-bold whitespace-nowrap min-w-[60px]">Qty</th>
+                <th className="pb-2 px-4 text-right font-bold whitespace-nowrap min-w-[100px]">Rate</th>
+                <th className="pb-2 pl-4 text-right font-bold whitespace-nowrap min-w-[100px]">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {validItems.length > 0 ? (
+                validItems.map((item, index) => (
+                  <tr
+                    key={index}
+                    style={{ borderBottom: `1px solid ${c.rule}` }}
+                    data-testid={`preview-item-${index}`}
+                  >
+                    <td className="py-3 pr-4 align-top">
+                      <div className="text-sm break-words" style={{ color: c.ink }}>{item.name}</div>
+                      {item.details && (
+                        <div className="text-xs mt-0.5 break-words" style={{ color: c.muted }}>
+                          {item.details}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>{item.quantity}</td>
+                    <td className="py-3 px-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                      {formatCurrency(Number(item.price) || 0)}
+                    </td>
+                    <td className="py-3 pl-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                      {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* Calculations */}

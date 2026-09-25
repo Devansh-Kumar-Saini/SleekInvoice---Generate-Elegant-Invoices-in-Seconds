@@ -1,4 +1,4 @@
-import { type InvoiceItem, currencies as currencyList } from "@/types/invoice";
+import { type InvoiceItem, type LogoSize, currencies as currencyList } from "@/types/invoice";
 import {
   type InvoiceTemplate,
   type ColorizableTemplate,
@@ -10,6 +10,7 @@ export interface InvoicePreviewProps {
   template?: InvoiceTemplate;
   companyName: string;
   companyLogo?: string;
+  logoSize?: LogoSize;
   companyAddress?: string;
   invoiceNumber?: string;
   date: string;

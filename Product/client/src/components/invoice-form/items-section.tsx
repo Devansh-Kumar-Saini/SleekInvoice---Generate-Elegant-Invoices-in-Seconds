@@ -90,10 +90,12 @@ export function ItemsSection({
                   type="number"
                   min="0"
                   step="0.01"
+                  placeholder="0.00"
                   value={item.price}
-                  onChange={(e) =>
-                    updateItem(index, "price", parseFloat(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    updateItem(index, "price", val === "" ? "" : parseFloat(val) || 0);
+                  }}
                   data-testid={`input-item-price-${index}`}
                   className="h-12"
                 />

@@ -10,6 +10,7 @@ import {
   drawPhoneIcon,
   drawHomeIcon,
   getLastAutoTableFinalY,
+  calculateItemColumnWidths,
 } from "@/lib/pdf/core";
 
 export function renderClassicTemplate(ctx: TemplateContext) {
@@ -36,8 +37,9 @@ export function renderClassicTemplate(ctx: TemplateContext) {
 
   let yPos = margin + 4;
   const headerTop = yPos;
-  const LOGO_MAX_W = 32;
-  const LOGO_MAX_H = 20;
+  const logoSize = invoice.logoSize || "medium";
+  const LOGO_MAX_W = logoSize === "small" ? 22 : logoSize === "large" ? 48 : 32;
+  const LOGO_MAX_H = logoSize === "small" ? 14 : logoSize === "large" ? 30 : 20;
 
   if (logo) {
     const aspect = logo.width / logo.height;
@@ -146,9 +148,20 @@ export function renderClassicTemplate(ctx: TemplateContext) {
   const itemsData = ctx.validItems.map((item) => [
     item.details ? `${item.name}\n${item.details}` : item.name,
     String(item.quantity),
-    formatCurrency(item.price, currency, currencyCode),
-    formatCurrency(item.quantity * item.price, currency, currencyCode),
+    formatCurrency(Number(item.price) || 0, currency, currencyCode),
+    formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0), currency, currencyCode),
   ]);
+
+  const colWidths = calculateItemColumnWidths(
+    doc,
+    ctx.validItems,
+    currency,
+    currencyCode,
+    { qty: 18, price: 38, total: 38 },
+    8,
+    9.5,
+    FONT_FAMILY
+  );
 
   // See the identical comment in renderSidebarTemplate: didDrawPage fires for
   // every page the table touches, including the page the header/billing
@@ -188,9 +201,9 @@ export function renderClassicTemplate(ctx: TemplateContext) {
     },
     columnStyles: {
       0: { cellWidth: "auto", halign: "left" },
-      1: { cellWidth: 18, halign: "center" },
-      2: { cellWidth: 38, halign: "right" },
-      3: { cellWidth: 38, halign: "right" },
+      1: { cellWidth: colWidths.qtyWidth, halign: "center" },
+      2: { cellWidth: colWidths.priceWidth, halign: "right" },
+      3: { cellWidth: colWidths.totalWidth, halign: "right" },
     },
     didParseCell: (data) => {
       if (data.section === "body" && data.column.index === 0) {

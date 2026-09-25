@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { type InvoiceItem } from "@/types/invoice";
+import { type InvoiceItem, type LogoSize } from "@/types/invoice";
 import {
   NOTO_SANS_BLACK_BASE64,
   NOTO_SANS_BOLD_BASE64,
@@ -14,7 +14,7 @@ import {
   INVOICE_TEMPLATES,
 } from "../pdf-templates";
 
-export type { InvoiceTemplate, CustomColors };
+export type { InvoiceTemplate, CustomColors, LogoSize };
 export { INVOICE_TEMPLATES, formatCurrencyAmount as formatCurrency, formatDate, formatDateSlash };
 
 export const FONT_FAMILY = "NotoSans";
@@ -51,6 +51,7 @@ export function registerFonts(doc: jsPDF) {
 export interface InvoicePdfData {
   companyName: string;
   companyLogo?: string;
+  logoSize?: LogoSize;
   companyAddress?: string;
   invoiceNumber: string;
   date: string;
@@ -227,4 +228,55 @@ export interface TemplateContext {
 
 export function getLastAutoTableFinalY(doc: jsPDF): number {
   return (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+}
+
+export interface DynamicColumnWidths {
+  qtyWidth: number;
+  priceWidth: number;
+  totalWidth: number;
+}
+
+export function calculateItemColumnWidths(
+  doc: jsPDF,
+  items: InvoiceItem[],
+  currency: string,
+  currencyCode?: string,
+  minWidths = { qty: 18, price: 36, total: 36 },
+  cellPadding = 8,
+  fontSize = 9.5,
+  fontFamily = FONT_FAMILY
+): DynamicColumnWidths {
+  doc.setFont(fontFamily, "normal");
+  doc.setFontSize(fontSize);
+
+  let maxQtyW = doc.getTextWidth("Qty");
+  let maxPriceW = Math.max(
+    doc.getTextWidth("Price"),
+    doc.getTextWidth("Unit Price"),
+    doc.getTextWidth("Rate"),
+    doc.getTextWidth("PRICE")
+  );
+  let maxTotalW = Math.max(
+    doc.getTextWidth("Total"),
+    doc.getTextWidth("Amount"),
+    doc.getTextWidth("TOTAL")
+  );
+
+  items.forEach((item) => {
+    const qtyStr = String(item.quantity ?? 1);
+    const priceNum = Number(item.price) || 0;
+    const totalNum = (Number(item.quantity) || 0) * priceNum;
+    const priceStr = formatCurrencyAmount(priceNum, currency, currencyCode);
+    const totalStr = formatCurrencyAmount(totalNum, currency, currencyCode);
+
+    maxQtyW = Math.max(maxQtyW, doc.getTextWidth(qtyStr));
+    maxPriceW = Math.max(maxPriceW, doc.getTextWidth(priceStr));
+    maxTotalW = Math.max(maxTotalW, doc.getTextWidth(totalStr));
+  });
+
+  return {
+    qtyWidth: Math.max(minWidths.qty, maxQtyW + cellPadding),
+    priceWidth: Math.max(minWidths.price, maxPriceW + cellPadding),
+    totalWidth: Math.max(minWidths.total, maxTotalW + cellPadding),
+  };
 }

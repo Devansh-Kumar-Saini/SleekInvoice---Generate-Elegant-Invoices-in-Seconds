@@ -1,10 +1,12 @@
 import { type InvoiceTemplate, type CustomColors } from "@/lib/pdf-templates";
 
+export type LogoSize = "small" | "medium" | "large";
+
 // Invoice item type
 export interface InvoiceItem {
   name: string;
   quantity: number;
-  price: number;
+  price: number | "";
   details?: string;
 }
 
@@ -12,6 +14,7 @@ export interface InvoiceItem {
 export type FormValues = {
   companyName: string;
   companyLogo: string;
+  logoSize: LogoSize;
   companyAddress: string;
   date: string;
   customerName: string;
@@ -68,6 +71,7 @@ export function generateInvoiceNumber(): string {
 export const initialFormValues: FormValues = {
   companyName: "",
   companyLogo: "",
+  logoSize: "medium",
   companyAddress: "",
   date: new Date().toISOString().split("T")[0],
   customerName: "",

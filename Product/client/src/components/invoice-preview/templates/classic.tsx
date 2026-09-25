@@ -6,6 +6,7 @@ import { SharedProps, colorsFor, formatDate } from "../types";
 export function ClassicPreview({
   companyName,
   companyLogo,
+  logoSize = "medium",
   companyAddress,
   invoiceNumber,
   date,
@@ -27,6 +28,14 @@ export function ClassicPreview({
 }: SharedProps) {
   const isDark = invoiceTheme === "dark";
   const c = colorsFor("classic", customColors, ["primary", "dark", "muted", "border", "headerFill"], isDark);
+
+  const logoHeightClass =
+    logoSize === "small" ? "max-h-10" : logoSize === "large" ? "max-h-24" : "max-h-16";
+  const placeholderBoxClass =
+    logoSize === "small" ? "w-10 h-10" : logoSize === "large" ? "w-24 h-24" : "w-16 h-16";
+  const placeholderIconClass =
+    logoSize === "small" ? "w-5 h-5" : logoSize === "large" ? "w-12 h-12" : "w-8 h-8";
+
   return (
     <Card
       className={`p-8 shadow-sm w-full max-w-4xl mx-auto ${isDark ? "bg-[#18181a]" : "bg-white"}`}
@@ -43,16 +52,16 @@ export function ClassicPreview({
               <img
                 src={companyLogo}
                 alt={companyName}
-                className="max-h-16 w-auto object-contain mb-3"
+                className={`${logoHeightClass} w-auto object-contain mb-3`}
                 data-testid="preview-company-logo"
               />
             ) : (
               <div
-                className={`w-16 h-16 rounded-lg flex items-center justify-center mb-3 ${
+                className={`${placeholderBoxClass} rounded-lg flex items-center justify-center mb-3 ${
                   isDark ? "bg-white/10" : "bg-muted"
                 }`}
               >
-                <FileText className="w-8 h-8" style={{ color: c.muted }} />
+                <FileText className={placeholderIconClass} style={{ color: c.muted }} />
               </div>
             )}
             <h3
@@ -144,52 +153,59 @@ export function ClassicPreview({
         </div>
 
         {/* Items Table */}
-        <div>
-          <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${c.border}` }}>
-            <div
-              className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-medium uppercase tracking-wider min-w-[600px]"
-              style={{ backgroundColor: c.headerFill, color: "#ffffff" }}
-            >
-              <div className="col-span-6">Item</div>
-              <div className="col-span-2 text-right">Qty</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-2 text-right">Total</div>
-            </div>
-
-            {items.length > 0 && items.some((item) => item.name) ? (
-              items
-                .filter((item) => item.name)
-                .map((item, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-12 gap-4 px-4 py-3 min-w-[600px] hover:bg-muted/10"
-                    style={{ borderTop: `1px solid ${c.border}` }}
-                    data-testid={`preview-item-${index}`}
-                  >
-                    <div className="col-span-6">
-                      <div className="font-medium break-words" style={{ color: c.dark }}>{item.name}</div>
-                      {item.details && (
-                        <div className="text-xs mt-1 break-words" style={{ color: c.muted }}>
-                          {item.details}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-span-2 text-right font-mono" style={{ color: c.dark }}>
-                      {item.quantity}
-                    </div>
-                    <div className="col-span-2 text-right font-mono" style={{ color: c.dark }}>
-                      {formatCurrency(item.price)}
-                    </div>
-                    <div className="col-span-2 text-right font-mono font-semibold" style={{ color: c.dark }}>
-                      {formatCurrency(item.quantity * item.price)}
-                    </div>
-                  </div>
-                ))
-            ) : (
-              <div className="py-8 text-center text-sm" style={{ color: c.muted }}>
-                No items added yet
-              </div>
-            )}
+        <div className="overflow-x-auto">
+          <div className="rounded-lg overflow-hidden min-w-[500px]" style={{ border: `1px solid ${c.border}` }}>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr
+                  className="text-sm font-medium uppercase tracking-wider"
+                  style={{ backgroundColor: c.headerFill, color: "#ffffff" }}
+                >
+                  <th className="px-4 py-3 text-left font-medium">Item</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[60px]">Qty</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[100px]">Price</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[100px]">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.length > 0 && items.some((item) => item.name) ? (
+                  items
+                    .filter((item) => item.name)
+                    .map((item, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-muted/10"
+                        style={{ borderTop: `1px solid ${c.border}` }}
+                        data-testid={`preview-item-${index}`}
+                      >
+                        <td className="px-4 py-3 align-top">
+                          <div className="font-medium break-words" style={{ color: c.dark }}>{item.name}</div>
+                          {item.details && (
+                            <div className="text-xs mt-1 break-words" style={{ color: c.muted }}>
+                              {item.details}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono align-top whitespace-nowrap" style={{ color: c.dark }}>
+                          {item.quantity}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono align-top whitespace-nowrap" style={{ color: c.dark }}>
+                          {formatCurrency(Number(item.price) || 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono font-semibold align-top whitespace-nowrap" style={{ color: c.dark }}>
+                          {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
+                        </td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm" style={{ color: c.muted }}>
+                      No items added yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

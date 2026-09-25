@@ -23,7 +23,7 @@ import { formatCurrencyAmount } from "@/lib/invoice-format";
 
 export default function CreateInvoice() {
   const [items, setItems] = useState<InvoiceItem[]>([
-    { name: "", quantity: 1, price: 0, details: "" },
+    { name: "", quantity: 1, price: "", details: "" },
   ]);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -59,7 +59,7 @@ export default function CreateInvoice() {
   };
 
   const addItem = () => {
-    setItems((prev) => [...prev, { name: "", quantity: 1, price: 0, details: "" }]);
+    setItems((prev) => [...prev, { name: "", quantity: 1, price: "", details: "" }]);
   };
 
   const removeItem = (index: number) => {
@@ -101,7 +101,7 @@ export default function CreateInvoice() {
 
   // Calculate totals
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity * item.price, 0),
+    () => items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0), 0),
     [items]
   );
   const taxPercentage = watchedTax || 0;
@@ -151,6 +151,7 @@ export default function CreateInvoice() {
       const { warning } = await generateInvoicePDF({
         companyName: values.companyName,
         companyLogo: logoPreview || undefined,
+        logoSize: values.logoSize,
         companyAddress: values.companyAddress || undefined,
         invoiceNumber,
         date: values.date,
@@ -204,7 +205,7 @@ export default function CreateInvoice() {
       ...initialFormValues,
       date: new Date().toISOString().split("T")[0],
     });
-    setItems([{ name: "", quantity: 1, price: 0, details: "" }]);
+    setItems([{ name: "", quantity: 1, price: "", details: "" }]);
     setLogoPreview("");
     setInvoiceNumber(generateInvoiceNumber());
   };
@@ -288,6 +289,7 @@ export default function CreateInvoice() {
                   template={values.template}
                   companyName={values.companyName}
                   companyLogo={logoPreview}
+                  logoSize={values.logoSize}
                   companyAddress={values.companyAddress}
                   invoiceNumber={invoiceNumber}
                   date={values.date}

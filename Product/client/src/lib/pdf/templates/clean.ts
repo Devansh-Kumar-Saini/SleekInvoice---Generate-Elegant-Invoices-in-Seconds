@@ -7,6 +7,7 @@ import {
   formatCurrency,
   formatDateSlash,
   getLastAutoTableFinalY,
+  calculateItemColumnWidths,
 } from "@/lib/pdf/core";
 
 export function renderCleanTemplate(ctx: TemplateContext) {
@@ -122,10 +123,22 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   yPos += 9;
 
   // --- Items — plain text column headers, no header fill, monospaced numbers. ---
-  const colName = margin;
-  const colQty = margin + contentWidth * 0.62;
-  const colPrice = margin + contentWidth * 0.8;
+  const colWidths = calculateItemColumnWidths(
+    doc,
+    ctx.validItems,
+    currency,
+    currencyCode,
+    { qty: 18, price: 34, total: 36 },
+    6,
+    9,
+    FONT_FAMILY_MONO
+  );
+
   const colTotal = pageWidth - margin;
+  const colPrice = colTotal - colWidths.totalWidth;
+  const colQty = colPrice - colWidths.priceWidth;
+  const colName = margin;
+  const colNameMaxW = Math.max(30, colQty - colWidths.qtyWidth - margin - 4);
 
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(9.5);
@@ -143,8 +156,9 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   const footerLimit = pageHeight - footerReserve;
   const itemsTopOfBlock = yPos;
   ctx.validItems.forEach((item) => {
-    const detailLines = item.details ? doc.splitTextToSize(item.details, contentWidth * 0.5) : [];
-    const rowHeight = 11 + detailLines.length * 4;
+    const itemNameLines = doc.splitTextToSize(item.name, colNameMaxW);
+    const detailLines = item.details ? doc.splitTextToSize(item.details, colNameMaxW) : [];
+    const rowHeight = Math.max(11, itemNameLines.length * 4.5 + 4) + detailLines.length * 4;
 
     if (yPos + rowHeight > footerLimit) {
       doc.addPage();
@@ -155,13 +169,13 @@ export function renderCleanTemplate(ctx: TemplateContext) {
     doc.setFont(FONT_FAMILY, "normal");
     doc.setFontSize(10.5);
     doc.setTextColor(...INK);
-    doc.text(item.name, colName, yPos);
+    doc.text(itemNameLines, colName, yPos);
 
     doc.setFont(FONT_FAMILY_MONO, "normal");
     doc.setFontSize(9);
     doc.text(String(item.quantity), colQty, yPos, { align: "right" });
-    doc.text(formatCurrency(item.price, currency, currencyCode), colPrice, yPos, { align: "right" });
-    doc.text(formatCurrency(item.quantity * item.price, currency, currencyCode), colTotal, yPos, {
+    doc.text(formatCurrency(Number(item.price) || 0, currency, currencyCode), colPrice, yPos, { align: "right" });
+    doc.text(formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0), currency, currencyCode), colTotal, yPos, {
       align: "right",
     });
 
@@ -169,7 +183,7 @@ export function renderCleanTemplate(ctx: TemplateContext) {
       doc.setFont(FONT_FAMILY, "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...GRAY);
-      doc.text(detailLines, colName, yPos + 4.4);
+      doc.text(detailLines, colName, yPos + itemNameLines.length * 4.4);
     }
 
     yPos += rowHeight;
@@ -218,7 +232,7 @@ export function renderCleanTemplate(ctx: TemplateContext) {
     ctx.validItems.forEach((item) => {
       rows.push({
         label: item.name,
-        value: formatCurrency(item.quantity * item.price, currency, currencyCode),
+        value: formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0), currency, currencyCode),
       });
     });
   }

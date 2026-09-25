@@ -95,41 +95,47 @@ export function CleanPreview({
         </div>
 
         {/* Items — no borders/fills on header, just a rule; monospaced numbers */}
-        <div>
-          <div className={`grid grid-cols-12 gap-4 pb-2 border-b ${border} text-sm ${muted} min-w-[600px]`}>
-            <div className="col-span-6">Item</div>
-            <div className="col-span-2 text-right">Qty</div>
-            <div className="col-span-2 text-right">Price</div>
-            <div className="col-span-2 text-right">Total</div>
-          </div>
-
-          {validItems.length > 0 ? (
-            validItems.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-12 gap-4 py-3 min-w-[600px]"
-                data-testid={`preview-item-${index}`}
-              >
-                <div className="col-span-6">
-                  <div className="text-sm break-words">{item.name}</div>
-                  {item.details && (
-                    <div className={`text-xs ${muted} mt-0.5 break-words`}>
-                      {item.details}
-                    </div>
-                  )}
-                </div>
-                <div className="col-span-2 text-right text-sm font-mono">{item.quantity}</div>
-                <div className="col-span-2 text-right text-sm font-mono">
-                  {formatCurrency(item.price)}
-                </div>
-                <div className="col-span-2 text-right text-sm font-mono">
-                  {formatCurrency(item.quantity * item.price)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className={`py-8 text-center text-sm ${muted}`}>No items added yet</div>
-          )}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[500px]">
+            <thead>
+              <tr className={`border-b ${border} text-sm ${muted}`}>
+                <th className="pb-2 text-left font-normal">Item</th>
+                <th className="pb-2 px-4 text-right font-normal whitespace-nowrap min-w-[60px]">Qty</th>
+                <th className="pb-2 px-4 text-right font-normal whitespace-nowrap min-w-[100px]">Price</th>
+                <th className="pb-2 pl-4 text-right font-normal whitespace-nowrap min-w-[100px]">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {validItems.length > 0 ? (
+                validItems.map((item, index) => (
+                  <tr
+                    key={index}
+                    data-testid={`preview-item-${index}`}
+                  >
+                    <td className="py-3 pr-4 align-top">
+                      <div className="text-sm break-words">{item.name}</div>
+                      {item.details && (
+                        <div className={`text-xs ${muted} mt-0.5 break-words`}>
+                          {item.details}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sm font-mono align-top whitespace-nowrap">{item.quantity}</td>
+                    <td className="py-3 px-4 text-right text-sm font-mono align-top whitespace-nowrap">
+                      {formatCurrency(Number(item.price) || 0)}
+                    </td>
+                    <td className="py-3 pl-4 text-right text-sm font-mono align-top whitespace-nowrap">
+                      {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className={`py-8 text-center text-sm ${muted}`}>No items added yet</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
           <div className={`border-b ${border}`} />
         </div>
 
@@ -153,7 +159,7 @@ export function CleanPreview({
                 <div key={index} className="flex justify-between items-center">
                   <span className={`text-xs ${muted} break-words pr-2`}>{item.name}</span>
                   <span className="text-sm font-mono whitespace-nowrap">
-                    {formatCurrency(item.quantity * item.price)}
+                    {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
                   </span>
                 </div>
               ))}

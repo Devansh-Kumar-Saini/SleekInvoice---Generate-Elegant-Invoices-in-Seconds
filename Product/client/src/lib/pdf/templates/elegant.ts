@@ -10,6 +10,7 @@ import {
   drawPhoneIcon,
   drawHomeIcon,
   getLastAutoTableFinalY,
+  calculateItemColumnWidths,
 } from "@/lib/pdf/core";
 
 export function renderElegantTemplate(ctx: TemplateContext) {
@@ -34,8 +35,9 @@ export function renderElegantTemplate(ctx: TemplateContext) {
   let yPos = margin + 2;
 
   if (logo) {
-    const LOGO_MAX_W = 24;
-    const LOGO_MAX_H = 16;
+    const logoSize = invoice.logoSize || "medium";
+    const LOGO_MAX_W = logoSize === "small" ? 16 : logoSize === "large" ? 38 : 24;
+    const LOGO_MAX_H = logoSize === "small" ? 11 : logoSize === "large" ? 25 : 16;
     const aspect = logo.width / logo.height;
     let drawW = LOGO_MAX_W;
     let drawH = drawW / aspect;
@@ -149,13 +151,24 @@ export function renderElegantTemplate(ctx: TemplateContext) {
   const itemsData = ctx.validItems.map((item) => [
     item.details ? `${item.name}\n${item.details}` : item.name,
     String(item.quantity),
-    formatCurrency(item.price, currency, currencyCode),
-    formatCurrency(item.quantity * item.price, currency, currencyCode),
+    formatCurrency(Number(item.price) || 0, currency, currencyCode),
+    formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0), currency, currencyCode),
   ]);
+
+  const colWidths = calculateItemColumnWidths(
+    doc,
+    ctx.validItems,
+    currency,
+    currencyCode,
+    { qty: 18, price: 36, total: 36 },
+    8,
+    9.5,
+    FONT_FAMILY
+  );
 
   // See the identical comment in renderSidebarTemplate: didDrawPage fires for
   // every page the table touches, including the page the letterhead/billing
-  // section above was already drawn on — only repaint pages autoTable adds.
+  // section above was already drawn on — repaint pages autoTable adds.
   const tableStartPage = doc.getCurrentPageInfo().pageNumber;
 
   autoTable(doc, {
@@ -185,9 +198,9 @@ export function renderElegantTemplate(ctx: TemplateContext) {
     },
     columnStyles: {
       0: { cellWidth: "auto", halign: "left" },
-      1: { cellWidth: 18, halign: "center" },
-      2: { cellWidth: 36, halign: "right" },
-      3: { cellWidth: 36, halign: "right" },
+      1: { cellWidth: colWidths.qtyWidth, halign: "center" },
+      2: { cellWidth: colWidths.priceWidth, halign: "right" },
+      3: { cellWidth: colWidths.totalWidth, halign: "right" },
     },
     didParseCell: (data) => {
       if (data.section === "head") {

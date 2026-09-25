@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { type FormValues } from "@/types/invoice";
@@ -81,6 +82,23 @@ export function CompanyInfoSection({
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="logoSize" className="text-sm font-medium">
+              Logo Size
+            </Label>
+            <Select
+              id="logoSize"
+              data-testid="select-logo-size"
+              value={values.logoSize || "medium"}
+              onChange={(e) => updateField("logoSize", e.target.value as "small" | "medium" | "large")}
+              className="h-12"
+            >
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </Select>
           </div>
 
           <div className="space-y-2">

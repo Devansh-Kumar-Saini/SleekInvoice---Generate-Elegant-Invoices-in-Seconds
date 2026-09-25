@@ -6,6 +6,7 @@ import { SharedProps, colorsFor, formatDate } from "../types";
 export function SidebarPreview({
   companyName,
   companyLogo,
+  logoSize = "medium",
   companyAddress,
   invoiceNumber,
   date,
@@ -29,6 +30,9 @@ export function SidebarPreview({
   const isDark = invoiceTheme === "dark";
   const c = colorsFor("sidebar", customColors, ["sidebar", "pop", "ink", "muted"], isDark);
 
+  const logoHeightClass =
+    logoSize === "small" ? "max-h-6" : logoSize === "large" ? "max-h-14" : "max-h-8";
+
   return (
     <Card
       className={`p-0 shadow-sm w-full max-w-4xl mx-auto overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
@@ -43,7 +47,7 @@ export function SidebarPreview({
                 <img
                   src={companyLogo}
                   alt={companyName}
-                  className="max-h-8 w-auto object-contain"
+                  className={`${logoHeightClass} w-auto object-contain`}
                   data-testid="preview-company-logo"
                 />
               </div>
@@ -122,51 +126,58 @@ export function SidebarPreview({
         <div className="flex-1 p-6 sm:p-8 space-y-6 min-w-0">
           <h3 className="text-3xl font-extrabold tracking-tight" style={{ color: c.ink }}>Invoice</h3>
 
-          <div className="border rounded-lg overflow-hidden" style={{ borderColor: isDark ? "#3a3a3e" : undefined }}>
-            <div
-              className={`grid grid-cols-12 gap-4 px-4 py-3 text-sm font-medium uppercase tracking-wider min-w-[500px] ${
-                isDark ? "bg-white/5" : "bg-muted/50"
-              }`}
-              style={{ color: c.muted }}
-            >
-              <div className="col-span-6">Item</div>
-              <div className="col-span-2 text-right">Qty</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-2 text-right">Total</div>
-            </div>
-
-            {validItems.length > 0 ? (
-              validItems.map((item, index) => (
-                <div
-                  key={index}
-                  className={`grid grid-cols-12 gap-4 px-4 py-3 border-t min-w-[500px] ${
-                    isDark ? "odd:bg-white/5" : "odd:bg-muted/20"
+          <div className="border rounded-lg overflow-hidden overflow-x-auto min-w-[450px]" style={{ borderColor: isDark ? "#3a3a3e" : undefined }}>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr
+                  className={`text-sm font-medium uppercase tracking-wider ${
+                    isDark ? "bg-white/5" : "bg-muted/50"
                   }`}
-                  style={{ borderColor: isDark ? "#3a3a3e" : undefined }}
-                  data-testid={`preview-item-${index}`}
+                  style={{ color: c.muted }}
                 >
-                  <div className="col-span-6">
-                    <div className="font-medium text-sm break-words" style={{ color: c.ink }}>{item.name}</div>
-                    {item.details && (
-                      <div className="text-xs mt-1 break-words" style={{ color: c.muted }}>
-                        {item.details}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-span-2 text-right font-mono text-sm" style={{ color: c.ink }}>
-                    {item.quantity}
-                  </div>
-                  <div className="col-span-2 text-right font-mono text-sm" style={{ color: c.ink }}>
-                    {formatCurrency(item.price)}
-                  </div>
-                  <div className="col-span-2 text-right font-mono text-sm font-semibold" style={{ color: c.ink }}>
-                    {formatCurrency(item.quantity * item.price)}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</div>
-            )}
+                  <th className="px-4 py-3 text-left font-medium">Item</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[60px]">Qty</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[90px]">Price</th>
+                  <th className="px-4 py-3 text-right font-medium whitespace-nowrap min-w-[90px]">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {validItems.length > 0 ? (
+                  validItems.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`border-t ${
+                        isDark ? "odd:bg-white/5" : "odd:bg-muted/20"
+                      }`}
+                      style={{ borderColor: isDark ? "#3a3a3e" : undefined }}
+                      data-testid={`preview-item-${index}`}
+                    >
+                      <td className="px-4 py-3 align-top">
+                        <div className="font-medium text-sm break-words" style={{ color: c.ink }}>{item.name}</div>
+                        {item.details && (
+                          <div className="text-xs mt-1 break-words" style={{ color: c.muted }}>
+                            {item.details}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                        {formatCurrency(Number(item.price) || 0)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold align-top whitespace-nowrap" style={{ color: c.ink }}>
+                        {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm" style={{ color: c.muted }}>No items added yet</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="flex justify-end">
