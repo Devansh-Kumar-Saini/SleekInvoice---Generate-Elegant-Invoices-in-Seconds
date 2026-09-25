@@ -2,43 +2,41 @@ import React from 'react'
 import SectionHeading from './SectionHeading'
 import Reveal from './Reveal'
 import { TEMPLATES } from '../data/content'
+import '../styles/Templates.css'
 
 export default function Templates() {
   return (
-    <section id="templates" style={{ scrollMarginTop: 84, position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '100px 24px' }}>
+    <section id="templates" className="templates-section">
       <SectionHeading
         eyebrow="Templates"
         title="Pick a look, or make it yours"
         subtitle="5 layouts to start from, each with its own accent color you can swap to match your brand. Every template exports pixel-identical to what you see on screen."
         maxWidth={620}
       />
-      <Reveal delay={1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 20 }}>
+      <Reveal delay={1} className="templates-grid">
         {TEMPLATES.map((t) => (
           <div
             key={t.name}
-            className="template-card"
-            style={{
-              background: 'var(--bg-surface)',
-              border: t.highlighted ? '1px solid var(--border-hair-strong)' : '1px solid var(--border-hair)',
-              borderRadius: 18, padding: 20, transition: 'all .25s',
-              boxShadow: t.highlighted ? 'var(--shadow-glow)' : 'none',
-            }}
+            className={`template-card ${t.highlighted ? 'is-highlighted' : ''}`}
           >
-            <div style={{ background: t.surface, border: t.bordered ? '1px solid var(--border-hair)' : 'none', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <div style={{ height: 6, width: '55%', background: t.highlighted ? 'var(--blue-ink)' : 'var(--text-tertiary)', opacity: t.highlighted ? 1 : 0.5, borderRadius: 3, marginBottom: 10 }} />
-              <div style={{ height: 5, width: '80%', background: 'var(--border-hair-strong)', borderRadius: 3, marginBottom: 6 }} />
-              <div style={{ height: 5, width: '65%', background: 'var(--border-hair-strong)', borderRadius: 3, marginBottom: 14 }} />
-              <div style={{ height: 7, width: '38%', background: t.accent, borderRadius: 3 }} />
+            <div
+              className={`template-preview ${t.bordered ? 'is-bordered' : ''}`}
+              style={{ background: t.surface }}
+            >
+              <div className={`template-preview-bar-1 ${t.highlighted ? 'is-highlighted' : ''}`} />
+              <div className="template-preview-bar-2" />
+              <div className="template-preview-bar-3" />
+              <div className="template-preview-accent" style={{ background: t.accent }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 15.5, fontWeight: 600, margin: 0 }}>{t.name}</h3>
+            <div className="template-header">
+              <h3 className="template-name">{t.name}</h3>
               {t.badge && (
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, letterSpacing: '.05em', color: 'var(--blue-ink)', textTransform: 'uppercase' }}>{t.badge}</span>
+                <span className="template-badge">{t.badge}</span>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: t.accent, border: '1px solid var(--border-hair-strong)', flexShrink: 0 }} />
-              <span style={{ fontSize: 11.5, color: 'var(--text-tertiary)' }}>Accent color customizable</span>
+            <div className="template-custom-note">
+              <span className="template-color-dot" style={{ background: t.accent }} />
+              <span className="template-custom-text">Accent color customizable</span>
             </div>
           </div>
         ))}

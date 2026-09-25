@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { NAV_LINKS } from '../data/content'
 import { ForgeMark, SunIcon, MoonIcon, CloseIcon, MenuIcon } from './Icons'
+import '../styles/Header.css'
 
 export default function Header() {
   const { toggleTheme, isLight } = useTheme()
@@ -20,40 +21,33 @@ export default function Header() {
   return (
     <header
       id="top"
-      className={scrolled ? 'header-scrolled' : ''}
-      style={{
-        position: 'sticky', top: 0, zIndex: 50, background: 'var(--bg-glass)',
-        backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--border-hair)',
-        transition: 'box-shadow .3s ease',
-      }}
+      className={`header ${scrolled ? 'header-scrolled' : ''}`}
     >
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-        <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)', flexShrink: 0 }}>
+      <div className="header-inner">
+        <a href="#top" className="header-brand">
+          <span className="header-logo-icon">
             <ForgeMark />
           </span>
-          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 19, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>InvoiceForge</span>
+          <span className="header-logo-text">InvoiceForge</span>
         </a>
 
         <div className="nav-desktop">
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
+          <nav className="nav-links">
             {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} className="nav-link" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 14.5, fontWeight: 500 }}>
+              <a key={link.href} href={link.href} className="nav-link">
                 {link.label}
               </a>
             ))}
           </nav>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="header-actions">
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
               className="icon-btn"
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border-hair-strong)', background: 'transparent', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               {isLight ? <SunIcon /> : <MoonIcon />}
             </button>
-            <a href="https://allfreeinvoice.vercel.app/" className="btn-primary-sm" style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'transform .2s' }}>
+            <a href="https://allfreeinvoice.vercel.app/" className="btn-primary-sm">
               Create Invoice Now
             </a>
           </div>
@@ -63,14 +57,14 @@ export default function Header() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border-hair-strong)', background: 'transparent', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            className="nav-mobile-btn"
           >
             {isLight ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
             onClick={() => setMobileMenuOpen((o) => !o)}
             aria-label="Menu"
-            style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border-hair-strong)', background: 'transparent', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            className="nav-mobile-btn nav-mobile-btn-toggle"
           >
             {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -78,17 +72,17 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="mobile-menu" style={{ borderTop: '1px solid var(--border-hair)', padding: '16px 24px 24px', flexDirection: 'column', gap: 4, background: 'var(--bg-canvas)' }}>
+        <div className="mobile-menu">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} onClick={closeMobileMenu} style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 15, fontWeight: 500, padding: '10px 0' }}>
+            <a key={link.href} href={link.href} onClick={closeMobileMenu} className="mobile-menu-link">
               {link.label}
             </a>
           ))}
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-            <a href="#gallery" onClick={closeMobileMenu} style={{ flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>
+          <div className="mobile-menu-actions">
+            <a href="#gallery" onClick={closeMobileMenu} className="mobile-menu-btn-outline">
               View Gallery
             </a>
-            <a href="https://allfreeinvoice.vercel.app/" onClick={closeMobileMenu} style={{ flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+            <a href="https://allfreeinvoice.vercel.app/" onClick={closeMobileMenu} className="mobile-menu-btn-primary">
               Create Invoice
             </a>
           </div>

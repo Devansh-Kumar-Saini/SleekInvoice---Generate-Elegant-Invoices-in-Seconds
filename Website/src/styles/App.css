@@ -1,0 +1,20 @@
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.mesh-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(680px 480px at 8% -8%, var(--mesh-1), transparent 60%),
+    radial-gradient(720px 520px at 96% 22%, var(--mesh-2), transparent 60%),
+    radial-gradient(600px 440px at 30% 100%, var(--mesh-3), transparent 60%);
+  animation: meshDrift 22s ease-in-out infinite;
+}

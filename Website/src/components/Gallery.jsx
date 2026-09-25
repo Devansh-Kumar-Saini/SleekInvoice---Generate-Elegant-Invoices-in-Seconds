@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import SectionHeading from './SectionHeading'
 import { GALLERY_ITEMS } from '../data/content'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ZoomIcon } from './Icons'
+import '../styles/Gallery.css'
 
 const resolveImage = (filename) => new URL(`../Assets/${filename}`, import.meta.url).href
 
@@ -27,13 +28,9 @@ export default function Gallery() {
 
   const count = items.length
 
-  // Responsive dimensions
-  // Cards have been increased significantly.
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth)
-
     window.addEventListener('resize', handleResize)
-
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
@@ -71,7 +68,6 @@ export default function Gallery() {
     }
   }, [windowWidth])
 
-  // Navigation handlers
   const next = useCallback(() => {
     setDragOffset(0)
     setCurrentIndex((i) => (i + 1) % count)
@@ -87,7 +83,6 @@ export default function Gallery() {
     setCurrentIndex(idx)
   }, [])
 
-  // Drag interaction refs & handlers
   const dragStartXRef = useRef(0)
   const isDraggingRef = useRef(false)
   const currentDragOffsetRef = useRef(0)
@@ -104,9 +99,7 @@ export default function Gallery() {
 
   const handlePointerMove = (e) => {
     if (!isDraggingRef.current) return
-
     const diff = e.clientX - dragStartXRef.current
-
     currentDragOffsetRef.current = diff
     setDragOffset(diff)
   }
@@ -118,7 +111,6 @@ export default function Gallery() {
     setIsDragging(false)
 
     const offset = currentDragOffsetRef.current
-
     currentDragOffsetRef.current = 0
     setDragOffset(0)
 
@@ -129,22 +121,18 @@ export default function Gallery() {
     }
   }
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (activeIndex !== null) {
         if (e.key === 'Escape') {
           setActiveIndex(null)
         }
-
         if (e.key === 'ArrowLeft') {
           setActiveIndex((i) => (i - 1 + count) % count)
         }
-
         if (e.key === 'ArrowRight') {
           setActiveIndex((i) => (i + 1) % count)
         }
-
         return
       }
 
@@ -160,25 +148,13 @@ export default function Gallery() {
     }
 
     window.addEventListener('keydown', handleKeyDown)
-
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [activeIndex, count, prev, next, currentIndex])
 
   const currentItem = items[currentIndex]
 
   return (
-    <section
-      id="gallery"
-      style={{
-        scrollMarginTop: 84,
-        position: 'relative',
-        zIndex: 1,
-        maxWidth: 1440,
-        margin: '0 auto',
-        padding: '80px 16px 70px',
-        overflow: 'hidden',
-      }}
-    >
+    <section id="gallery" className="gallery-section">
       <SectionHeading
         eyebrow="Invoice Gallery"
         title="See InvoiceForge in action"
@@ -187,17 +163,7 @@ export default function Gallery() {
       />
 
       {/* Main 3D Stage */}
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: 1400,
-          margin: '36px auto 0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div className="gallery-stage">
         {/* Previous Button */}
         <button
           type="button"
@@ -207,29 +173,7 @@ export default function Gallery() {
             prev()
           }}
           aria-label="Previous template"
-          className="gallery-nav-btn"
-          style={{
-            position: 'absolute',
-            left: 12,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 52,
-            height: 52,
-            borderRadius: '50%',
-            background: 'rgba(15, 23, 42, 0.94)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            color: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 100,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
-            transition:
-              'transform 0.2s, background 0.2s, border-color 0.2s',
-          }}
+          className="gallery-nav-btn gallery-nav-prev"
         >
           <ChevronLeftIcon size={24} />
         </button>
@@ -248,67 +192,33 @@ export default function Gallery() {
           tabIndex={0}
           role="region"
           aria-label="3D curved invoice gallery. Drag or use arrow keys to navigate."
+          className="gallery-3d-viewport"
           style={{
-            position: 'relative',
-            width: '100%',
             height: layout.stageHeight,
             perspective: `${layout.perspective}px`,
-            perspectiveOrigin: '50% 50%',
-            overflow: 'hidden',
-            userSelect: 'none',
             cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'pan-y',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
         >
           {/* 3D Container */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 0,
-              height: 0,
-              transformStyle: 'preserve-3d',
-              pointerEvents: 'none',
-            }}
-          >
+          <div className="gallery-3d-container">
             {items.map((item, idx) => {
-              // Calculate shortest circular relative offset
               let offset = idx - currentIndex
 
               if (offset > count / 2) {
                 offset -= count
               }
-
               if (offset < -count / 2) {
                 offset += count
               }
 
               const isActive = offset === 0
-
-              // 3D positioning
               const dragShift = dragOffset * 0.4
-
               const x = offset * layout.spacing + dragShift
-
               const z = -Math.abs(offset) * layout.zStep
-
-              const rotY =
-                -Math.sign(offset) *
-                (Math.abs(offset) * layout.rotStep)
-
-              // Slightly larger side cards as well
+              const rotY = -Math.sign(offset) * (Math.abs(offset) * layout.rotStep)
               const scale = 1 - Math.abs(offset) * 0.055
-
               const zIndex = 50 - Math.abs(offset) * 10
-
-              const opacity =
-                Math.abs(offset) > 3
-                  ? 0
-                  : 1 - Math.abs(offset) * 0.1
+              const opacity = Math.abs(offset) > 3 ? 0 : 1 - Math.abs(offset) * 0.1
 
               return (
                 <div
@@ -322,37 +232,15 @@ export default function Gallery() {
                   }}
                   className={`gallery-card-3d ${
                     isActive ? 'is-active' : ''
-                  }`}
+                  } ${item.key === 'darkmode' ? 'is-dark' : 'is-light'}`}
                   style={{
-                    position: 'absolute',
-
-                    // INCREASED CARD SIZE
                     width: layout.cardWidth,
                     height: layout.cardHeight,
-
                     top: -layout.cardHeight / 2,
                     left: -layout.cardWidth / 2,
-
-                    borderRadius: 18,
-                    overflow: 'hidden',
-                    cursor: isActive ? 'zoom-in' : 'pointer',
-                    pointerEvents: 'auto',
                     zIndex,
                     opacity,
-
-                    background:
-                      item.key === 'darkmode'
-                        ? '#0E1526'
-                        : '#FFFFFF',
-
-                    border: isActive
-                      ? '2.5px solid var(--blue)'
-                      : '1.5px solid rgba(255, 255, 255, 0.18)',
-
-                    boxShadow: isActive
-                      ? '0 0 45px rgba(59, 130, 246, 0.5), 0 24px 60px rgba(0, 0, 0, 0.65)'
-                      : '0 16px 38px rgba(0, 0, 0, 0.4)',
-
+                    cursor: isActive ? 'zoom-in' : 'pointer',
                     transform: `
                       translate3d(
                         ${x.toFixed(1)}px,
@@ -362,19 +250,9 @@ export default function Gallery() {
                       rotateY(${rotY.toFixed(1)}deg)
                       scale(${scale.toFixed(2)})
                     `,
-
-                    transformOrigin: '50% 50%',
-                    backfaceVisibility: 'hidden',
-
                     transition: isDragging
                       ? 'none'
                       : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease',
-
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    padding: 10,
                   }}
                 >
                   {/* Zoom Button */}
@@ -388,26 +266,6 @@ export default function Gallery() {
                       }}
                       aria-label="Zoom into invoice preview"
                       className="gallery-card-zoom-btn"
-                      style={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        background: '#0F172A',
-                        border: '2px solid #FFFFFF',
-                        color: '#FFFFFF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        zIndex: 120,
-                        boxShadow:
-                          '0 5px 18px rgba(0, 0, 0, 0.7)',
-                        transition:
-                          'transform 0.2s, background 0.2s',
-                      }}
                     >
                       <ZoomIcon size={18} />
                     </button>
@@ -419,21 +277,7 @@ export default function Gallery() {
                     alt={item.caption}
                     draggable={false}
                     loading="lazy"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      objectFit: 'contain',
-                      objectPosition: 'center',
-                      borderRadius: 12,
-                      display: 'block',
-                      pointerEvents: 'none',
-                      filter:
-                        item.key === 'darkmode'
-                          ? 'none'
-                          : 'drop-shadow(0 3px 10px rgba(0,0,0,0.1))',
-                    }}
+                    className={`gallery-card-img ${item.key !== 'darkmode' ? 'has-shadow' : ''}`}
                   />
                 </div>
               )
@@ -450,98 +294,24 @@ export default function Gallery() {
             next()
           }}
           aria-label="Next template"
-          className="gallery-nav-btn"
-          style={{
-            position: 'absolute',
-            right: 12,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 52,
-            height: 52,
-            borderRadius: '50%',
-            background: 'rgba(15, 23, 42, 0.94)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            color: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 100,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
-            transition:
-              'transform 0.2s, background 0.2s, border-color 0.2s',
-          }}
+          className="gallery-nav-btn gallery-nav-next"
         >
           <ChevronRightIcon size={24} />
         </button>
       </div>
 
       {/* Information Bar & Interactive Dots */}
-      <div
-        style={{
-          marginTop: 28,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 16,
-        }}
-      >
+      <div className="gallery-info-bar">
         {/* Caption & Quick Zoom Card */}
-        <div
-          style={{
-            maxWidth: 680,
-            width: '100%',
-            padding: '16px 22px',
-            borderRadius: 16,
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-hair-strong)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 18,
-            boxShadow: '0 10px 30px rgba(0,0,0,.2)',
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: 'var(--blue)',
-                }}
-              >
+        <div className="gallery-caption-card">
+          <div className="gallery-caption-info">
+            <div className="gallery-caption-tag-wrapper">
+              <span className="gallery-caption-tag">
                 Template {currentIndex + 1} of {count}
               </span>
             </div>
 
-            <p
-              style={{
-                margin: 0,
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
+            <p className="gallery-caption-text">
               {currentItem?.caption}
             </p>
           </div>
@@ -549,24 +319,6 @@ export default function Gallery() {
           <button
             type="button"
             onClick={() => setActiveIndex(currentIndex)}
-            style={{
-              padding: '9px 19px',
-              borderRadius: 10,
-              background: 'var(--blue)',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 600,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              cursor: 'pointer',
-              boxShadow:
-                '0 4px 14px rgba(59, 130, 246, 0.4)',
-              transition:
-                'transform 0.15s, opacity 0.15s',
-              whiteSpace: 'nowrap',
-            }}
             className="gallery-zoom-btn"
           >
             <ZoomIcon size={15} />
@@ -575,13 +327,7 @@ export default function Gallery() {
         </div>
 
         {/* Dot Indicators */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
+        <div className="gallery-dots">
           {items.map((item, idx) => {
             const isSelected = idx === currentIndex
 
@@ -591,36 +337,15 @@ export default function Gallery() {
                 key={item.key}
                 onClick={() => goTo(idx)}
                 aria-label={`Go to ${item.title}`}
-                style={{
-                  width: isSelected ? 26 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: isSelected
-                    ? 'var(--blue)'
-                    : 'var(--text-tertiary)',
-                  opacity: isSelected ? 1 : 0.4,
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  transition:
-                    'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
+                className={`gallery-dot ${isSelected ? 'is-active' : ''}`}
               />
             )
           })}
         </div>
 
         {/* Interaction Hint */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: 12.5,
-            color: 'var(--text-tertiary)',
-            letterSpacing: '0.02em',
-          }}
-        >
-          Drag horizontally, click &lt; &gt; or use arrow keys •
-          Click center invoice to zoom
+        <p className="gallery-hint">
+          Drag horizontally, click &lt; &gt; or use arrow keys • Click center invoice to zoom
         </p>
       </div>
 
@@ -630,18 +355,7 @@ export default function Gallery() {
           role="dialog"
           aria-modal="true"
           onClick={() => setActiveIndex(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            background: 'rgba(5, 8, 16, 0.94)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-          }}
+          className="gallery-modal-overlay"
         >
           {/* Close Button */}
           <button
@@ -651,24 +365,7 @@ export default function Gallery() {
               setActiveIndex(null)
             }}
             aria-label="Close lightbox"
-            style={{
-              position: 'absolute',
-              top: 22,
-              right: 22,
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.12)',
-              border:
-                '1.5px solid rgba(255, 255, 255, 0.25)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 10010,
-              transition: 'background 0.2s',
-            }}
+            className="gallery-modal-close-btn"
           >
             <CloseIcon size={20} />
           </button>
@@ -678,30 +375,10 @@ export default function Gallery() {
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              setActiveIndex(
-                (i) => (i - 1 + count) % count
-              )
+              setActiveIndex((i) => (i - 1 + count) % count)
             }}
             aria-label="Previous template"
-            style={{
-              position: 'absolute',
-              left: 20,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.12)',
-              border:
-                '1.5px solid rgba(255, 255, 255, 0.25)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 10010,
-              transition: 'background 0.2s',
-            }}
+            className="gallery-modal-nav-btn gallery-modal-nav-prev"
           >
             <ChevronLeftIcon size={26} />
           </button>
@@ -709,59 +386,22 @@ export default function Gallery() {
           {/* Lightbox Content */}
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: 1200,
-              maxHeight: '92vh',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 16,
-              zIndex: 10005,
-              padding: '0 16px',
-            }}
+            className="gallery-modal-content"
           >
             <img
               src={items[activeIndex].src}
               alt={items[activeIndex].caption}
-              style={{
-                maxWidth: '94vw',
-                maxHeight: '82vh',
-                borderRadius: 18,
-                boxShadow:
-                  '0 30px 100px rgba(0, 0, 0, 0.85)',
-                border:
-                  '1px solid rgba(255, 255, 255, 0.15)',
-                objectFit: 'contain',
-                background:
-                  items[activeIndex].key === 'darkmode'
-                    ? '#0E1526'
-                    : '#FFFFFF',
-              }}
+              className={`gallery-modal-img ${
+                items[activeIndex].key === 'darkmode' ? 'is-dark' : 'is-light'
+              }`}
             />
 
-            <div
-              style={{
-                textAlign: 'center',
-              }}
-            >
-              <p
-                style={{
-                  color: '#F5F7FB',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  margin: '0 0 4px',
-                }}
-              >
+            <div className="gallery-modal-info">
+              <p className="gallery-modal-title">
                 {items[activeIndex].title}
               </p>
 
-              <p
-                style={{
-                  color: '#93A0BC',
-                  fontSize: 14,
-                  margin: 0,
-                }}
-              >
+              <p className="gallery-modal-caption">
                 {items[activeIndex].caption}
               </p>
             </div>
@@ -772,30 +412,10 @@ export default function Gallery() {
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              setActiveIndex(
-                (i) => (i + 1) % count
-              )
+              setActiveIndex((i) => (i + 1) % count)
             }}
             aria-label="Next template"
-            style={{
-              position: 'absolute',
-              right: 20,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.12)',
-              border:
-                '1.5px solid rgba(255, 255, 255, 0.25)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 10010,
-              transition: 'background 0.2s',
-            }}
+            className="gallery-modal-nav-btn gallery-modal-nav-next"
           >
             <ChevronRightIcon size={26} />
           </button>

@@ -2,6 +2,7 @@ import React from 'react'
 import SectionHeading from './SectionHeading'
 import Reveal from './Reveal'
 import { GridIcon, DocIcon, GlobeIcon, UsersIcon, PaletteIcon } from './Icons'
+import '../styles/Features.css'
 
 const SMALL_FEATURES = [
   {
@@ -28,49 +29,49 @@ const SMALL_FEATURES = [
 
 export default function Features() {
   return (
-    <section id="features" style={{ scrollMarginTop: 84, position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '100px 24px' }}>
+    <section id="features" className="features-section">
       <SectionHeading
         eyebrow="Features"
         title="Everything you need to invoice like a pro"
         subtitle="A tight, focused toolkit — not a bloated accounting suite."
       />
 
-      <Reveal delay={1} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hair)', borderRadius: 20, padding: 40, marginBottom: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 40, alignItems: 'center' }}>
+      <Reveal delay={1} className="features-hero-card">
         <div>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-ink)', marginBottom: 18 }}>
+          <div className="features-icon-box">
             <GridIcon />
           </div>
-          <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 21, fontWeight: 600, margin: '0 0 10px' }}>Live Real-Time Preview</h3>
-          <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+          <h3 className="features-hero-title">Live Real-Time Preview</h3>
+          <p className="features-hero-desc">
             Every field you type renders instantly into a print-ready invoice, split-screen — no refresh, no surprises at export time.
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-          <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Form</div>
-            <div style={{ height: 8, width: '70%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 8, width: '90%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 8, width: '55%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 8, width: '80%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
+        <div className="features-preview-grid">
+          <div className="features-mockup-card">
+            <div className="features-mockup-tag">Form</div>
+            <div className="mockup-line w-70" />
+            <div className="mockup-line w-90" />
+            <div className="mockup-line w-55" />
+            <div className="mockup-line w-80" />
           </div>
-          <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, color: 'var(--blue-ink)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Invoice</div>
-            <div style={{ height: 8, width: '85%', background: 'var(--blue)', opacity: 0.5, borderRadius: 4 }} />
-            <div style={{ height: 8, width: '65%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 8, width: '75%', background: 'var(--border-hair-strong)', borderRadius: 4 }} />
-            <div style={{ height: 9, width: '40%', background: 'var(--blue-ink)', borderRadius: 4, marginTop: 4 }} />
+          <div className="features-mockup-card is-accent">
+            <div className="features-mockup-tag is-blue">Invoice</div>
+            <div className="mockup-line w-85" />
+            <div className="mockup-line w-65" />
+            <div className="mockup-line w-75" />
+            <div className="mockup-line w-40-accent" />
           </div>
         </div>
       </Reveal>
 
-      <Reveal delay={2} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20 }}>
+      <Reveal delay={2} className="features-grid">
         {SMALL_FEATURES.map(({ Icon, title, body }) => (
-          <div key={title} className="feature-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hair)', borderRadius: 18, padding: 32, transition: 'all .25s' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-ink)', marginBottom: 18 }}>
+          <div key={title} className="feature-card">
+            <div className="features-icon-box">
               <Icon />
             </div>
-            <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 17.5, fontWeight: 600, margin: '0 0 8px' }}>{title}</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>{body}</p>
+            <h3 className="feature-title">{title}</h3>
+            <p className="feature-desc">{body}</p>
           </div>
         ))}
       </Reveal>

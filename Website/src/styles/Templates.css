@@ -1,0 +1,120 @@
+.templates-section {
+  scroll-margin-top: 84px;
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 100px 24px;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.template-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hair);
+  border-radius: 18px;
+  padding: 20px;
+  transition: all 0.25s ease;
+}
+
+.template-card.is-highlighted {
+  border-color: var(--border-hair-strong);
+  box-shadow: var(--shadow-glow);
+}
+
+.template-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hair-strong);
+}
+
+.template-preview {
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.template-preview.is-bordered {
+  border: 1px solid var(--border-hair);
+}
+
+.template-preview-bar-1 {
+  height: 6px;
+  width: 55%;
+  background: var(--text-tertiary);
+  opacity: 0.5;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+.template-preview-bar-1.is-highlighted {
+  background: var(--blue-ink);
+  opacity: 1;
+}
+
+.template-preview-bar-2 {
+  height: 5px;
+  width: 80%;
+  background: var(--border-hair-strong);
+  border-radius: 3px;
+  margin-bottom: 6px;
+}
+
+.template-preview-bar-3 {
+  height: 5px;
+  width: 65%;
+  background: var(--border-hair-strong);
+  border-radius: 3px;
+  margin-bottom: 14px;
+}
+
+.template-preview-accent {
+  height: 7px;
+  width: 38%;
+  border-radius: 3px;
+}
+
+.template-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.template-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15.5px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.template-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  color: var(--blue-ink);
+  text-transform: uppercase;
+}
+
+.template-custom-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.template-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--border-hair-strong);
+  flex-shrink: 0;
+}
+
+.template-custom-text {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}

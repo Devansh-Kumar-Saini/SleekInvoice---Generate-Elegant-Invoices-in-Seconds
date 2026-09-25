@@ -1,104 +1,100 @@
 import React from 'react'
 import { ForgeMark, BoltIcon, ArrowRightIcon, DocIcon } from './Icons'
 import Reveal from './Reveal'
+import '../styles/Hero.css'
 
 export default function Hero() {
   return (
-    <section style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '88px 24px 72px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(400px,1fr))', gap: 56, alignItems: 'center' }}>
+    <section className="hero-section">
       <Reveal>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '7px 14px', borderRadius: 999, border: '1px solid var(--border-hair-strong)', background: 'var(--bg-surface-2)', width: 'fit-content', marginBottom: 24 }}>
+        <div className="hero-badge">
           <BoltIcon />
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, letterSpacing: '.05em', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+          <span className="hero-badge-text">
             GENERATE ELEGANT INVOICES IN SECONDS
           </span>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--green)', animation: 'pulseDot 2s infinite', flexShrink: 0 }} />
+          <span className="hero-badge-dot" />
         </div>
-        <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 'clamp(2.3rem,4.4vw,3.9rem)', lineHeight: 1.06, letterSpacing: '-0.02em', margin: '0 0 22px', color: 'var(--text-primary)' }}>
-          Professional Invoices.<br />Effortlessly Built.<br /><span style={{ color: 'var(--blue-ink)' }}>Instantly Paid.</span>
+        <h1 className="hero-title">
+          Professional Invoices.<br />Effortlessly Built.<br /><span className="hero-title-highlight">Instantly Paid.</span>
         </h1>
-        <p style={{ fontSize: 17, lineHeight: 1.65, color: 'var(--text-secondary)', maxWidth: 480, margin: '0 0 34px' }}>
+        <p className="hero-description">
           The fastest invoice builder for freelancers, consultants, and teams. No login required, automatic tax math, and instant client-ready PDF downloads.
         </p>
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-          <a href="https://allfreeinvoice.vercel.app/" className="btn-primary" style={{ padding: '16px 26px', borderRadius: 12, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', color: '#F5F9FF', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: 'var(--shadow-glow)', display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'transform .2s, box-shadow .2s' }}>
+        <div className="hero-actions">
+          <a href="https://allfreeinvoice.vercel.app/" className="btn-primary">
             Generate Free Invoice
             <ArrowRightIcon />
           </a>
-          <a href="#features" className="btn-outline" style={{ padding: '16px 24px', borderRadius: 12, border: '1px solid var(--border-hair-strong)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', transition: 'background .2s, border-color .2s' }}>
+          <a href="#features" className="btn-outline">
             See How It Works
           </a>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28 }}>
-          <div style={{ display: 'flex' }}>
-            {['NC', 'CR', 'M'].map((initials, i) => (
+        <div className="hero-trusted">
+          <div className="hero-avatars">
+            {['NC', 'CR', 'M'].map((initials) => (
               <span
                 key={initials}
-                style={{
-                  width: 30, height: 30, borderRadius: '50%', background: 'var(--bg-surface-2)',
-                  border: '2px solid var(--bg-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: "'Outfit',sans-serif", fontSize: 10.5, fontWeight: 600, color: 'var(--blue-ink)',
-                  marginLeft: i === 0 ? 0 : -10,
-                }}
+                className="hero-avatar"
               >
                 {initials}
               </span>
             ))}
           </div>
-          <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
-            Trusted by <strong style={{ color: 'var(--text-secondary)' }}>freelancers, developers &amp; teams</strong>
+          <span className="hero-trusted-text">
+            Trusted by <strong>freelancers, developers &amp; teams</strong>
           </span>
         </div>
       </Reveal>
 
-      <Reveal delay={1} style={{ perspective: 1400, position: 'relative', paddingBottom: 46, paddingRight: 16 }}>
-        <div style={{ animation: 'floatY 6s ease-in-out infinite', transform: 'rotateX(6deg) rotateY(-8deg)', transformStyle: 'preserve-3d', background: 'var(--bg-surface)', border: '1px solid var(--border-hair-strong)', borderRadius: 20, boxShadow: 'var(--shadow-card)', padding: 28, position: 'relative', maxWidth: 440, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,var(--blue),var(--blue-soft))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Reveal delay={1} className="hero-preview-wrapper">
+        <div className="hero-invoice-card">
+          <div className="hero-card-header">
+            <div className="hero-card-brand">
+              <span className="hero-card-icon">
                 <ForgeMark size={11} />
               </span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: 'var(--text-tertiary)', letterSpacing: '.04em' }}>INV-2024-0847</span>
+              <span className="hero-card-inv-no">INV-2024-0847</span>
             </div>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, letterSpacing: '.06em', color: 'var(--green)', background: 'rgba(52,211,153,.12)', border: '1px solid rgba(52,211,153,.3)', padding: '4px 10px', borderRadius: 999 }}>PAID</span>
+            <span className="hero-card-status">PAID</span>
           </div>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Bill To</div>
-            <div style={{ fontSize: 14.5, color: 'var(--text-primary)', fontWeight: 600 }}>Amelia Ross</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>amelia@northlightstudio.com</div>
+          <div className="hero-bill-to">
+            <div className="hero-bill-to-label">Bill To</div>
+            <div className="hero-bill-to-name">Amelia Ross</div>
+            <div className="hero-bill-to-email">amelia@northlightstudio.com</div>
           </div>
-          <div style={{ borderTop: '1px solid var(--border-hair)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="hero-items-list">
             {[
               ['Homepage redesign', '$1,200.00'],
               ['Logo & brand kit', '$450.00'],
               ['Monthly retainer (2x)', '$600.00'],
             ].map(([label, amt]) => (
-              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5 }}>
-                <span style={{ color: 'var(--text-primary)' }}>{label}</span>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", color: 'var(--text-secondary)' }}>{amt}</span>
+              <div key={label} className="hero-item-row">
+                <span className="hero-item-label">{label}</span>
+                <span className="hero-item-amount">{amt}</span>
               </div>
             ))}
           </div>
-          <div style={{ borderTop: '1px solid var(--border-hair)', marginTop: 14, paddingTop: 14, paddingBottom: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-tertiary)' }}>
+          <div className="hero-totals">
+            <div className="hero-total-row">
               <span>Subtotal</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>$2,250.00</span>
+              <span className="hero-total-val">$2,250.00</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-tertiary)' }}>
+            <div className="hero-total-row">
               <span>Tax (8%)</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>$180.00</span>
+              <span className="hero-total-val">$180.00</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
-              <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>Total</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, color: 'var(--blue-ink)', fontWeight: 700 }}>$2,430.00</span>
+            <div className="hero-total-grand">
+              <span className="hero-total-grand-label">Total</span>
+              <span className="hero-total-grand-amount">$2,430.00</span>
             </div>
           </div>
-          <div style={{ position: 'absolute', right: -18, bottom: -28, background: 'var(--bg-surface-2)', border: '1px solid var(--border-hair-strong)', borderRadius: 14, padding: '12px 16px', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', gap: 10, transform: 'rotate(-4deg)' }}>
-            <span style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(34,211,238,.14)', border: '1px solid rgba(34,211,238,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cyan-ink)', flexShrink: 0 }}>
+          <div className="hero-export-badge">
+            <span className="hero-export-icon">
               <DocIcon size={15} />
             </span>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>PDF Exported</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, color: 'var(--text-tertiary)' }}>in 0.8s</div>
+              <div className="hero-export-title">PDF Exported</div>
+              <div className="hero-export-time">in 0.8s</div>
             </div>
           </div>
         </div>

@@ -1,17 +1,18 @@
 import React from 'react'
 import Reveal from './Reveal'
+import '../styles/SectionHeading.css'
 
 export default function SectionHeading({ eyebrow, title, subtitle, maxWidth = 620 }) {
   return (
-    <Reveal style={{ textAlign: 'center', maxWidth, margin: '0 auto 52px' }}>
-      <div style={{ display: 'inline-flex', padding: '6px 14px', borderRadius: 999, border: '1px solid var(--border-hair-strong)', background: 'var(--bg-surface-2)', fontFamily: "'JetBrains Mono',monospace", fontSize: 11, letterSpacing: '.08em', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 18 }}>
+    <Reveal className="section-heading-wrapper" style={maxWidth ? { maxWidth } : undefined}>
+      <div className="section-eyebrow">
         {eyebrow}
       </div>
-      <h2 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 'clamp(2rem,3.2vw,2.6rem)', letterSpacing: '-0.01em', margin: '0 0 14px' }}>
+      <h2 className="section-title">
         {title}
       </h2>
       {subtitle && (
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>{subtitle}</p>
+        <p className="section-subtitle">{subtitle}</p>
       )}
     </Reveal>
   )
