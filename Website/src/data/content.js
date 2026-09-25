@@ -48,6 +48,7 @@ export const GALLERY_ITEMS = [
   { key: 'fullpreview', image: 'fullpreview.png', caption: 'Live builder with real-time invoice preview', colSpan: 2, rowSpan: 2 },
   { key: 'default', image: 'default.png', caption: 'Classic template — clean itemized layout', colSpan: 1, rowSpan: 2 },
   { key: 'modern', image: 'modern.png', caption: 'Modern template — bold header, card summary', colSpan: 1, rowSpan: 2 },
+  // { key: 'elegant', image: 'elegant.png', caption: 'Elegant template — formal serif letterhead', colSpan: 1, rowSpan: 2 },
   { key: 'cleanInvoice', image: 'cleanInvoice.png', caption: 'Clean template — minimal, theme-aware', colSpan: 1, rowSpan: 2 },
   { key: 'customize', image: 'customize.png', caption: 'Customize Invoice — brand your accent colors', colSpan: 1, rowSpan: 2 },
   { key: 'elegent', image: 'elegent.png', caption: 'Elegant template — formal serif letterhead', colSpan: 1, rowSpan: 2 },
@@ -56,19 +57,19 @@ export const GALLERY_ITEMS = [
 
 export const TESTIMONIALS = [
   {
-    initials: 'FD',
+    initials: 'D',
     quote: "I went from a blank page to a client-ready PDF in under two minutes. It's the fastest invoicing flow I've used.",
-    role: 'Freelance Web Developer',
+    role: 'Full Stack Web Developer',
   },
   {
-    initials: 'AO',
+    initials: 'SE',
     quote: 'The live preview alone is worth it — I can see exactly what my client will receive before I hit export.',
-    role: 'Creative Agency Owner',
+    role: 'Startup Entrepreneur',
   },
   {
-    initials: 'IC',
-    quote: 'Clean templates, automatic tax math, and no clunky sign-up flow. Exactly what a small studio needs.',
-    role: 'Independent Consultant',
+    initials: 'FD',
+    quote: 'Clean templates, custom branding, and no clunky sign-up flow. Exactly what a small studio needs.',
+    role: 'Freelance Designer',
   },
 ]
 
