@@ -18,3 +18,7 @@
     radial-gradient(600px 440px at 30% 100%, var(--mesh-3), transparent 60%);
   animation: meshDrift 22s ease-in-out infinite;
 }
+
+#main-content:focus {
+  outline: none;
+}

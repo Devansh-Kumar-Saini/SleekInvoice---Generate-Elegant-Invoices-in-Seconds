@@ -5,7 +5,7 @@ import '../styles/TrustBar.css'
 
 export default function TrustBar() {
   return (
-    <section className="trustbar-section">
+    <section aria-label="Trusted by companies worldwide" className="trustbar-section">
       <Reveal as="p" className="trustbar-text">
         Trusted by freelancers, developers, and agency founders worldwide
       </Reveal>

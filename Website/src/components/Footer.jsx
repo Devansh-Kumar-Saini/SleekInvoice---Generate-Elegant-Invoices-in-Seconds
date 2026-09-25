@@ -25,8 +25,8 @@ export default function Footer() {
         <Reveal className="footer-grid">
           <div>
             <div className="footer-brand-header">
-              <span className="footer-brand-icon">
-                <ForgeMark size={14} />
+              <span className="footer-brand-icon" aria-hidden="true">
+                <ForgeMark size={16} />
               </span>
               <span className="footer-brand-name">InvoiceForge</span>
             </div>
@@ -34,36 +34,39 @@ export default function Footer() {
               Elegant invoices, built in seconds. No login required.
             </p>
             <button
+              type="button"
               onClick={toggleTheme}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={isDark}
               className="mode-toggle"
             >
-              {isDark ? <MoonIcon size={13} /> : <SunIcon size={13} />}
+              {isDark ? <MoonIcon size={15} /> : <SunIcon size={15} />}
               {isDark ? 'Dark mode' : 'Light mode'}
             </button>
           </div>
           <div>
             <div className="footer-col-title">Product</div>
-            <div className="footer-links-list">
+            <nav aria-label="Product navigation" className="footer-links-list">
               {PRODUCT_LINKS.map((l) => (
                 <a key={l.label} href={l.href} className="footer-link">{l.label}</a>
               ))}
-            </div>
+            </nav>
           </div>
           <div>
             <div className="footer-col-title">Resources</div>
-            <div className="footer-links-list">
+            <nav aria-label="Resource navigation" className="footer-links-list">
               {RESOURCE_LINKS.map((l) => (
                 <a key={l.label} href={l.href} className="footer-link">{l.label}</a>
               ))}
-            </div>
+            </nav>
           </div>
           <div>
             <div className="footer-col-title">Connect</div>
             <div className="footer-socials">
               {[
-                { label: 'Email', Icon: MailIcon },
-                { label: 'Community', Icon: CommunityIcon },
-                { label: 'Updates', Icon: UpdatesIcon },
+                { label: 'Send email inquiry', Icon: MailIcon },
+                { label: 'Join community', Icon: CommunityIcon },
+                { label: 'Product release updates', Icon: UpdatesIcon },
               ].map(({ label, Icon }) => (
                 <a key={label} href="#" aria-label={label} className="social-icon">
                   <Icon />
@@ -76,7 +79,7 @@ export default function Footer() {
         <div className="footer-status-bar">
           <span className="footer-copyright">© 2026 InvoiceForge. All rights reserved.</span>
           <span className="footer-status-pill">
-            <span className="footer-status-dot" />
+            <span aria-hidden="true" className="footer-status-dot" />
             All Systems Operational
           </span>
         </div>
@@ -90,9 +93,9 @@ export default function Footer() {
           </div>
           <div className="footer-bottom-socials">
             {[
-              { label: 'X', Icon: XIcon, href: '#' },
-              { label: 'LinkedIn', Icon: LinkedinIcon, href: '#' },
-              { label: 'YouTube', Icon: YoutubeIcon, href: '#' },
+              { label: 'InvoiceForge on X', Icon: XIcon, href: '#' },
+              { label: 'InvoiceForge on LinkedIn', Icon: LinkedinIcon, href: '#' },
+              { label: 'InvoiceForge on YouTube', Icon: YoutubeIcon, href: '#' },
             ].map(({ label, Icon, href }) => (
               <a
                 key={label}

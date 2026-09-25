@@ -1,45 +1,57 @@
 .how-it-works-section {
-  scroll-margin-top: 84px;
+  scroll-margin-top: 100px;
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 100px 24px;
+  padding: 100px 32px;
+}
+
+@media (max-width: 640px) {
+  .how-it-works-section {
+    padding: 72px 18px;
+  }
 }
 
 .steps-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 28px;
 }
 
 .step-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-hair);
   border-radius: 18px;
-  padding: 32px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
 }
 
 .step-number {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 700;
   color: var(--blue-ink);
-  opacity: 0.85;
-  margin-bottom: 14px;
+  opacity: 0.95;
+  margin-bottom: 16px;
+  line-height: 1;
 }
 
 .step-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   color: var(--text-primary);
 }
 
 .step-body {
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }

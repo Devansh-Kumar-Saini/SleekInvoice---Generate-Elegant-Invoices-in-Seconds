@@ -8,13 +8,13 @@ import '../styles/Faqs.css'
 export default function Faqs() {
   return (
     <section id="faqs" className="faqs-section">
-      <SectionHeading eyebrow="FAQ" title="Frequently asked questions" maxWidth={560} />
+      <SectionHeading eyebrow="FAQ" title="Frequently asked questions" maxWidth={760} />
       <Reveal delay={1} className="faqs-list">
         {FAQS.map((faq) => (
           <details key={faq.q} className="faq-item">
             <summary className="faq-summary">
               {faq.q}
-              <span className="faq-chevron">
+              <span aria-hidden="true" className="faq-chevron">
                 <ChevronDownIcon />
               </span>
             </summary>

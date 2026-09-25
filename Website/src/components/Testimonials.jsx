@@ -7,17 +7,17 @@ import '../styles/Testimonials.css'
 
 export default function Testimonials() {
   return (
-    <section className="testimonials-section">
-      <SectionHeading eyebrow="Testimonials" title="Loved by people who hate busywork" maxWidth={600} />
+    <section aria-label="Testimonials" className="testimonials-section">
+      <SectionHeading eyebrow="Testimonials" title="Loved by people who hate busywork" maxWidth={760} />
       <Reveal delay={1} className="testimonials-grid">
         {TESTIMONIALS.map((t) => (
-          <div key={t.initials} className="testimonial-card">
-            <div className="testimonial-stars">
+          <figure key={t.initials} className="testimonial-card">
+            <div role="img" aria-label="5 out of 5 stars rating" className="testimonial-stars">
               {Array.from({ length: 5 }).map((_, i) => <StarIcon key={i} />)}
             </div>
-            <p className="testimonial-quote">{t.quote}</p>
-            <div className="testimonial-author">
-              <span className="testimonial-avatar">
+            <blockquote className="testimonial-quote">{t.quote}</blockquote>
+            <figcaption className="testimonial-author">
+              <span aria-hidden="true" className="testimonial-avatar">
                 {t.initials}
               </span>
               <div>
@@ -26,8 +26,8 @@ export default function Testimonials() {
                 </div>
                 <div className="testimonial-verified">Verified user</div>
               </div>
-            </div>
-          </div>
+            </figcaption>
+          </figure>
         ))}
       </Reveal>
     </section>

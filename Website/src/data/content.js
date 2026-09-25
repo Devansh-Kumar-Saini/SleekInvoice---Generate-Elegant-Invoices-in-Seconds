@@ -12,7 +12,7 @@ export const TRUSTED_LOGOS = [
   'News Connect',
   'Pass Guard',
   'Rehabit',
-  'Talk2SQL',
+  // 'Talk2SQL',
   'API Gen',
   'Goal Invest AI',
   'OCC Mobiles'

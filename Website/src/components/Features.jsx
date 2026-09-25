@@ -38,7 +38,7 @@ export default function Features() {
 
       <Reveal delay={1} className="features-hero-card">
         <div>
-          <div className="features-icon-box">
+          <div aria-hidden="true" className="features-icon-box">
             <GridIcon />
           </div>
           <h3 className="features-hero-title">Live Real-Time Preview</h3>
@@ -46,7 +46,7 @@ export default function Features() {
             Every field you type renders instantly into a print-ready invoice, split-screen — no refresh, no surprises at export time.
           </p>
         </div>
-        <div className="features-preview-grid">
+        <div aria-hidden="true" className="features-preview-grid">
           <div className="features-mockup-card">
             <div className="features-mockup-tag">Form</div>
             <div className="mockup-line w-70" />
@@ -67,7 +67,7 @@ export default function Features() {
       <Reveal delay={2} className="features-grid">
         {SMALL_FEATURES.map(({ Icon, title, body }) => (
           <div key={title} className="feature-card">
-            <div className="features-icon-box">
+            <div aria-hidden="true" className="features-icon-box">
               <Icon />
             </div>
             <h3 className="feature-title">{title}</h3>

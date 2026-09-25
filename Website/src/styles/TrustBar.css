@@ -1,37 +1,38 @@
 .trustbar-section {
   position: relative;
   z-index: 1;
-  padding: 36px 24px;
+  padding: 40px 32px;
   border-top: 1px solid var(--border-hair);
   border-bottom: 1px solid var(--border-hair);
 }
 
 .trustbar-text {
   text-align: center;
-  font-size: 12.5px;
-  letter-spacing: 0.05em;
-  color: var(--text-tertiary);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
   font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
   text-transform: uppercase;
-  margin: 0 0 26px;
+  margin: 0 0 28px;
 }
 
 .trustbar-logos {
   display: flex;
   justify-content: center;
-  gap: 44px;
+  gap: 48px;
   flex-wrap: wrap;
-  max-width: 1000px;
+  max-width: 1380px;
   margin: 0 auto;
 }
 
 .trust-logo {
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: 0.03em;
-  color: var(--text-tertiary);
-  opacity: 0.7;
+  color: var(--text-secondary);
+  opacity: 0.95;
   transition: all 0.25s ease;
   cursor: default;
 }

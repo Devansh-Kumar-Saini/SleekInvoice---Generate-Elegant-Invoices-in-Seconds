@@ -18,18 +18,23 @@ function Page() {
 
   return (
     <div data-theme={theme} className="app-container">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <div aria-hidden="true" className="mesh-background" />
 
       <Header />
-      <Hero />
-      <TrustBar />
-      <Features />
-      <HowItWorks />
-      <Gallery />
-      <Templates />
-      <Testimonials />
-      <Faqs />
-      <FinalCta />
+      <main id="main-content" tabIndex={-1}>
+        <Hero />
+        <TrustBar />
+        <Features />
+        <HowItWorks />
+        <Gallery />
+        <Templates />
+        <Testimonials />
+        <Faqs />
+        <FinalCta />
+      </main>
       <Footer />
     </div>
   )

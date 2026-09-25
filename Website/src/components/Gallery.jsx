@@ -37,32 +37,32 @@ export default function Gallery() {
   const layout = useMemo(() => {
     if (windowWidth < 640) {
       return {
-        cardWidth: 250,
-        cardHeight: 190,
-        spacing: 145,
-        stageHeight: 350,
+        cardWidth: 260,
+        cardHeight: 195,
+        spacing: 155,
+        stageHeight: 360,
         perspective: 850,
         zStep: 34,
         rotStep: 14,
       }
     } else if (windowWidth < 1024) {
       return {
-        cardWidth: 320,
-        cardHeight: 235,
-        spacing: 190,
-        stageHeight: 420,
+        cardWidth: 340,
+        cardHeight: 250,
+        spacing: 210,
+        stageHeight: 440,
         perspective: 1000,
         zStep: 42,
         rotStep: 16,
       }
     } else {
       return {
-        cardWidth: 380,
-        cardHeight: 275,
-        spacing: 255,
-        stageHeight: 490,
-        perspective: 1200,
-        zStep: 50,
+        cardWidth: 420,
+        cardHeight: 300,
+        spacing: 280,
+        stageHeight: 520,
+        perspective: 1300,
+        zStep: 52,
         rotStep: 18,
       }
     }
@@ -159,7 +159,7 @@ export default function Gallery() {
         eyebrow="Invoice Gallery"
         title="See InvoiceForge in action"
         subtitle="Explore our live builder, crafted invoice templates, and branding tools."
-        maxWidth={640}
+        maxWidth={760}
       />
 
       {/* Main 3D Stage */}
@@ -264,7 +264,7 @@ export default function Gallery() {
                         e.stopPropagation()
                         setActiveIndex(idx)
                       }}
-                      aria-label="Zoom into invoice preview"
+                      aria-label={`Zoom into ${item.title} preview`}
                       className="gallery-card-zoom-btn"
                     >
                       <ZoomIcon size={18} />
@@ -307,8 +307,11 @@ export default function Gallery() {
           <div className="gallery-caption-info">
             <div className="gallery-caption-tag-wrapper">
               <span className="gallery-caption-tag">
-                Template {currentIndex + 1} of {count}
+                {currentItem?.title}
               </span>
+              {/* <span className="gallery-caption-tag">
+                Template {currentIndex + 1} of {count}
+              </span> */}
             </div>
 
             <p className="gallery-caption-text">
@@ -319,15 +322,16 @@ export default function Gallery() {
           <button
             type="button"
             onClick={() => setActiveIndex(currentIndex)}
+            aria-label={`Zoom into ${currentItem?.title || 'invoice'} preview`}
             className="gallery-zoom-btn"
           >
-            <ZoomIcon size={15} />
+            <ZoomIcon size={16} />
             Zoom Preview
           </button>
         </div>
 
         {/* Dot Indicators */}
-        <div className="gallery-dots">
+        <div className="gallery-dots" role="tablist" aria-label="Template slides">
           {items.map((item, idx) => {
             const isSelected = idx === currentIndex
 
@@ -336,17 +340,13 @@ export default function Gallery() {
                 type="button"
                 key={item.key}
                 onClick={() => goTo(idx)}
-                aria-label={`Go to ${item.title}`}
+                aria-label={`View slide ${idx + 1} of ${count}: ${item.title}`}
+                aria-current={isSelected ? 'true' : undefined}
                 className={`gallery-dot ${isSelected ? 'is-active' : ''}`}
               />
             )
           })}
         </div>
-
-        {/* Interaction Hint */}
-        {/* <p className="gallery-hint">
-          Drag horizontally, click &lt; &gt; or use arrow keys • Click center invoice to zoom
-        </p> */}
       </div>
 
       {/* Fullscreen Lightbox Modal */}
@@ -354,6 +354,7 @@ export default function Gallery() {
         <div
           role="dialog"
           aria-modal="true"
+          aria-label={`Invoice preview: ${items[activeIndex]?.title || 'Template'}`}
           onClick={() => setActiveIndex(null)}
           className="gallery-modal-overlay"
         >
@@ -364,10 +365,10 @@ export default function Gallery() {
               e.stopPropagation()
               setActiveIndex(null)
             }}
-            aria-label="Close lightbox"
+            aria-label="Close invoice preview lightbox"
             className="gallery-modal-close-btn"
           >
-            <CloseIcon size={20} />
+            <CloseIcon size={22} />
           </button>
 
           {/* Previous Lightbox Button */}
@@ -377,7 +378,7 @@ export default function Gallery() {
               e.stopPropagation()
               setActiveIndex((i) => (i - 1 + count) % count)
             }}
-            aria-label="Previous template"
+            aria-label="Previous template preview"
             className="gallery-modal-nav-btn gallery-modal-nav-prev"
           >
             <ChevronLeftIcon size={26} />
@@ -414,7 +415,7 @@ export default function Gallery() {
               e.stopPropagation()
               setActiveIndex((i) => (i + 1) % count)
             }}
-            aria-label="Next template"
+            aria-label="Next template preview"
             className="gallery-modal-nav-btn gallery-modal-nav-next"
           >
             <ChevronRightIcon size={26} />

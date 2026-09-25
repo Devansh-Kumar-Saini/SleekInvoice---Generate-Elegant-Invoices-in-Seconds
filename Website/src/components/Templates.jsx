@@ -11,7 +11,7 @@ export default function Templates() {
         eyebrow="Templates"
         title="Pick a look, or make it yours"
         subtitle="5 layouts to start from, each with its own accent color you can swap to match your brand. Every template exports pixel-identical to what you see on screen."
-        maxWidth={620}
+        maxWidth={760}
       />
       <Reveal delay={1} className="templates-grid">
         {TEMPLATES.map((t) => (
@@ -20,6 +20,7 @@ export default function Templates() {
             className={`template-card ${t.highlighted ? 'is-highlighted' : ''}`}
           >
             <div
+              aria-hidden="true"
               className={`template-preview ${t.bordered ? 'is-bordered' : ''}`}
               style={{ background: t.surface }}
             >
@@ -35,7 +36,7 @@ export default function Templates() {
               )}
             </div>
             <div className="template-custom-note">
-              <span className="template-color-dot" style={{ background: t.accent }} />
+              <span aria-hidden="true" className="template-color-dot" style={{ background: t.accent }} />
               <span className="template-custom-text">Accent color customizable</span>
             </div>
           </div>

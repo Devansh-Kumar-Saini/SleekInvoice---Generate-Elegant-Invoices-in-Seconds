@@ -1,66 +1,79 @@
 .features-section {
-  scroll-margin-top: 84px;
+  scroll-margin-top: 100px;
   position: relative;
   z-index: 1;
-  max-width: 1280px;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 100px 24px;
+  padding: 100px 32px;
+}
+
+@media (max-width: 640px) {
+  .features-section {
+    padding: 72px 18px;
+  }
 }
 
 .features-hero-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-hair);
   border-radius: 20px;
-  padding: 40px;
-  margin-bottom: 20px;
+  padding: 44px;
+  margin-bottom: 24px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 48px;
   align-items: center;
 }
 
+@media (max-width: 640px) {
+  .features-hero-card {
+    padding: 24px;
+    gap: 32px;
+  }
+}
+
 .features-icon-box {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   background: var(--bg-surface-2);
-  border: 1px solid var(--border-hair);
+  border: 1px solid var(--border-hair-strong);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--blue-ink);
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .features-hero-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 21px;
+  font-size: 23px;
   font-weight: 600;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   color: var(--text-primary);
 }
 
 .features-hero-desc {
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }
 
 .features-preview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
 }
 
 .features-mockup-card {
   background: var(--bg-surface-2);
   border: 1px solid var(--border-hair);
   border-radius: 14px;
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .features-mockup-card.is-accent {
@@ -68,11 +81,12 @@
 }
 
 .features-mockup-tag {
-  font-size: 10px;
-  color: var(--text-tertiary);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .features-mockup-tag.is-blue {
@@ -89,22 +103,22 @@
 .mockup-line.w-90 { width: 90%; }
 .mockup-line.w-55 { width: 55%; }
 .mockup-line.w-80 { width: 80%; }
-.mockup-line.w-85 { width: 85%; background: var(--blue); opacity: 0.5; }
+.mockup-line.w-85 { width: 85%; background: var(--blue); opacity: 0.65; }
 .mockup-line.w-65 { width: 65%; }
 .mockup-line.w-75 { width: 75%; }
 .mockup-line.w-40-accent { width: 40%; height: 9px; background: var(--blue-ink); margin-top: 4px; }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .feature-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-hair);
   border-radius: 18px;
-  padding: 32px;
+  padding: 34px;
   transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -116,15 +130,15 @@
 
 .feature-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 17.5px;
+  font-size: 19px;
   font-weight: 600;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   color: var(--text-primary);
 }
 
 .feature-desc {
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }

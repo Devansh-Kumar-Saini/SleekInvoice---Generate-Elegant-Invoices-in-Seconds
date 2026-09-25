@@ -16,6 +16,16 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [mobileMenuOpen])
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   return (
@@ -24,7 +34,7 @@ export default function Header() {
       className={`header ${scrolled ? 'header-scrolled' : ''}`}
     >
       <div className="header-inner">
-        <a href="#top" className="header-brand">
+        <a href="#top" aria-label="InvoiceForge Home" className="header-brand">
           <span className="header-logo-icon">
             <ForgeMark />
           </span>
@@ -32,7 +42,7 @@ export default function Header() {
         </a>
 
         <div className="nav-desktop">
-          <nav className="nav-links">
+          <nav className="nav-links" aria-label="Main Navigation">
             {NAV_LINKS.map((link) => (
               <a key={link.href} href={link.href} className="nav-link">
                 {link.label}
@@ -41,8 +51,10 @@ export default function Header() {
           </nav>
           <div className="header-actions">
             <button
+              type="button"
               onClick={toggleTheme}
-              aria-label="Toggle theme"
+              aria-label={isLight ? 'Switch to dark theme' : 'Switch to light theme'}
+              aria-pressed={isLight}
               className="icon-btn"
             >
               {isLight ? <SunIcon /> : <MoonIcon />}
@@ -55,15 +67,20 @@ export default function Header() {
 
         <div className="nav-mobile">
           <button
+            type="button"
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label={isLight ? 'Switch to dark theme' : 'Switch to light theme'}
+            aria-pressed={isLight}
             className="nav-mobile-btn"
           >
             {isLight ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
+            type="button"
             onClick={() => setMobileMenuOpen((o) => !o)}
-            aria-label="Menu"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
             className="nav-mobile-btn nav-mobile-btn-toggle"
           >
             {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -72,7 +89,7 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="mobile-menu">
+        <nav id="mobile-nav-menu" aria-label="Mobile Navigation" className="mobile-menu">
           {NAV_LINKS.map((link) => (
             <a key={link.href} href={link.href} onClick={closeMobileMenu} className="mobile-menu-link">
               {link.label}
@@ -86,7 +103,7 @@ export default function Header() {
               Create Invoice
             </a>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   )

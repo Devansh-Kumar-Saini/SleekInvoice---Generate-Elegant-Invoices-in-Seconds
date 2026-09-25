@@ -1,25 +1,17 @@
 import React from 'react'
-import { ForgeMark, BoltIcon, ArrowRightIcon, DocIcon } from './Icons'
+import { ForgeMark, ArrowRightIcon, DocIcon } from './Icons'
 import Reveal from './Reveal'
 import '../styles/Hero.css'
 
 export default function Hero() {
   return (
-    <section className="hero-section">
+    <section aria-label="Hero" className="hero-section">
       <Reveal>
-        {/* <div className="hero-badge">
-          <BoltIcon />
-          <span className="hero-badge-text">
-            GENERATE ELEGANT INVOICES IN SECONDS
-          </span>
-          <span className="hero-badge-dot" />
-        </div> */}
         <div className="hero-badge">
-          {/* <BoltIcon /> */}
           <span className="hero-badge-text">
             No login required
           </span>
-          <span className="hero-badge-dot" />
+          <span className="hero-badge-dot" aria-hidden="true" />
         </div>
         <h1 className="hero-title">
           Professional Invoices.<br />Effortlessly Built.<br /><span className="hero-title-highlight">Instantly Paid.</span>
@@ -28,7 +20,6 @@ export default function Hero() {
           Fast invoices ● Zero friction
           <br />
           Create professional invoices in seconds with automatic tax calculations and instant client-ready PDF downloads.
-
         </p>
         <div className="hero-actions">
           <a href="https://allfreeinvoice.vercel.app/" className="btn-primary">
@@ -40,7 +31,7 @@ export default function Hero() {
           </a>
         </div>
         <div className="hero-trusted">
-          <div className="hero-avatars">
+          <div aria-hidden="true" className="hero-avatars">
             {['NC', 'CR', 'M', 'PG'].map((initials) => (
               <span
                 key={initials}
@@ -57,11 +48,15 @@ export default function Hero() {
       </Reveal>
 
       <Reveal delay={1} className="hero-preview-wrapper">
-        <div className="hero-invoice-card">
+        <div
+          role="region"
+          aria-label="Interactive preview of a sample invoice"
+          className="hero-invoice-card"
+        >
           <div className="hero-card-header">
             <div className="hero-card-brand">
-              <span className="hero-card-icon">
-                <ForgeMark size={11} />
+              <span className="hero-card-icon" aria-hidden="true">
+                <ForgeMark size={13} />
               </span>
               <span className="hero-card-inv-no">INV-2024-0847</span>
             </div>
@@ -99,8 +94,8 @@ export default function Hero() {
             </div>
           </div>
           <div className="hero-export-badge">
-            <span className="hero-export-icon">
-              <DocIcon size={15} />
+            <span className="hero-export-icon" aria-hidden="true">
+              <DocIcon size={16} />
             </span>
             <div>
               <div className="hero-export-title">PDF Exported</div>

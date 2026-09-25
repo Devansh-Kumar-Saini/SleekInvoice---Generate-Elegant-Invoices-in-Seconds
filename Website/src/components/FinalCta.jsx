@@ -5,9 +5,9 @@ import '../styles/FinalCta.css'
 
 export default function FinalCta() {
   return (
-    <section className="final-cta-section">
+    <section aria-label="Call to action" className="final-cta-section">
       <Reveal className="final-cta-card">
-        <div className="final-cta-glow" />
+        <div aria-hidden="true" className="final-cta-glow" />
         <div className="final-cta-content">
           <div className="final-cta-badge">
             No Sign-Up Required
