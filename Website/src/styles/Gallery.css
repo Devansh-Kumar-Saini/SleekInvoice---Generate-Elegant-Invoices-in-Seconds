@@ -64,6 +64,39 @@
   align-items: center;
   justify-content: center;
   perspective-origin: 50% 50%;
+  --card-w: 420px;
+  --card-h: 300px;
+  --spacing: 280px;
+  --stage-h: 520px;
+  --perspective: 1300px;
+  --z-step: 52px;
+  --rot-step: 18deg;
+  height: var(--stage-h);
+  perspective: var(--perspective);
+}
+
+@media (max-width: 1023px) {
+  .gallery-3d-viewport {
+    --card-w: 340px;
+    --card-h: 250px;
+    --spacing: 210px;
+    --stage-h: 440px;
+    --perspective: 1000px;
+    --z-step: 42px;
+    --rot-step: 16deg;
+  }
+}
+
+@media (max-width: 639px) {
+  .gallery-3d-viewport {
+    --card-w: 260px;
+    --card-h: 195px;
+    --spacing: 155px;
+    --stage-h: 360px;
+    --perspective: 850px;
+    --z-step: 34px;
+    --rot-step: 14deg;
+  }
 }
 
 .gallery-3d-viewport:focus-visible {
@@ -84,6 +117,10 @@
 
 .gallery-card-3d {
   position: absolute;
+  width: var(--card-w);
+  height: var(--card-h);
+  top: calc(var(--card-h) / -2);
+  left: calc(var(--card-w) / -2);
   border-radius: 18px;
   overflow: hidden;
   pointer-events: auto;
@@ -95,6 +132,18 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
+  transform: translate3d(
+    calc(var(--offset) * var(--spacing) + var(--drag-shift, 0px)),
+    0px,
+    calc(var(--abs-offset) * -1 * var(--z-step))
+  )
+  rotateY(calc(var(--sign-offset) * -1 * var(--abs-offset) * var(--rot-step)))
+  scale(calc(1 - var(--abs-offset) * 0.055));
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
+}
+
+.gallery-3d-viewport.is-dragging .gallery-card-3d {
+  transition: none;
 }
 
 .gallery-card-3d.is-dark {

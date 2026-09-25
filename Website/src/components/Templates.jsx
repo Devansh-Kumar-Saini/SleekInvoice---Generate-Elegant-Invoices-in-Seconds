@@ -11,7 +11,6 @@ export default function Templates() {
         eyebrow="Templates"
         title="Pick a look, or make it yours"
         subtitle="5 layouts to start from, each with its own accent color you can swap to match your brand. Every template exports pixel-identical to what you see on screen."
-        maxWidth={760}
       />
       <Reveal delay={1} className="templates-grid">
         {TEMPLATES.map((t) => (

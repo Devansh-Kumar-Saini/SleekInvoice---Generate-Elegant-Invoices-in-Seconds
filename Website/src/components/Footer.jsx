@@ -1,5 +1,4 @@
 import React from 'react'
-import { useTheme } from '../context/ThemeContext'
 import { ForgeMark, SunIcon, MoonIcon, MailIcon, CommunityIcon, UpdatesIcon, XIcon, LinkedinIcon, YoutubeIcon } from './Icons'
 import Reveal from './Reveal'
 import '../styles/Footer.css'
@@ -16,8 +15,8 @@ const RESOURCE_LINKS = [
   { href: '#', label: 'Terms of Service' },
 ]
 
-export default function Footer() {
-  const { isDark, toggleTheme } = useTheme()
+export default function Footer({ theme, toggleTheme }) {
+  const isDark = theme === 'dark'
 
   return (
     <footer className="footer">

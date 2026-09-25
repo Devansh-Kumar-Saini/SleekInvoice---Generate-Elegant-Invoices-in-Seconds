@@ -7,7 +7,7 @@ import '../styles/HowItWorks.css'
 export default function HowItWorks() {
   return (
     <section id="how-it-works" className="how-it-works-section">
-      <SectionHeading eyebrow="How It Works" title="From blank page to paid, in three steps" maxWidth={720} />
+      <SectionHeading eyebrow="How It Works" title="From blank page to paid, in three steps" />
       <Reveal delay={1} as="ol" className="steps-grid">
         {HOW_IT_WORKS.map((step) => (
           <li key={step.num} className="step-card">

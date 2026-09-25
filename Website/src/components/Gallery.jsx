@@ -11,128 +11,59 @@ export default function Gallery() {
   const [activeIndex, setActiveIndex] = useState(null)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1200
-  )
 
   const items = useMemo(() => {
     return GALLERY_ITEMS.map((item) => ({
       ...item,
       src: resolveImage(item.image),
       title: item.caption.split('—')[0]?.trim() || item.caption,
-      subtitle: item.caption.includes('—')
-        ? item.caption.split('—')[1]?.trim()
-        : '',
     }))
   }, [])
 
   const count = items.length
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  const layout = useMemo(() => {
-    if (windowWidth < 640) {
-      return {
-        cardWidth: 260,
-        cardHeight: 195,
-        spacing: 155,
-        stageHeight: 360,
-        perspective: 850,
-        zStep: 34,
-        rotStep: 14,
-      }
-    } else if (windowWidth < 1024) {
-      return {
-        cardWidth: 340,
-        cardHeight: 250,
-        spacing: 210,
-        stageHeight: 440,
-        perspective: 1000,
-        zStep: 42,
-        rotStep: 16,
-      }
-    } else {
-      return {
-        cardWidth: 420,
-        cardHeight: 300,
-        spacing: 280,
-        stageHeight: 520,
-        perspective: 1300,
-        zStep: 52,
-        rotStep: 18,
-      }
-    }
-  }, [windowWidth])
-
   const next = useCallback(() => {
-    setDragOffset(0)
     setCurrentIndex((i) => (i + 1) % count)
   }, [count])
 
   const prev = useCallback(() => {
-    setDragOffset(0)
     setCurrentIndex((i) => (i - 1 + count) % count)
   }, [count])
 
   const goTo = useCallback((idx) => {
-    setDragOffset(0)
     setCurrentIndex(idx)
   }, [])
 
   const dragStartXRef = useRef(0)
-  const isDraggingRef = useRef(false)
-  const currentDragOffsetRef = useRef(0)
 
   const handlePointerDown = (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return
     if (e.target.closest('button')) return
-
-    isDraggingRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
     setIsDragging(true)
     dragStartXRef.current = e.clientX
-    currentDragOffsetRef.current = 0
   }
 
   const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return
-    const diff = e.clientX - dragStartXRef.current
-    currentDragOffsetRef.current = diff
-    setDragOffset(diff)
+    if (!isDragging) return
+    setDragOffset(e.clientX - dragStartXRef.current)
   }
 
-  const handlePointerUp = () => {
-    if (!isDraggingRef.current) return
-
-    isDraggingRef.current = false
+  const handlePointerUp = (e) => {
+    if (!isDragging) return
     setIsDragging(false)
-
-    const offset = currentDragOffsetRef.current
-    currentDragOffsetRef.current = 0
+    const diff = e.clientX - dragStartXRef.current
     setDragOffset(0)
-
-    if (offset < -45) {
-      next()
-    } else if (offset > 45) {
-      prev()
-    }
+    if (diff < -45) next()
+    else if (diff > 45) prev()
   }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (activeIndex !== null) {
-        if (e.key === 'Escape') {
-          setActiveIndex(null)
-        }
-        if (e.key === 'ArrowLeft') {
-          setActiveIndex((i) => (i - 1 + count) % count)
-        }
-        if (e.key === 'ArrowRight') {
-          setActiveIndex((i) => (i + 1) % count)
-        }
+        if (e.key === 'Escape') setActiveIndex(null)
+        else if (e.key === 'ArrowLeft') setActiveIndex((i) => (i - 1 + count) % count)
+        else if (e.key === 'ArrowRight') setActiveIndex((i) => (i + 1) % count)
         return
       }
 
@@ -159,7 +90,6 @@ export default function Gallery() {
         eyebrow="Invoice Gallery"
         title="See InvoiceForge in action"
         subtitle="Explore our live builder, crafted invoice templates, and branding tools."
-        maxWidth={760}
       />
 
       {/* Main 3D Stage */}
@@ -167,11 +97,7 @@ export default function Gallery() {
         {/* Previous Button */}
         <button
           type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            prev()
-          }}
+          onClick={prev}
           aria-label="Previous template"
           className="gallery-nav-btn gallery-nav-prev"
         >
@@ -184,75 +110,44 @@ export default function Gallery() {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onPointerLeave={(e) => {
-            if (isDraggingRef.current) {
-              handlePointerUp(e)
-            }
-          }}
           tabIndex={0}
           role="region"
           aria-label="3D curved invoice gallery. Drag or use arrow keys to navigate."
-          className="gallery-3d-viewport"
+          className={`gallery-3d-viewport${isDragging ? ' is-dragging' : ''}`}
           style={{
-            height: layout.stageHeight,
-            perspective: `${layout.perspective}px`,
             cursor: isDragging ? 'grabbing' : 'grab',
+            '--drag-shift': `${(dragOffset * 0.4).toFixed(1)}px`,
           }}
         >
           {/* 3D Container */}
           <div className="gallery-3d-container">
             {items.map((item, idx) => {
               let offset = idx - currentIndex
-
-              if (offset > count / 2) {
-                offset -= count
-              }
-              if (offset < -count / 2) {
-                offset += count
-              }
+              if (offset > count / 2) offset -= count
+              if (offset < -count / 2) offset += count
 
               const isActive = offset === 0
-              const dragShift = dragOffset * 0.4
-              const x = offset * layout.spacing + dragShift
-              const z = -Math.abs(offset) * layout.zStep
-              const rotY = -Math.sign(offset) * (Math.abs(offset) * layout.rotStep)
-              const scale = 1 - Math.abs(offset) * 0.055
-              const zIndex = 50 - Math.abs(offset) * 10
-              const opacity = Math.abs(offset) > 3 ? 0 : 1 - Math.abs(offset) * 0.1
+              const absOffset = Math.abs(offset)
+              const zIndex = 50 - absOffset * 10
+              const opacity = absOffset > 3 ? 0 : 1 - absOffset * 0.1
 
               return (
                 <div
                   key={item.key}
                   onClick={() => {
-                    if (isActive) {
-                      setActiveIndex(idx)
-                    } else {
-                      goTo(idx)
-                    }
+                    if (isActive) setActiveIndex(idx)
+                    else goTo(idx)
                   }}
-                  className={`gallery-card-3d ${
-                    isActive ? 'is-active' : ''
-                  } ${item.key === 'darkmode' ? 'is-dark' : 'is-light'}`}
+                  className={`gallery-card-3d ${isActive ? 'is-active' : ''} ${
+                    item.key === 'darkmode' ? 'is-dark' : 'is-light'
+                  }`}
                   style={{
-                    width: layout.cardWidth,
-                    height: layout.cardHeight,
-                    top: -layout.cardHeight / 2,
-                    left: -layout.cardWidth / 2,
+                    '--offset': offset,
+                    '--abs-offset': absOffset,
+                    '--sign-offset': Math.sign(offset),
                     zIndex,
                     opacity,
                     cursor: isActive ? 'zoom-in' : 'pointer',
-                    transform: `
-                      translate3d(
-                        ${x.toFixed(1)}px,
-                        0px,
-                        ${z.toFixed(1)}px
-                      )
-                      rotateY(${rotY.toFixed(1)}deg)
-                      scale(${scale.toFixed(2)})
-                    `,
-                    transition: isDragging
-                      ? 'none'
-                      : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease',
                   }}
                 >
                   {/* Zoom Button */}
@@ -288,11 +183,7 @@ export default function Gallery() {
         {/* Next Button */}
         <button
           type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            next()
-          }}
+          onClick={next}
           aria-label="Next template"
           className="gallery-nav-btn gallery-nav-next"
         >
@@ -309,9 +200,6 @@ export default function Gallery() {
               <span className="gallery-caption-tag">
                 {currentItem?.title}
               </span>
-              {/* <span className="gallery-caption-tag">
-                Template {currentIndex + 1} of {count}
-              </span> */}
             </div>
 
             <p className="gallery-caption-text">

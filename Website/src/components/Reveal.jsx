@@ -1,33 +1,38 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
+
+let sharedObserver
+function getObserver() {
+  if (!sharedObserver && typeof IntersectionObserver !== 'undefined') {
+    sharedObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          sharedObserver.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' })
+  }
+  return sharedObserver
+}
 
 export default function Reveal({ as: Tag = 'div', delay, className = '', style, children, ...rest }) {
   const ref = useRef(null)
-  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const el = ref.current
-    if (!el || typeof IntersectionObserver === 'undefined') {
-      setVisible(true)
+    if (!el) return
+    const obs = getObserver()
+    if (!obs) {
+      el.classList.add('is-visible')
       return
     }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+    obs.observe(el)
+    return () => obs.unobserve(el)
   }, [])
 
   const delayClass = delay ? ` reveal-d${delay}` : ''
-  const classes = `reveal${delayClass}${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`
-
   return (
-    <Tag ref={ref} className={classes} style={style} {...rest}>
+    <Tag ref={ref} className={`reveal${delayClass}${className ? ` ${className}` : ''}`} style={style} {...rest}>
       {children}
     </Tag>
   )

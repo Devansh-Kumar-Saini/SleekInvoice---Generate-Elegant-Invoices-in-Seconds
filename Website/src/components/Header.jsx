@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useTheme } from '../context/ThemeContext'
 import { NAV_LINKS } from '../data/content'
 import { ForgeMark, SunIcon, MoonIcon, CloseIcon, MenuIcon } from './Icons'
 import '../styles/Header.css'
 
-export default function Header() {
-  const { toggleTheme, isLight } = useTheme()
+export default function Header({ theme, toggleTheme }) {
+  const isLight = theme === 'light'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 

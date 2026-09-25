@@ -12,7 +12,6 @@ export const TRUSTED_LOGOS = [
   'News Connect',
   'Pass Guard',
   'Rehabit',
-  // 'Talk2SQL',
   'API Gen',
   'Goal Invest AI',
   'OCC Mobiles'
@@ -45,14 +44,13 @@ export const TEMPLATES = [
 ]
 
 export const GALLERY_ITEMS = [
-  { key: 'fullpreview', image: 'fullpreview.png', caption: 'Live builder with real-time invoice preview', colSpan: 2, rowSpan: 2 },
-  { key: 'default', image: 'default.png', caption: 'Classic template — clean itemized layout', colSpan: 1, rowSpan: 2 },
-  { key: 'modern', image: 'modern.png', caption: 'Modern template — bold header, card summary', colSpan: 1, rowSpan: 2 },
-  // { key: 'elegant', image: 'elegant.png', caption: 'Elegant template — formal serif letterhead', colSpan: 1, rowSpan: 2 },
-  { key: 'cleanInvoice', image: 'cleanInvoice.png', caption: 'Clean template — minimal, theme-aware', colSpan: 1, rowSpan: 2 },
-  { key: 'customize', image: 'customize.png', caption: 'Customize Invoice — brand your accent colors', colSpan: 1, rowSpan: 2 },
-  { key: 'elegent', image: 'elegent.png', caption: 'Elegant template — formal serif letterhead', colSpan: 1, rowSpan: 2 },
-  { key: 'darkmode', image: 'darkmode.png', caption: 'Dark mode — easy on the eyes for night work', colSpan: 1, rowSpan: 2 },
+  { key: 'fullpreview', image: 'fullpreview.png', caption: 'Live builder with real-time invoice preview' },
+  { key: 'default', image: 'default.png', caption: 'Classic template — clean itemized layout' },
+  { key: 'modern', image: 'modern.png', caption: 'Modern template — bold header, card summary' },
+  { key: 'cleanInvoice', image: 'cleanInvoice.png', caption: 'Clean template — minimal, theme-aware' },
+  { key: 'customize', image: 'customize.png', caption: 'Customize Invoice — brand your accent colors' },
+  { key: 'elegent', image: 'elegent.png', caption: 'Elegant template — formal serif letterhead' },
+  { key: 'darkmode', image: 'darkmode.png', caption: 'Dark mode — easy on the eyes for night work' },
 ]
 
 export const TESTIMONIALS = [
@@ -78,7 +76,5 @@ export const FAQS = [
   { q: 'What formats can I export to?', a: 'Every invoice exports as a crisp, print-ready PDF in under a second. CSV export and shareable payment links are on the roadmap.' },
   { q: 'Does it handle multiple currencies and tax rules?', a: 'Yes — choose from 30+ currencies and InvoiceForge automatically calculates VAT, GST, and custom tax or discount rates per line item.' },
   { q: 'Is my invoice data stored anywhere?', a: 'Free plan invoices stay local to your browser.' },
-  // { q: 'Is my invoice data stored anywhere?', a: 'Free plan invoices stay local to your browser. Forge Pro securely syncs your clients, catalog, and invoice history so you can access them anywhere.' },
   { q: 'Can I add my own logo and branding?', a: 'Absolutely. Drop in your logo and brand color for custom branding.' },
-  // { q: 'Can I cancel Forge Pro anytime?', a: 'Yes. It is a simple monthly plan with no contracts — cancel anytime and keep using the Free plan.' },
 ]

@@ -8,7 +8,7 @@ import '../styles/Faqs.css'
 export default function Faqs() {
   return (
     <section id="faqs" className="faqs-section">
-      <SectionHeading eyebrow="FAQ" title="Frequently asked questions" maxWidth={760} />
+      <SectionHeading eyebrow="FAQ" title="Frequently asked questions" />
       <Reveal delay={1} className="faqs-list">
         {FAQS.map((faq) => (
           <details key={faq.q} className="faq-item">

@@ -51,13 +51,6 @@ export function ArrowRightIcon({ size = 17 }) {
   )
 }
 
-export function BoltIcon({ size = 13 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--amber-ink)" stroke="none" aria-hidden="true" focusable="false">
-      <path d="M13 2L3 14h7l-1 8 11-14h-8z" />
-    </svg>
-  )
-}
 
 export function GridIcon({ size = 20 }) {
   return (

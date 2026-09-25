@@ -1,5 +1,4 @@
-import React from 'react'
-import { ThemeProvider, useTheme } from './context/ThemeContext'
+import React, { useState } from 'react'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import TrustBar from './components/TrustBar'
@@ -13,8 +12,9 @@ import FinalCta from './components/FinalCta'
 import Footer from './components/Footer'
 import './styles/App.css'
 
-function Page() {
-  const { theme } = useTheme()
+export default function App() {
+  const [theme, setTheme] = useState('dark')
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
 
   return (
     <div data-theme={theme} className="app-container">
@@ -23,7 +23,7 @@ function Page() {
       </a>
       <div aria-hidden="true" className="mesh-background" />
 
-      <Header />
+      <Header theme={theme} toggleTheme={toggleTheme} />
       <main id="main-content" tabIndex={-1}>
         <Hero />
         <TrustBar />
@@ -35,15 +35,7 @@ function Page() {
         <Faqs />
         <FinalCta />
       </main>
-      <Footer />
+      <Footer theme={theme} toggleTheme={toggleTheme} />
     </div>
-  )
-}
-
-export default function App() {
-  return (
-    <ThemeProvider defaultTheme="dark">
-      <Page />
-    </ThemeProvider>
   )
 }
