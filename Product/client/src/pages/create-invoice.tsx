@@ -340,7 +340,7 @@ export default function CreateInvoice() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* <div className="mb-8"> */}
           {/* <h1
             className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2"
@@ -998,7 +998,7 @@ export default function CreateInvoice() {
               className="max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-auto rounded-xl border border-card-border bg-muted/40 p-4 sm:p-6"
               data-testid="invoice-preview-scroll-area"
             >
-              <div className="min-w-fit">
+              <div className="min-w-fit w-full">
                 <InvoicePreview
                   template={values.template}
                   companyName={values.companyName}

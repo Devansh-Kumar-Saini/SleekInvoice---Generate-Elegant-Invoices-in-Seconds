@@ -144,7 +144,7 @@ function ClassicPreview({
   const c = colorsFor("classic", customColors, ["primary", "dark", "muted", "border", "headerFill"], isDark);
   return (
     <Card
-      className={`p-8 shadow-sm w-full max-w-4xl ${isDark ? "bg-[#18181a]" : "bg-white"}`}
+      className={`p-8 shadow-sm w-full max-w-4xl mx-auto ${isDark ? "bg-[#18181a]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       <div className="space-y-8">
@@ -391,7 +391,7 @@ function CleanPreview({
 
   return (
     <Card
-      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl ${border} ${
+      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl mx-auto ${border} ${
         isDark ? "bg-black text-white" : "bg-white text-black"
       }`}
       data-testid="invoice-preview"
@@ -591,7 +591,7 @@ function ModernPreview({
 
   return (
     <Card
-      className={`p-0 shadow-sm w-full max-w-4xl overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
+      className={`p-0 shadow-sm w-full max-w-4xl mx-auto overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       {/* Banner header */}
@@ -832,7 +832,7 @@ function ElegantPreview({
 
   return (
     <Card
-      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl ${isDark ? "bg-[#1a1917]" : "bg-white"}`}
+      className={`p-8 sm:p-10 shadow-sm w-full max-w-4xl mx-auto ${isDark ? "bg-[#1a1917]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       <div className="space-y-8">
@@ -1041,7 +1041,7 @@ function SidebarPreview({
 
   return (
     <Card
-      className={`p-0 shadow-sm w-full max-w-4xl overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
+      className={`p-0 shadow-sm w-full max-w-4xl mx-auto overflow-hidden ${isDark ? "bg-[#18181a]" : "bg-white"}`}
       data-testid="invoice-preview"
     >
       <div className="flex flex-col sm:flex-row">
