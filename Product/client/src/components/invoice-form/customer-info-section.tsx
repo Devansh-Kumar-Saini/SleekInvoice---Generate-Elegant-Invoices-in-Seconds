@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,10 @@ export function CustomerInfoSection({ values, updateField }: CustomerInfoSection
       className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden"
     >
       <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
-        <h2 className="text-xl font-semibold text-left">Customer Information</h2>
+        <div className="flex items-center gap-2 text-left">
+          <User className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Customer Information</h2>
+        </div>
       </AccordionTrigger>
       <AccordionContent className="px-6 sm:px-8 pb-8">
         <div className="space-y-6">

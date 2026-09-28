@@ -5,6 +5,7 @@ import {
   loadImage,
   type InvoicePdfData,
   type LoadedLogo,
+  type LoadedPaymentImageItem,
   type TemplateContext,
   FONT_FAMILY,
 } from "./core";
@@ -43,19 +44,52 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
     logoWarning = result.warning;
   }
 
-  let paymentImage: LoadedLogo | null = null;
-  let paymentImageWarning: string | null = null;
-  if (invoice.paymentImage) {
-    const desc =
-      invoice.paymentImageType === "cheque"
-        ? "cancelled cheque"
-        : invoice.paymentImageType === "qr"
-        ? "payment QR code"
-        : "payment image";
-    const result = await loadImage(invoice.paymentImage, desc);
-    paymentImage = result.logo;
-    paymentImageWarning = result.warning;
+  const rawPaymentImages: Array<{ image: string; type?: string; label?: string }> = [];
+  if (invoice.paymentImages && invoice.paymentImages.length > 0) {
+    for (const item of invoice.paymentImages) {
+      if (item.image && item.image.trim()) {
+        rawPaymentImages.push(item);
+      }
+    }
+  } else if (invoice.paymentImage && invoice.paymentImage.trim()) {
+    rawPaymentImages.push({
+      image: invoice.paymentImage,
+      type: invoice.paymentImageType,
+      label: invoice.paymentImageLabel,
+    });
   }
+
+  const paymentImages: LoadedPaymentImageItem[] = [];
+  const paymentImageWarnings: string[] = [];
+
+  for (let i = 0; i < Math.min(rawPaymentImages.length, 3); i++) {
+    const item = rawPaymentImages[i];
+    const desc =
+      item.type === "cheque"
+        ? `cancelled cheque (#${i + 1})`
+        : item.type === "qr"
+        ? `payment QR code (#${i + 1})`
+        : `payment image (#${i + 1})`;
+    const result = await loadImage(item.image, desc);
+    if (result.logo) {
+      const defaultCaption =
+        item.type === "cheque"
+          ? "Cancelled Cheque"
+          : item.type === "qr"
+          ? "Scan to Pay"
+          : "Payment Document";
+      paymentImages.push({
+        logo: result.logo,
+        type: item.type || "qr",
+        label: item.label || defaultCaption,
+      });
+    }
+    if (result.warning) {
+      paymentImageWarnings.push(result.warning);
+    }
+  }
+
+  const primaryPaymentImage = paymentImages[0]?.logo || null;
 
   const validItems = invoice.items.filter((item) => item.name && item.name.trim() !== "");
   const isDark = !!invoice.isDarkMode;
@@ -64,7 +98,8 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
     doc,
     invoice,
     logo,
-    paymentImage,
+    paymentImage: primaryPaymentImage,
+    paymentImages,
     pageWidth,
     pageHeight,
     margin,
@@ -99,6 +134,6 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
   const safeInvoiceNumber = (invoice.invoiceNumber || "invoice").replace(/[^a-zA-Z0-9-_]/g, "");
   doc.save(`${safeInvoiceNumber}.pdf`);
 
-  const warnings = [logoWarning, paymentImageWarning].filter(Boolean);
+  const warnings = [logoWarning, ...paymentImageWarnings].filter(Boolean);
   return { warning: warnings.length > 0 ? warnings.join(" ") : null };
 }

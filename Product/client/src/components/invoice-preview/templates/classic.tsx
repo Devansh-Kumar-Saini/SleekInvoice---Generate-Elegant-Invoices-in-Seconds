@@ -34,6 +34,7 @@ export function ClassicPreview({
   upiId,
   paymentTerms,
   paymentNotes,
+  paymentImages,
   paymentImage,
   paymentImageType,
   paymentImageLabel,
@@ -268,6 +269,7 @@ export function ClassicPreview({
           upiId={upiId}
           paymentTerms={paymentTerms}
           paymentNotes={paymentNotes}
+          paymentImages={paymentImages}
           paymentImage={paymentImage}
           paymentImageType={paymentImageType}
           paymentImageLabel={paymentImageLabel}

@@ -1,3 +1,4 @@
+import { Building2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -26,7 +27,10 @@ export function CompanyInfoSection({
       className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden"
     >
       <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
-        <h2 className="text-xl font-semibold text-left">Company Information</h2>
+        <div className="flex items-center gap-2 text-left">
+          <Building2 className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Company Information</h2>
+        </div>
       </AccordionTrigger>
       <AccordionContent className="px-6 sm:px-8 pb-8">
         <div className="space-y-6">

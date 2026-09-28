@@ -34,6 +34,7 @@ export function SidebarPreview({
   upiId,
   paymentTerms,
   paymentNotes,
+  paymentImages,
   paymentImage,
   paymentImageType,
   paymentImageLabel,
@@ -242,6 +243,7 @@ export function SidebarPreview({
             upiId={upiId}
             paymentTerms={paymentTerms}
             paymentNotes={paymentNotes}
+            paymentImages={paymentImages}
             paymentImage={paymentImage}
             paymentImageType={paymentImageType}
             paymentImageLabel={paymentImageLabel}

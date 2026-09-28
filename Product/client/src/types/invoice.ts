@@ -13,6 +13,13 @@ export interface InvoiceItem {
 
 export type PaymentImageType = "qr" | "cheque" | "other";
 
+export interface PaymentImageItem {
+  id: string;
+  image: string;
+  type: PaymentImageType;
+  label: string;
+}
+
 export type FormValues = {
   companyName: string;
   companyLogo: string;
@@ -40,6 +47,7 @@ export type FormValues = {
   upiId: string;
   paymentTerms: string;
   paymentNotes: string;
+  paymentImages: PaymentImageItem[];
   paymentImage: string;
   paymentImageType: PaymentImageType;
   paymentImageLabel: string;
@@ -107,6 +115,14 @@ export const initialFormValues: FormValues = {
   upiId: "",
   paymentTerms: "",
   paymentNotes: "",
+  paymentImages: [
+    {
+      id: "1",
+      image: "",
+      type: "qr",
+      label: "Scan to Pay",
+    },
+  ],
   paymentImage: "",
   paymentImageType: "qr",
   paymentImageLabel: "",

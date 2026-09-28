@@ -1,3 +1,4 @@
+import { FileText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -24,7 +25,10 @@ export function InvoiceDetailsSection({
       className="rounded-xl border bg-card border-card-border text-card-foreground shadow-sm overflow-hidden"
     >
       <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
-        <h2 className="text-xl font-semibold text-left">Invoice Details</h2>
+        <div className="flex items-center gap-2 text-left">
+          <FileText className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Invoice Details</h2>
+        </div>
       </AccordionTrigger>
       <AccordionContent className="px-6 sm:px-8 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

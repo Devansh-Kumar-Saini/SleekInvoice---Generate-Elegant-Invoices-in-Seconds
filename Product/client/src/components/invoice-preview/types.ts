@@ -2,6 +2,7 @@ import {
   type InvoiceItem,
   type LogoSize,
   type PaymentImageType,
+  type PaymentImageItem,
   currencies as currencyList,
 } from "@/types/invoice";
 import {
@@ -47,6 +48,7 @@ export interface InvoicePreviewProps {
   upiId?: string;
   paymentTerms?: string;
   paymentNotes?: string;
+  paymentImages?: PaymentImageItem[];
   paymentImage?: string;
   paymentImageType?: PaymentImageType;
   paymentImageLabel?: string;

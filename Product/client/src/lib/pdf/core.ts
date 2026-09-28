@@ -88,6 +88,11 @@ export interface InvoicePdfData {
   upiId?: string;
   paymentTerms?: string;
   paymentNotes?: string;
+  paymentImages?: Array<{
+    image: string;
+    type?: string;
+    label?: string;
+  }>;
   paymentImage?: string;
   paymentImageType?: string;
   paymentImageLabel?: string;
@@ -229,11 +234,18 @@ export function loadLogo(
 
 export type ColorizableTemplateArg = "classic" | "modern" | "elegant" | "sidebar";
 
+export interface LoadedPaymentImageItem {
+  logo: LoadedLogo;
+  type: string;
+  label: string;
+}
+
 export interface TemplateContext {
   doc: jsPDF;
   invoice: InvoicePdfData;
   logo: LoadedLogo | null;
   paymentImage: LoadedLogo | null;
+  paymentImages: LoadedPaymentImageItem[];
   pageWidth: number;
   pageHeight: number;
   margin: number;

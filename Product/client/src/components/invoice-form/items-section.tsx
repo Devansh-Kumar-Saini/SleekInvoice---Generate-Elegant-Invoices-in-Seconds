@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,10 @@ export function ItemsSection({
     >
       <AccordionTrigger className="px-6 sm:px-8 py-5 hover:no-underline [&>svg]:ml-4">
         <div className="flex items-center justify-between w-full pr-2">
-          <h2 className="text-xl font-semibold">Items</h2>
+          <div className="flex items-center gap-2 text-left">
+            <Package className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-xl font-semibold">Items</h2>
+          </div>
           <Button
             variant="secondary"
             size="sm"
@@ -130,6 +133,17 @@ export function ItemsSection({
               </div>
             </div>
           ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addItem}
+            data-testid="button-add-item-bottom"
+            className="w-full border-dashed py-3 flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted/50 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add Item
+          </Button>
         </div>
       </AccordionContent>
     </AccordionItem>

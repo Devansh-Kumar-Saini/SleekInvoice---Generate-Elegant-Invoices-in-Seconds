@@ -30,6 +30,7 @@ export function CleanPreview({
   upiId,
   paymentTerms,
   paymentNotes,
+  paymentImages,
   paymentImage,
   paymentImageType,
   paymentImageLabel,
@@ -215,6 +216,7 @@ export function CleanPreview({
           upiId={upiId}
           paymentTerms={paymentTerms}
           paymentNotes={paymentNotes}
+          paymentImages={paymentImages}
           paymentImage={paymentImage}
           paymentImageType={paymentImageType}
           paymentImageLabel={paymentImageLabel}

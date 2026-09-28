@@ -1,4 +1,5 @@
-import { type PaymentImageType } from "@/types/invoice";
+import { useMemo } from "react";
+import { type PaymentImageType, type PaymentImageItem } from "@/types/invoice";
 
 export interface PaymentPreviewBlockProps {
   bankName?: string;
@@ -8,6 +9,7 @@ export interface PaymentPreviewBlockProps {
   upiId?: string;
   paymentTerms?: string;
   paymentNotes?: string;
+  paymentImages?: PaymentImageItem[];
   paymentImage?: string;
   paymentImageType?: PaymentImageType;
   paymentImageLabel?: string;
@@ -30,6 +32,7 @@ export function PaymentPreviewBlock({
   upiId,
   paymentTerms,
   paymentNotes,
+  paymentImages,
   paymentImage,
   paymentImageType = "qr",
   paymentImageLabel,
@@ -37,11 +40,46 @@ export function PaymentPreviewBlock({
   variant = "classic",
   theme = {},
 }: PaymentPreviewBlockProps) {
+  const normalizedImages: PaymentImageItem[] = useMemo(() => {
+    if (paymentImages && paymentImages.length > 0) {
+      return paymentImages
+        .filter((img) => img.image && img.image.trim() !== "")
+        .slice(0, 3)
+        .map((img) => ({
+          ...img,
+          label:
+            img.label ||
+            (img.type === "cheque"
+              ? "Cancelled Cheque"
+              : img.type === "qr"
+              ? "Scan to Pay"
+              : "Payment Document"),
+        }));
+    }
+    if (paymentImage && paymentImage.trim() !== "") {
+      const defaultCaption =
+        paymentImageType === "cheque"
+          ? "Cancelled Cheque"
+          : paymentImageType === "qr"
+          ? "Scan to Pay"
+          : "Payment Document";
+      return [
+        {
+          id: "default-img",
+          image: paymentImage,
+          type: paymentImageType || "qr",
+          label: paymentImageLabel || defaultCaption,
+        },
+      ];
+    }
+    return [];
+  }, [paymentImages, paymentImage, paymentImageType, paymentImageLabel]);
+
   const hasBankDetails = Boolean(
     bankName || accountName || accountNumber || routingCode || upiId || paymentNotes
   );
   const hasTerms = Boolean(paymentTerms && paymentTerms.trim());
-  const hasImage = Boolean(paymentImage && paymentImage.trim());
+  const hasImage = normalizedImages.length > 0;
   const hasNotes = Boolean(notes && notes.trim());
 
   if (!hasBankDetails && !hasTerms && !hasImage && !hasNotes) {
@@ -53,15 +91,6 @@ export function PaymentPreviewBlock({
   const muted = theme.muted || "#6b7280";
   const border = theme.border || "#e5e7eb";
   const cardBg = theme.cardBg || "transparent";
-
-  const defaultImageCaption =
-    paymentImageType === "cheque"
-      ? "Cancelled Cheque"
-      : paymentImageType === "qr"
-      ? "Scan to Pay"
-      : "Payment Document";
-
-  const imageCaption = paymentImageLabel || defaultImageCaption;
 
   return (
     <div
@@ -186,35 +215,90 @@ export function PaymentPreviewBlock({
           )}
         </div>
 
-        {/* Right side: Payment Image (QR Code / Cancelled Cheque) */}
-        {hasImage && (
+        {/* Right side: Payment Image when exactly 1 image and other details exist */}
+        {hasImage && normalizedImages.length === 1 && (hasBankDetails || hasTerms || hasNotes) && (
           <div
             className="flex flex-col items-center justify-center p-2 rounded border bg-card/60 shrink-0 self-center sm:self-start mt-2 sm:mt-0"
             style={{ borderColor: border }}
           >
             <div
               className={
-                paymentImageType === "cheque"
+                normalizedImages[0].type === "cheque"
                   ? "w-40 h-24 flex items-center justify-center overflow-hidden rounded bg-background"
                   : "w-24 h-24 flex items-center justify-center overflow-hidden rounded bg-background"
               }
             >
               <img
-                src={paymentImage}
-                alt={imageCaption}
+                src={normalizedImages[0].image}
+                alt={normalizedImages[0].label}
                 className="max-w-full max-h-full object-contain"
               />
             </div>
             <span
               className="text-[10px] font-medium text-center mt-1.5 max-w-[160px] truncate"
               style={{ color: muted }}
-              title={imageCaption}
+              title={normalizedImages[0].label}
             >
-              {imageCaption}
+              {normalizedImages[0].label}
             </span>
           </div>
         )}
       </div>
+
+      {/* Multiple Payment Images (or single image when no text details exist) */}
+      {hasImage && (normalizedImages.length > 1 || (!hasBankDetails && !hasTerms && !hasNotes)) && (
+        <div
+          className={`space-y-2 ${hasBankDetails || hasTerms || hasNotes ? "pt-3 border-t" : ""}`}
+          style={{ borderColor: border }}
+        >
+          {(hasBankDetails || hasTerms || hasNotes) && (
+            <div
+              className="font-bold uppercase tracking-wider text-[10px]"
+              style={{ color: muted }}
+            >
+              Payment Methods &amp; Verification
+            </div>
+          )}
+          <div
+            className={`grid gap-3 ${
+              normalizedImages.length === 1
+                ? "grid-cols-1 max-w-[200px]"
+                : normalizedImages.length === 2
+                ? "grid-cols-1 sm:grid-cols-2"
+                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+            }`}
+          >
+            {normalizedImages.map((img, idx) => (
+              <div
+                key={img.id || idx}
+                className="flex flex-col items-center justify-center p-2.5 rounded border bg-card/60"
+                style={{ borderColor: border }}
+              >
+                <div
+                  className={
+                    img.type === "cheque"
+                      ? "w-full h-24 flex items-center justify-center overflow-hidden rounded bg-background"
+                      : "w-24 h-24 flex items-center justify-center overflow-hidden rounded bg-background"
+                  }
+                >
+                  <img
+                    src={img.image}
+                    alt={img.label}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+                <span
+                  className="text-[10px] font-medium text-center mt-1.5 max-w-[160px] truncate"
+                  style={{ color: muted }}
+                  title={img.label}
+                >
+                  {img.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

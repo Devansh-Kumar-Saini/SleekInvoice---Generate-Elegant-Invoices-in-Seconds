@@ -16,6 +16,8 @@ import { type ColorizableTemplate } from "@/lib/pdf-templates";
 import {
   type InvoiceItem,
   type FormValues,
+  type PaymentImageType,
+  type PaymentImageItem,
   currencies,
   generateInvoiceNumber,
   initialFormValues,
@@ -27,7 +29,6 @@ export default function CreateInvoice() {
     { name: "", quantity: 1, price: "", details: "" },
   ]);
   const [logoPreview, setLogoPreview] = useState<string>("");
-  const [paymentImagePreview, setPaymentImagePreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
   const [openSection, setOpenSection] = useState<string>("company");
@@ -99,18 +100,72 @@ export default function CreateInvoice() {
     reader.readAsDataURL(file);
   };
 
-  const handlePaymentImageUrlChange = (url: string) => {
-    updateField("paymentImage", url);
-    setPaymentImagePreview(url);
+  const addPaymentImage = () => {
+    if (values.paymentImages.length >= 3) return;
+    const usedTypes = new Set(values.paymentImages.map((img) => img.type));
+    let nextType: PaymentImageType = "qr";
+    if (!usedTypes.has("qr")) nextType = "qr";
+    else if (!usedTypes.has("cheque")) nextType = "cheque";
+    else if (!usedTypes.has("other")) nextType = "other";
+
+    const defaultLabels: Record<PaymentImageType, string> = {
+      qr: "Scan to Pay",
+      cheque: "Cancelled Cheque",
+      other: "Payment Document",
+    };
+
+    const newItem: PaymentImageItem = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      image: "",
+      type: nextType,
+      label: defaultLabels[nextType],
+    };
+
+    setValues((prev) => {
+      const nextImages = [...prev.paymentImages, newItem];
+      return {
+        ...prev,
+        paymentImages: nextImages,
+        paymentImage: nextImages[0]?.image || "",
+        paymentImageType: nextImages[0]?.type || "qr",
+        paymentImageLabel: nextImages[0]?.label || "",
+      };
+    });
   };
 
-  const handlePaymentImageFileChange = (file: File | null) => {
+  const removePaymentImage = (index: number) => {
+    setValues((prev) => {
+      const nextImages = prev.paymentImages.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        paymentImages: nextImages,
+        paymentImage: nextImages[0]?.image || "",
+        paymentImageType: nextImages[0]?.type || "qr",
+        paymentImageLabel: nextImages[0]?.label || "",
+      };
+    });
+  };
+
+  const updatePaymentImage = (index: number, updates: Partial<PaymentImageItem>) => {
+    setValues((prev) => {
+      const nextImages = [...prev.paymentImages];
+      nextImages[index] = { ...nextImages[index], ...updates };
+      return {
+        ...prev,
+        paymentImages: nextImages,
+        paymentImage: nextImages[0]?.image || "",
+        paymentImageType: nextImages[0]?.type || "qr",
+        paymentImageLabel: nextImages[0]?.label || "",
+      };
+    });
+  };
+
+  const handlePaymentImageFileChange = (index: number, file: File | null) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      updateField("paymentImage", dataUrl);
-      setPaymentImagePreview(dataUrl);
+      updatePaymentImage(index, { image: dataUrl });
     };
     reader.onerror = () => {
       toast({
@@ -120,11 +175,6 @@ export default function CreateInvoice() {
       });
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleRemovePaymentImage = () => {
-    updateField("paymentImage", "");
-    setPaymentImagePreview("");
   };
 
   const { taxPercentage: watchedTax, discountType, discountValue: watchedDiscountValue, currency } = values;
@@ -211,9 +261,16 @@ export default function CreateInvoice() {
         upiId: values.upiId || undefined,
         paymentTerms: values.paymentTerms || undefined,
         paymentNotes: values.paymentNotes || undefined,
-        paymentImage: paymentImagePreview || undefined,
-        paymentImageType: values.paymentImageType || undefined,
-        paymentImageLabel: values.paymentImageLabel || undefined,
+        paymentImage: values.paymentImages?.[0]?.image || undefined,
+        paymentImageType: values.paymentImages?.[0]?.type || undefined,
+        paymentImageLabel: values.paymentImages?.[0]?.label || undefined,
+        paymentImages: values.paymentImages
+          ?.filter((img) => img.image && img.image.trim())
+          .map((img) => ({
+            image: img.image,
+            type: img.type,
+            label: img.label,
+          })),
       });
 
       if (warning) {
@@ -247,7 +304,6 @@ export default function CreateInvoice() {
     });
     setItems([{ name: "", quantity: 1, price: "", details: "" }]);
     setLogoPreview("");
-    setPaymentImagePreview("");
     setInvoiceNumber(generateInvoiceNumber());
   };
 
@@ -313,11 +369,11 @@ export default function CreateInvoice() {
 
               <PaymentInfoSection
                 values={values}
-                paymentImagePreview={paymentImagePreview}
                 updateField={updateField}
-                handlePaymentImageUrlChange={handlePaymentImageUrlChange}
+                addPaymentImage={addPaymentImage}
+                removePaymentImage={removePaymentImage}
+                updatePaymentImage={updatePaymentImage}
                 handlePaymentImageFileChange={handlePaymentImageFileChange}
-                handleRemovePaymentImage={handleRemovePaymentImage}
               />
             </Accordion>
 
@@ -365,9 +421,10 @@ export default function CreateInvoice() {
                   upiId={values.upiId}
                   paymentTerms={values.paymentTerms}
                   paymentNotes={values.paymentNotes}
-                  paymentImage={paymentImagePreview}
-                  paymentImageType={values.paymentImageType}
-                  paymentImageLabel={values.paymentImageLabel}
+                  paymentImage={values.paymentImages?.[0]?.image || ""}
+                  paymentImageType={values.paymentImages?.[0]?.type || values.paymentImageType}
+                  paymentImageLabel={values.paymentImages?.[0]?.label || values.paymentImageLabel}
+                  paymentImages={values.paymentImages}
                 />
               </div>
             </div>
