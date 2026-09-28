@@ -1,4 +1,9 @@
-import { type InvoiceItem, type LogoSize, currencies as currencyList } from "@/types/invoice";
+import {
+  type InvoiceItem,
+  type LogoSize,
+  type PaymentImageType,
+  currencies as currencyList,
+} from "@/types/invoice";
 import {
   type InvoiceTemplate,
   type ColorizableTemplate,
@@ -26,6 +31,7 @@ export interface InvoicePreviewProps {
   tax: number;
   discount: number;
   grandTotal: number;
+  notes?: string;
   /** Per-template color overrides from the "Customize Invoice" section —
    * see TEMPLATE_COLOR_SLOTS in pdf-templates.ts. Not consulted by Clean. */
   customColors?: CustomColors;
@@ -33,6 +39,17 @@ export interface InvoicePreviewProps {
    * section — only consulted by the Clean template. Deliberately independent
    * of the app's own UI theme (see useTheme/header.tsx); defaults to "light". */
   invoiceTheme?: "light" | "dark";
+  // Payment Info fields
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+  routingCode?: string;
+  upiId?: string;
+  paymentTerms?: string;
+  paymentNotes?: string;
+  paymentImage?: string;
+  paymentImageType?: PaymentImageType;
+  paymentImageLabel?: string;
 }
 
 export interface SharedProps extends InvoicePreviewProps {

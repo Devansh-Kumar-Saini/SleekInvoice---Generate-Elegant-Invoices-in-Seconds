@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Mail, Phone, Home } from "lucide-react";
 import { amountToWords } from "@/lib/invoice-format";
 import { SharedProps, colorsFor, formatDate } from "../types";
+import { PaymentPreviewBlock } from "../payment-section";
 
 export function ClassicPreview({
   companyName,
@@ -22,9 +23,20 @@ export function ClassicPreview({
   tax,
   discount,
   grandTotal,
+  notes,
   formatCurrency,
   customColors,
   invoiceTheme,
+  bankName,
+  accountName,
+  accountNumber,
+  routingCode,
+  upiId,
+  paymentTerms,
+  paymentNotes,
+  paymentImage,
+  paymentImageType,
+  paymentImageLabel,
 }: SharedProps) {
   const isDark = invoiceTheme === "dark";
   const c = colorsFor("classic", customColors, ["primary", "dark", "muted", "border", "headerFill"], isDark);
@@ -246,6 +258,29 @@ export function ClassicPreview({
             </div>
           </div>
         </div>
+
+        {/* Payment Information & Notes */}
+        <PaymentPreviewBlock
+          bankName={bankName}
+          accountName={accountName}
+          accountNumber={accountNumber}
+          routingCode={routingCode}
+          upiId={upiId}
+          paymentTerms={paymentTerms}
+          paymentNotes={paymentNotes}
+          paymentImage={paymentImage}
+          paymentImageType={paymentImageType}
+          paymentImageLabel={paymentImageLabel}
+          notes={notes}
+          variant="classic"
+          theme={{
+            primary: c.primary,
+            dark: c.dark,
+            muted: c.muted,
+            border: c.border,
+            cardBg: isDark ? "#202024" : "#fbfbfb",
+          }}
+        />
 
         {/* Footer */}
         <div className="pt-6" style={{ borderTop: `1px solid ${c.border}` }}>

@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Mail, Phone, Home } from "lucide-react";
 import { amountToWords } from "@/lib/invoice-format";
 import { SharedProps, colorsFor, formatDate } from "../types";
+import { PaymentPreviewBlock } from "../payment-section";
 
 export function ElegantPreview({
   companyName,
@@ -21,9 +22,20 @@ export function ElegantPreview({
   tax,
   discount,
   grandTotal,
+  notes,
   formatCurrency,
   customColors,
   invoiceTheme,
+  bankName,
+  accountName,
+  accountNumber,
+  routingCode,
+  upiId,
+  paymentTerms,
+  paymentNotes,
+  paymentImage,
+  paymentImageType,
+  paymentImageLabel,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
   const isDark = invoiceTheme === "dark";
@@ -206,6 +218,29 @@ export function ElegantPreview({
             </div>
           </div>
         </div>
+
+        {/* Payment Information & Notes */}
+        <PaymentPreviewBlock
+          bankName={bankName}
+          accountName={accountName}
+          accountNumber={accountNumber}
+          routingCode={routingCode}
+          upiId={upiId}
+          paymentTerms={paymentTerms}
+          paymentNotes={paymentNotes}
+          paymentImage={paymentImage}
+          paymentImageType={paymentImageType}
+          paymentImageLabel={paymentImageLabel}
+          notes={notes}
+          variant="elegant"
+          theme={{
+            primary: c.gold,
+            dark: c.ink,
+            muted: c.muted,
+            border: c.rule,
+            cardBg: isDark ? "#1a1916" : "#fcfaf6",
+          }}
+        />
 
         {/* Footer */}
         <div className="pt-6 text-center text-xs" style={{ borderTop: `1px solid ${c.rule}`, color: c.muted }}>

@@ -9,6 +9,7 @@ import {
   getLastAutoTableFinalY,
   calculateItemColumnWidths,
 } from "@/lib/pdf/core";
+import { renderPaymentPdfSection } from "../payment";
 
 export function renderCleanTemplate(ctx: TemplateContext) {
   const { doc, invoice, pageWidth, pageHeight, margin, contentWidth, footerReserve, currency, currencyCode } = ctx;
@@ -290,6 +291,25 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   const wordsLines = doc.splitTextToSize(wordsText, pageWidth - margin - (summaryLabelX - 4));
   doc.text(wordsLines, summaryLabelX - 4, yPos);
   yPos += wordsLines.length * 4.5;
+
+  yPos += 6;
+
+  yPos = renderPaymentPdfSection(ctx, {
+    startX: margin,
+    width: contentWidth,
+    currentY: yPos,
+    primaryColor: INK,
+    textColor: INK,
+    mutedColor: GRAY,
+    borderColor: LINE,
+    fillColor: isDark ? [15, 15, 15] : [248, 248, 248],
+    boxStyle: "card",
+    onPageBreak: () => {
+      doc.addPage();
+      paintBackground();
+      return margin + 10;
+    },
+  });
 
   if (invoice.notes && invoice.notes.trim() && metaRows.every((r) => r.label !== "Payment Terms")) {
     yPos += 6;

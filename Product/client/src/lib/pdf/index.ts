@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import {
   registerFonts,
   loadLogo,
+  loadImage,
   type InvoicePdfData,
   type LoadedLogo,
   type TemplateContext,
@@ -42,6 +43,20 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
     logoWarning = result.warning;
   }
 
+  let paymentImage: LoadedLogo | null = null;
+  let paymentImageWarning: string | null = null;
+  if (invoice.paymentImage) {
+    const desc =
+      invoice.paymentImageType === "cheque"
+        ? "cancelled cheque"
+        : invoice.paymentImageType === "qr"
+        ? "payment QR code"
+        : "payment image";
+    const result = await loadImage(invoice.paymentImage, desc);
+    paymentImage = result.logo;
+    paymentImageWarning = result.warning;
+  }
+
   const validItems = invoice.items.filter((item) => item.name && item.name.trim() !== "");
   const isDark = !!invoice.isDarkMode;
 
@@ -49,6 +64,7 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
     doc,
     invoice,
     logo,
+    paymentImage,
     pageWidth,
     pageHeight,
     margin,
@@ -83,5 +99,6 @@ export async function generateInvoicePDF(invoice: InvoicePdfData): Promise<{ war
   const safeInvoiceNumber = (invoice.invoiceNumber || "invoice").replace(/[^a-zA-Z0-9-_]/g, "");
   doc.save(`${safeInvoiceNumber}.pdf`);
 
-  return { warning: logoWarning };
+  const warnings = [logoWarning, paymentImageWarning].filter(Boolean);
+  return { warning: warnings.length > 0 ? warnings.join(" ") : null };
 }

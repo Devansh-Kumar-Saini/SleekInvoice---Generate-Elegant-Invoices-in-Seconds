@@ -13,6 +13,7 @@ import {
   getLastAutoTableFinalY,
   calculateItemColumnWidths,
 } from "@/lib/pdf/core";
+import { renderPaymentPdfSection } from "../payment";
 
 export function renderSidebarTemplate(ctx: TemplateContext) {
   const { doc, invoice, logo, pageWidth, pageHeight, margin, footerReserve, currency, currencyCode } = ctx;
@@ -323,6 +324,26 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
   const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
   doc.text(wordsLines, summaryLabelX - 6, yPos);
   yPos += wordsLines.length * 4 + 6;
+
+  const CARD_BG_PAYMENT = ctx.isDark ? hexToRgb(SURFACES.surface) : ([255, 255, 255] as [number, number, number]);
+
+  yPos = renderPaymentPdfSection(ctx, {
+    startX: mainX,
+    width: mainWidth,
+    currentY: yPos,
+    primaryColor: POP,
+    textColor: INK,
+    mutedColor: MUTED,
+    borderColor: LINE,
+    fillColor: CARD_BG_PAYMENT,
+    boxStyle: "card",
+    onPageBreak: () => {
+      doc.addPage();
+      paintSidebar();
+      paintMain();
+      return margin + 8;
+    },
+  });
 
   if (invoice.notes && invoice.notes.trim()) {
     if (yPos + 20 > pageHeight - footerReserve) {

@@ -4,4 +4,5 @@ export * from "./customize-section";
 export * from "./customer-info-section";
 export * from "./items-section";
 export * from "./calculations-section";
+export * from "./payment-info-section";
 export * from "./action-buttons";

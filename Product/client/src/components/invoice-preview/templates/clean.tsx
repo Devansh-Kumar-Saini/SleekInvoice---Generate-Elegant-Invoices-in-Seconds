@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Mail, Phone, Home } from "lucide-react";
 import { amountToWords } from "@/lib/invoice-format";
 import { SharedProps, formatDateSlash } from "../types";
+import { PaymentPreviewBlock } from "../payment-section";
 
 export function CleanPreview({
   companyName,
@@ -19,8 +20,19 @@ export function CleanPreview({
   tax,
   discount,
   grandTotal,
+  notes,
   formatCurrency,
   invoiceTheme,
+  bankName,
+  accountName,
+  accountNumber,
+  routingCode,
+  upiId,
+  paymentTerms,
+  paymentNotes,
+  paymentImage,
+  paymentImageType,
+  paymentImageLabel,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
   const isDark = invoiceTheme === "dark";
@@ -193,6 +205,29 @@ export function CleanPreview({
             </div>
           </div>
         </div>
+
+        {/* Payment Information & Notes */}
+        <PaymentPreviewBlock
+          bankName={bankName}
+          accountName={accountName}
+          accountNumber={accountNumber}
+          routingCode={routingCode}
+          upiId={upiId}
+          paymentTerms={paymentTerms}
+          paymentNotes={paymentNotes}
+          paymentImage={paymentImage}
+          paymentImageType={paymentImageType}
+          paymentImageLabel={paymentImageLabel}
+          notes={notes}
+          variant="clean"
+          theme={{
+            primary: isDark ? "#ffffff" : "#111827",
+            dark: isDark ? "#f3f4f6" : "#111827",
+            muted: isDark ? "#9ca3af" : "#6b7280",
+            border: isDark ? "#2e2e32" : "#e5e7eb",
+            cardBg: isDark ? "#121214" : "#fafafa",
+          }}
+        />
 
         {/* Footer */}
         <div className={`pt-6 border-t ${border} flex justify-between text-[10px] ${muted} uppercase tracking-widest`}>

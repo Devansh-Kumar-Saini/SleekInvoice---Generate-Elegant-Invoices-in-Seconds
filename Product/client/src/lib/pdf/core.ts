@@ -80,6 +80,17 @@ export interface InvoicePdfData {
    * Slots left unset fall back to that template's built-in default —
    * see TEMPLATE_COLOR_SLOTS in pdf-templates.ts. Not consulted by Clean. */
   customColors?: CustomColors;
+  // Payment Info fields
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+  routingCode?: string;
+  upiId?: string;
+  paymentTerms?: string;
+  paymentNotes?: string;
+  paymentImage?: string;
+  paymentImageType?: string;
+  paymentImageLabel?: string;
 }
 
 
@@ -178,15 +189,16 @@ export function attemptLoadLogo(src: string, useCrossOrigin: boolean, timeoutMs:
   });
 }
 
-export async function loadLogo(
+export async function loadImage(
   src: string,
+  imageDescription = "image",
   timeoutMs = 6000
 ): Promise<{ logo: LoadedLogo | null; warning: string | null }> {
   if (src.startsWith("data:")) {
     const result = await attemptLoadLogo(src, false, timeoutMs);
     return result.status === "ok"
       ? { logo: result.logo, warning: null }
-      : { logo: null, warning: "The logo image couldn't be read — it may be corrupted. It was left out of the PDF." };
+      : { logo: null, warning: `The ${imageDescription} couldn't be read — it may be corrupted. It was left out of the PDF.` };
   }
 
   const viaCors = await attemptLoadLogo(src, true, timeoutMs);
@@ -199,13 +211,20 @@ export async function loadLogo(
     return {
       logo: null,
       warning:
-        "The logo couldn't be embedded because that image's host doesn't allow cross-origin access. It was left out of the PDF — try uploading the logo file directly instead of pasting a URL.",
+        `The ${imageDescription} couldn't be embedded because that image's host doesn't allow cross-origin access. It was left out of the PDF — try uploading the file directly instead of pasting a URL.`,
     };
   }
   return {
     logo: null,
-    warning: "The logo URL couldn't be loaded (it may be unreachable or invalid). It was left out of the PDF.",
+    warning: `The ${imageDescription} URL couldn't be loaded (it may be unreachable or invalid). It was left out of the PDF.`,
   };
+}
+
+export function loadLogo(
+  src: string,
+  timeoutMs = 6000
+): Promise<{ logo: LoadedLogo | null; warning: string | null }> {
+  return loadImage(src, "logo", timeoutMs);
 }
 
 export type ColorizableTemplateArg = "classic" | "modern" | "elegant" | "sidebar";
@@ -214,6 +233,7 @@ export interface TemplateContext {
   doc: jsPDF;
   invoice: InvoicePdfData;
   logo: LoadedLogo | null;
+  paymentImage: LoadedLogo | null;
   pageWidth: number;
   pageHeight: number;
   margin: number;

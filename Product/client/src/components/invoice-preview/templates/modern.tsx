@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Mail, Phone, Home } from "lucide-react";
 import { amountToWords } from "@/lib/invoice-format";
 import { SharedProps, colorsFor, formatDate } from "../types";
+import { PaymentPreviewBlock } from "../payment-section";
 
 export function ModernPreview({
   companyName,
@@ -22,9 +23,20 @@ export function ModernPreview({
   tax,
   discount,
   grandTotal,
+  notes,
   formatCurrency,
   customColors,
   invoiceTheme,
+  bankName,
+  accountName,
+  accountNumber,
+  routingCode,
+  upiId,
+  paymentTerms,
+  paymentNotes,
+  paymentImage,
+  paymentImageType,
+  paymentImageLabel,
 }: SharedProps) {
   const validItems = items.filter((item) => item.name);
   const isDark = invoiceTheme === "dark";
@@ -236,6 +248,29 @@ export function ModernPreview({
             </div>
           </div>
         </div>
+
+        {/* Payment Information & Notes */}
+        <PaymentPreviewBlock
+          bankName={bankName}
+          accountName={accountName}
+          accountNumber={accountNumber}
+          routingCode={routingCode}
+          upiId={upiId}
+          paymentTerms={paymentTerms}
+          paymentNotes={paymentNotes}
+          paymentImage={paymentImage}
+          paymentImageType={paymentImageType}
+          paymentImageLabel={paymentImageLabel}
+          notes={notes}
+          variant="modern"
+          theme={{
+            primary: c.pop,
+            dark: c.ink,
+            muted: c.muted,
+            border: isDark ? "#3a3a3e" : "#e5e7eb",
+            cardBg: isDark ? "#1d1d21" : "#f8f9fa",
+          }}
+        />
 
         {/* Footer */}
         <div

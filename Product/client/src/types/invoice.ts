@@ -11,6 +11,8 @@ export interface InvoiceItem {
 }
 
 
+export type PaymentImageType = "qr" | "cheque" | "other";
+
 export type FormValues = {
   companyName: string;
   companyLogo: string;
@@ -30,6 +32,17 @@ export type FormValues = {
   template: InvoiceTemplate;
   customColors: CustomColors;
   invoiceTheme: "light" | "dark";
+  // Payment Info fields
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  routingCode: string;
+  upiId: string;
+  paymentTerms: string;
+  paymentNotes: string;
+  paymentImage: string;
+  paymentImageType: PaymentImageType;
+  paymentImageLabel: string;
 };
 
 export const categories = [
@@ -87,4 +100,14 @@ export const initialFormValues: FormValues = {
   template: "classic",
   customColors: {},
   invoiceTheme: "light",
+  bankName: "",
+  accountName: "",
+  accountNumber: "",
+  routingCode: "",
+  upiId: "",
+  paymentTerms: "",
+  paymentNotes: "",
+  paymentImage: "",
+  paymentImageType: "qr",
+  paymentImageLabel: "",
 };

@@ -9,6 +9,7 @@ import {
   CustomerInfoSection,
   ItemsSection,
   CalculationsSection,
+  PaymentInfoSection,
   ActionButtons,
 } from "@/components/invoice-form";
 import { type ColorizableTemplate } from "@/lib/pdf-templates";
@@ -26,6 +27,7 @@ export default function CreateInvoice() {
     { name: "", quantity: 1, price: "", details: "" },
   ]);
   const [logoPreview, setLogoPreview] = useState<string>("");
+  const [paymentImagePreview, setPaymentImagePreview] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState<string>(() => generateInvoiceNumber());
   const [openSection, setOpenSection] = useState<string>("company");
@@ -95,6 +97,34 @@ export default function CreateInvoice() {
       });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handlePaymentImageUrlChange = (url: string) => {
+    updateField("paymentImage", url);
+    setPaymentImagePreview(url);
+  };
+
+  const handlePaymentImageFileChange = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      updateField("paymentImage", dataUrl);
+      setPaymentImagePreview(dataUrl);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Couldn't read payment image file",
+        description: "Please try a different image file.",
+        variant: "destructive",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePaymentImage = () => {
+    updateField("paymentImage", "");
+    setPaymentImagePreview("");
   };
 
   const { taxPercentage: watchedTax, discountType, discountValue: watchedDiscountValue, currency } = values;
@@ -174,6 +204,16 @@ export default function CreateInvoice() {
         template: values.template,
         isDarkMode: values.invoiceTheme === "dark",
         customColors: values.customColors,
+        bankName: values.bankName || undefined,
+        accountName: values.accountName || undefined,
+        accountNumber: values.accountNumber || undefined,
+        routingCode: values.routingCode || undefined,
+        upiId: values.upiId || undefined,
+        paymentTerms: values.paymentTerms || undefined,
+        paymentNotes: values.paymentNotes || undefined,
+        paymentImage: paymentImagePreview || undefined,
+        paymentImageType: values.paymentImageType || undefined,
+        paymentImageLabel: values.paymentImageLabel || undefined,
       });
 
       if (warning) {
@@ -207,6 +247,7 @@ export default function CreateInvoice() {
     });
     setItems([{ name: "", quantity: 1, price: "", details: "" }]);
     setLogoPreview("");
+    setPaymentImagePreview("");
     setInvoiceNumber(generateInvoiceNumber());
   };
 
@@ -269,6 +310,15 @@ export default function CreateInvoice() {
                 formatCurrency={formatCurrency}
                 updateField={updateField}
               />
+
+              <PaymentInfoSection
+                values={values}
+                paymentImagePreview={paymentImagePreview}
+                updateField={updateField}
+                handlePaymentImageUrlChange={handlePaymentImageUrlChange}
+                handlePaymentImageFileChange={handlePaymentImageFileChange}
+                handleRemovePaymentImage={handleRemovePaymentImage}
+              />
             </Accordion>
 
             <ActionButtons
@@ -305,8 +355,19 @@ export default function CreateInvoice() {
                   tax={tax}
                   discount={discount}
                   grandTotal={grandTotal}
+                  notes={values.notes}
                   customColors={values.customColors}
                   invoiceTheme={values.invoiceTheme}
+                  bankName={values.bankName}
+                  accountName={values.accountName}
+                  accountNumber={values.accountNumber}
+                  routingCode={values.routingCode}
+                  upiId={values.upiId}
+                  paymentTerms={values.paymentTerms}
+                  paymentNotes={values.paymentNotes}
+                  paymentImage={paymentImagePreview}
+                  paymentImageType={values.paymentImageType}
+                  paymentImageLabel={values.paymentImageLabel}
                 />
               </div>
             </div>
