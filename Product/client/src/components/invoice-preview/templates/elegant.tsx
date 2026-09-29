@@ -136,10 +136,10 @@ export function ElegantPreview({
                 className="text-xs font-bold uppercase tracking-wide"
                 style={{ borderBottom: `2px solid ${c.gold}`, color: c.gold }}
               >
-                <th className="pb-2 text-left font-bold">Description</th>
-                <th className="pb-2 px-4 text-right font-bold whitespace-nowrap min-w-[60px]">Qty</th>
-                <th className="pb-2 px-4 text-right font-bold whitespace-nowrap min-w-[100px]">Rate</th>
-                <th className="pb-2 pl-4 text-right font-bold whitespace-nowrap min-w-[100px]">Amount</th>
+                <th className="pb-2 px-4 text-center font-bold">Description</th>
+                <th className="pb-2 px-4 text-center font-bold whitespace-nowrap min-w-[60px]">Qty</th>
+                <th className="pb-2 px-4 text-center font-bold whitespace-nowrap min-w-[100px]">Rate</th>
+                <th className="pb-2 px-4 text-center font-bold whitespace-nowrap min-w-[100px]">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -150,7 +150,7 @@ export function ElegantPreview({
                     style={{ borderBottom: `1px solid ${c.rule}` }}
                     data-testid={`preview-item-${index}`}
                   >
-                    <td className="py-3 pr-4 align-top">
+                    <td className="py-3 px-4 text-center align-top">
                       <div className="text-sm break-words" style={{ color: c.ink }}>{item.name}</div>
                       {item.details && (
                         <div className="text-xs mt-0.5 break-words" style={{ color: c.muted }}>
@@ -158,11 +158,11 @@ export function ElegantPreview({
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>{item.quantity}</td>
-                    <td className="py-3 px-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                    <td className="py-3 px-4 text-center text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>{item.quantity}</td>
+                    <td className="py-3 px-4 text-center text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
                       {formatCurrency(Number(item.price) || 0)}
                     </td>
-                    <td className="py-3 pl-4 text-right text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
+                    <td className="py-3 px-4 text-center text-sm align-top whitespace-nowrap" style={{ color: c.ink }}>
                       {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
                     </td>
                   </tr>
@@ -201,7 +201,7 @@ export function ElegantPreview({
             )}
             {/* Bordered (not filled) total box — restrained, letterhead-style. */}
             <div
-              className="flex justify-between items-center gap-4 rounded-sm px-4 py-3 mt-3"
+              className="flex justify-between items-baseline gap-4 rounded-sm px-4 py-3 mt-3"
               style={{ border: `2px solid ${c.gold}` }}
             >
               <span className="text-xs font-bold uppercase tracking-widest shrink-0" style={{ color: c.gold }}>

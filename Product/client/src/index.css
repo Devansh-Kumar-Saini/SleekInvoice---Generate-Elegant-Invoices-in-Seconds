@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'PoundAdjusted';
+  src: url('https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrFJA.ttf') format('truetype'),
+       local('Poppins'), local('Segoe UI'), local('Arial'), sans-serif;
+  unicode-range: U+00A3;
+  size-adjust: 120%;
+}
+
+@font-face {
+  font-family: 'PoundAdjustedMono';
+  src: url('https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjPQ.ttf') format('truetype'),
+       local('JetBrains Mono'), local('Menlo'), monospace;
+  unicode-range: U+00A3;
+  size-adjust: 120%;
+}
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .10);
@@ -42,9 +58,10 @@
   --input: 220 15% 82%;
   --ring: 217 91% 60%;
 
-  --font-sans: 'Poppins', sans-serif;
-  --font-serif: 'Poppins', sans-serif;
-  --font-mono: 'JetBrains Mono', Menlo, monospace;
+
+  --font-sans: 'PoundAdjusted', 'Poppins', sans-serif;
+  --font-serif: 'PoundAdjusted', 'Poppins', sans-serif;
+  --font-mono: 'PoundAdjustedMono', 'JetBrains Mono', Menlo, monospace;
   --radius: 0.8rem;
   --shadow-sm: 0px 1px 2px 0px hsl(220 20% 10% / 0.04), 0px 1px 2px -1px hsl(220 20% 10% / 0.04);
   --shadow: 0px 1px 3px 0px hsl(220 20% 10% / 0.06), 0px 1px 2px -1px hsl(220 20% 10% / 0.04);

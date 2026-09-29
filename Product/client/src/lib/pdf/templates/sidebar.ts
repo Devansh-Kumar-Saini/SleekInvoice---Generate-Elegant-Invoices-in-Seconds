@@ -241,6 +241,10 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
       3: { cellWidth: colWidths.totalWidth, halign: "right" },
     },
     didParseCell: (data) => {
+      if (data.section === "head") {
+        if (data.column.index === 1) data.cell.styles.halign = "center";
+        if (data.column.index === 2 || data.column.index === 3) data.cell.styles.halign = "right";
+      }
       if (data.section === "body" && data.column.index === 0) {
         const raw = String(data.cell.raw ?? "");
         if (raw.includes("\n")) {

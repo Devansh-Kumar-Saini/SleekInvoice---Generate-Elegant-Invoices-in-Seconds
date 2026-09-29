@@ -171,7 +171,7 @@ export function PaymentPreviewBlock({
               </div>
 
               {paymentNotes && (
-                <div className="pt-1 text-[11px] italic" style={{ color: muted }}>
+                <div className="pt-1 text-[11px] italic whitespace-pre-wrap break-words" style={{ color: muted }}>
                   {paymentNotes}
                 </div>
               )}
@@ -190,7 +190,7 @@ export function PaymentPreviewBlock({
               >
                 Payment Terms
               </div>
-              <p className="text-xs leading-relaxed" style={{ color: dark }}>
+              <p className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: dark }}>
                 {paymentTerms}
               </p>
             </div>
@@ -208,7 +208,7 @@ export function PaymentPreviewBlock({
               >
                 Notes
               </div>
-              <p className="text-xs leading-relaxed" style={{ color: dark }}>
+              <p className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: dark }}>
                 {notes}
               </p>
             </div>

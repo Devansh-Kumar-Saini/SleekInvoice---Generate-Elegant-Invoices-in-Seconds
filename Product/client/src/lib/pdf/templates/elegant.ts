@@ -184,6 +184,7 @@ export function renderElegantTemplate(ctx: TemplateContext) {
       textColor: GOLD,
       fontStyle: "bold",
       fontSize: 8.5,
+      halign: "center",
       cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
     },
     bodyStyles: {
@@ -199,16 +200,18 @@ export function renderElegantTemplate(ctx: TemplateContext) {
       overflow: "linebreak",
     },
     columnStyles: {
-      0: { cellWidth: "auto", halign: "left" },
+      0: { cellWidth: "auto", halign: "center" },
       1: { cellWidth: colWidths.qtyWidth, halign: "center" },
-      2: { cellWidth: colWidths.priceWidth, halign: "right" },
-      3: { cellWidth: colWidths.totalWidth, halign: "right" },
+      2: { cellWidth: colWidths.priceWidth, halign: "center" },
+      3: { cellWidth: colWidths.totalWidth, halign: "center" },
     },
     didParseCell: (data) => {
       if (data.section === "head") {
+        data.cell.styles.halign = "center";
         data.cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.6, left: 0 };
       }
       if (data.section === "body") {
+        data.cell.styles.halign = "center";
         data.cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.25, left: 0 };
         if (data.column.index === 0) {
           const raw = String(data.cell.raw ?? "");
@@ -261,7 +264,7 @@ export function renderElegantTemplate(ctx: TemplateContext) {
       value: grandTotalStr,
       labelFont: { family: FONT_FAMILY, style: "bold", size: 9.5 },
       valueFont: { family: FONT_FAMILY, style: "bold", size: 14 },
-      isStacked: true,
+      isStacked: false,
     },
     rightX: pageWidth - margin,
     maxAvailableWidth: contentWidth * 0.75,
@@ -272,7 +275,7 @@ export function renderElegantTemplate(ctx: TemplateContext) {
 
   const { summaryLabelX, summaryValueX, summaryWidth, minGap } = summaryLayout;
 
-  const boxHeight = 18;
+  const boxHeight = 13;
   const summaryBlockHeight = rows.length * 6.5 + boxHeight + 25;
   if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
     doc.addPage();
@@ -308,10 +311,10 @@ export function renderElegantTemplate(ctx: TemplateContext) {
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(...GOLD);
-  doc.text("TOTAL DUE", summaryLabelX, yPos + 7.5);
+  doc.text("TOTAL DUE", summaryLabelX, yPos + 8.5);
   doc.setFontSize(14);
   doc.setTextColor(...INK);
-  doc.text(grandTotalStr, summaryValueX - 4, yPos + 13.5, {
+  doc.text(grandTotalStr, summaryValueX - 4, yPos + 8.5, {
     align: "right",
   });
 
@@ -348,24 +351,35 @@ export function renderElegantTemplate(ctx: TemplateContext) {
   });
 
   if (invoice.notes && invoice.notes.trim()) {
-    if (yPos + 20 > pageHeight - footerReserve) {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(9);
+    const textPadding = 4;
+    const textAvailableWidth = contentWidth - textPadding * 2;
+    const noteLines = doc.splitTextToSize(invoice.notes, textAvailableWidth);
+    const noteBoxHeight = 10 + noteLines.length * 4.5;
+
+    if (yPos + noteBoxHeight + 6 > pageHeight - footerReserve) {
       doc.addPage();
       paintBackground();
       yPos = margin + 8;
     }
+
     doc.setFillColor(...FAINT_FILL);
-    const noteLines = doc.splitTextToSize(invoice.notes, contentWidth - 8);
-    const noteBoxHeight = 10 + noteLines.length * 4.2;
-    doc.rect(margin, yPos - 5, contentWidth, noteBoxHeight, "F");
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.25);
+    doc.rect(margin, yPos - 3, contentWidth, noteBoxHeight, "FD");
+
     doc.setFont(FONT_FAMILY, "bold");
     doc.setFontSize(8);
     doc.setTextColor(...GOLD);
-    doc.text("NOTES", margin + 4, yPos);
-    yPos += 5;
+    doc.text("NOTES", margin + textPadding, yPos + 2);
+
+    yPos += 7;
     doc.setFont(FONT_FAMILY, "normal");
     doc.setFontSize(9);
     doc.setTextColor(...INK);
-    doc.text(noteLines, margin + 4, yPos);
+    doc.text(noteLines, margin + textPadding, yPos);
+    yPos += noteLines.length * 4.5 + 4;
   }
 
   const pageCount = doc.getNumberOfPages();
