@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Accordion } from "@/components/ui/accordion";
 import { InvoicePreview } from "@/components/invoice-preview";
@@ -23,6 +23,7 @@ import {
   initialFormValues,
 } from "@/types/invoice";
 import { formatCurrencyAmount } from "@/lib/invoice-format";
+import { generateRandomInvoiceData } from "@/lib/test-data-generator";
 
 export default function CreateInvoice() {
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -297,6 +298,65 @@ export default function CreateInvoice() {
     }
   };
 
+  const autofillWithRandomData = useCallback((itemCount?: number) => {
+    const data = generateRandomInvoiceData(itemCount);
+    setValues(data.values);
+    setItems(data.items);
+    setInvoiceNumber(data.invoiceNumber);
+    setLogoPreview("");
+    toast({
+      title: "Test Data Autofilled",
+      description: `Generated random invoice with ${data.items.length} items.`,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    // Expose on window for easy developer testing in console:
+    // e.g. autofill(5) or window.autofillInvoice(8)
+    (window as any).autofill = autofillWithRandomData;
+    (window as any).autofillInvoice = autofillWithRandomData;
+
+    const handleCustomEvent = (e: any) => {
+      const count = e.detail?.itemCount || e.detail?.items || e.detail?.count;
+      autofillWithRandomData(count);
+    };
+    window.addEventListener("autofill-invoice" as any, handleCustomEvent);
+
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("sleekinvoice_testing");
+      channel.onmessage = (event) => {
+        if (event.data?.type === "AUTOFILL") {
+          autofillWithRandomData(event.data?.itemCount);
+        }
+      };
+      return () => {
+        channel.close();
+        window.removeEventListener("autofill-invoice" as any, handleCustomEvent);
+      };
+    }
+
+    return () => {
+      window.removeEventListener("autofill-invoice" as any, handleCustomEvent);
+    };
+  }, [autofillWithRandomData]);
+
+  // Check URL query param ?autofill=<count> on initial load (dev mode only)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const autofillParam = params.get("autofill");
+    if (autofillParam !== null) {
+      const count = parseInt(autofillParam, 10);
+      autofillWithRandomData(isNaN(count) ? 4 : count);
+      // Clean up URL without page reload
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [autofillWithRandomData]);
+
   const handleClearForm = () => {
     setValues({
       ...initialFormValues,
@@ -381,6 +441,7 @@ export default function CreateInvoice() {
               isGenerating={isGenerating}
               onSubmit={handleSubmit}
               onClear={handleClearForm}
+              onAutofill={import.meta.env.DEV ? () => autofillWithRandomData() : undefined}
             />
           </div>
 

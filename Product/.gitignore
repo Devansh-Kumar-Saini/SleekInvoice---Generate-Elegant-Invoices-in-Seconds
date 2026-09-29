@@ -38,3 +38,7 @@ vite.config.ts.*
 
 # Server
 server/public
+
+# Local test scripts
+test-autofill.js
+test-autofill.*
