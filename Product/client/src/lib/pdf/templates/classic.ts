@@ -11,6 +11,7 @@ import {
   drawHomeIcon,
   getLastAutoTableFinalY,
   calculateItemColumnWidths,
+  calculateSummaryLayout,
 } from "@/lib/pdf/core";
 import { renderPaymentPdfSection } from "../payment";
 
@@ -224,19 +225,6 @@ export function renderClassicTemplate(ctx: TemplateContext) {
 
   yPos = getLastAutoTableFinalY(doc) + 10;
 
-  const summaryBlockHeight = 55;
-  if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
-    doc.addPage();
-    paintBackground();
-    yPos = margin + 8;
-  }
-
-  const summaryLabelX = pageWidth - margin - 55;
-  const summaryValueX = pageWidth - margin;
-
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(10);
-
   const rows: Array<{ label: string; value: string }> = [
     { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
     { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
@@ -248,12 +236,51 @@ export function renderClassicTemplate(ctx: TemplateContext) {
     });
   }
 
+  const grandTotalStr = formatCurrency(invoice.grandTotal, currency, currencyCode);
+
+  const summaryLayout = calculateSummaryLayout({
+    doc,
+    rows: rows.map((r) => ({
+      label: r.label,
+      value: r.value,
+      fontSize: 10,
+      fontFamily: FONT_FAMILY,
+    })),
+    total: {
+      label: "Total Due",
+      value: grandTotalStr,
+      labelFont: { family: FONT_FAMILY, style: "bold", size: 12.5 },
+      valueFont: { family: FONT_FAMILY, style: "bold", size: 15 },
+      isStacked: false,
+    },
+    rightX: pageWidth - margin,
+    maxAvailableWidth: contentWidth * 0.75,
+    minWidth: 75,
+    minGap: 8,
+  });
+
+  const { summaryLabelX, summaryValueX, summaryWidth, shouldStackTotal, minGap } = summaryLayout;
+
+  const estimatedSummaryHeight = rows.length * 7 + (shouldStackTotal ? 36 : 28) + 16;
+  if (yPos + estimatedSummaryHeight > pageHeight - footerReserve) {
+    doc.addPage();
+    paintBackground();
+    yPos = margin + 8;
+  }
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(10);
+
   rows.forEach((row) => {
+    const valW = doc.getTextWidth(row.value);
+    const maxLabelW = Math.max(20, summaryWidth - valW - minGap);
+    const labelLines = doc.splitTextToSize(row.label, maxLabelW);
+
     doc.setTextColor(...BRAND.muted);
-    doc.text(row.label, summaryLabelX, yPos);
+    doc.text(labelLines, summaryLabelX, yPos);
     doc.setTextColor(...BRAND.dark);
     doc.text(row.value, summaryValueX, yPos, { align: "right" });
-    yPos += 6.5;
+    yPos += Math.max(1, labelLines.length) * 6.5;
   });
 
   yPos += 2;
@@ -261,19 +288,30 @@ export function renderClassicTemplate(ctx: TemplateContext) {
   doc.setLineWidth(0.4);
   doc.line(summaryLabelX - 4, yPos - 4.5, summaryValueX, yPos - 4.5);
 
-  doc.setFont(FONT_FAMILY, "bold");
-  doc.setFontSize(12.5);
-  doc.setTextColor(...BRAND.dark);
-  doc.text("Total Due", summaryLabelX, yPos + 2);
-  doc.setFontSize(15);
-  doc.setTextColor(...BRAND.primary);
-  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX, yPos + 2.5, {
-    align: "right",
-  });
+  if (shouldStackTotal) {
+    doc.setFont(FONT_FAMILY, "bold");
+    doc.setFontSize(12.5);
+    doc.setTextColor(...BRAND.dark);
+    doc.text("Total Due", summaryLabelX, yPos + 2);
+    yPos += 7;
+    doc.setFontSize(15);
+    doc.setTextColor(...BRAND.primary);
+    doc.text(grandTotalStr, summaryValueX, yPos + 2, { align: "right" });
+    yPos += 8;
+  } else {
+    doc.setFont(FONT_FAMILY, "bold");
+    doc.setFontSize(12.5);
+    doc.setTextColor(...BRAND.dark);
+    doc.text("Total Due", summaryLabelX, yPos + 2);
+    doc.setFontSize(15);
+    doc.setTextColor(...BRAND.primary);
+    doc.text(grandTotalStr, summaryValueX, yPos + 2.5, {
+      align: "right",
+    });
+    yPos += 12;
+  }
 
-  yPos += 12;
-
-  const wordsLabelWidth = pageWidth - margin - (summaryLabelX - 4);
+  const wordsLabelWidth = summaryValueX - (summaryLabelX - 4);
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...BRAND.muted);

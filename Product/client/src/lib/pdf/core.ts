@@ -312,3 +312,111 @@ export function calculateItemColumnWidths(
     totalWidth: Math.max(minWidths.total, maxTotalW + cellPadding),
   };
 }
+
+export interface SummaryRowItem {
+  label: string;
+  value: string;
+  fontSize?: number;
+  fontFamily?: string;
+  fontStyle?: string;
+}
+
+export interface SummaryTotalItem {
+  label: string;
+  value: string;
+  labelFont?: { family?: string; style?: string; size?: number };
+  valueFont?: { family?: string; style?: string; size?: number };
+  isStacked?: boolean;
+}
+
+export interface CalculateSummaryLayoutOptions {
+  doc: jsPDF;
+  rows: SummaryRowItem[];
+  total: SummaryTotalItem;
+  rightX: number;
+  maxAvailableWidth: number;
+  minWidth?: number;
+  minGap?: number;
+  boxPadding?: number;
+}
+
+export interface SummaryLayoutResult {
+  summaryWidth: number;
+  summaryLabelX: number;
+  summaryValueX: number;
+  shouldStackTotal: boolean;
+  minGap: number;
+}
+
+/**
+ * Dynamically calculates the required width and coordinates for the invoice
+ * summary/totals section based on the exact rendered text dimensions of each
+ * row (Subtotal, Tax, Discount, and Total Due).
+ *
+ * This auto-adjusts the width to guarantee that label and value NEVER collide
+ * or overlap, even with large multi-digit currency amounts or long custom labels.
+ */
+export function calculateSummaryLayout(options: CalculateSummaryLayoutOptions): SummaryLayoutResult {
+  const {
+    doc,
+    rows,
+    total,
+    rightX,
+    maxAvailableWidth,
+    minWidth = 75,
+    minGap = 8,
+    boxPadding = 4,
+  } = options;
+
+  let maxRowWidthNeeded = 0;
+
+  rows.forEach((row) => {
+    doc.setFont(row.fontFamily || FONT_FAMILY, row.fontStyle || "normal");
+    doc.setFontSize(row.fontSize || 9.5);
+    const labelW = doc.getTextWidth(row.label);
+    const valueW = doc.getTextWidth(row.value);
+    maxRowWidthNeeded = Math.max(maxRowWidthNeeded, labelW + minGap + valueW);
+  });
+
+  const totalLabelFamily = total.labelFont?.family || FONT_FAMILY;
+  const totalLabelStyle = total.labelFont?.style || "bold";
+  const totalLabelSize = total.labelFont?.size || 12;
+
+  const totalValueFamily = total.valueFont?.family || FONT_FAMILY;
+  const totalValueStyle = total.valueFont?.style || "bold";
+  const totalValueSize = total.valueFont?.size || 14;
+
+  doc.setFont(totalLabelFamily, totalLabelStyle);
+  doc.setFontSize(totalLabelSize);
+  const totalLabelW = doc.getTextWidth(total.label);
+
+  doc.setFont(totalValueFamily, totalValueStyle);
+  doc.setFontSize(totalValueSize);
+  const totalValueW = doc.getTextWidth(total.value);
+
+  let totalWidthNeeded = 0;
+  if (total.isStacked) {
+    totalWidthNeeded = Math.max(totalLabelW, totalValueW) + boxPadding * 2;
+  } else {
+    totalWidthNeeded = totalLabelW + minGap + totalValueW + boxPadding;
+  }
+
+  const maxNeeded = Math.max(maxRowWidthNeeded, totalWidthNeeded);
+  const desiredWidth = Math.max(minWidth, maxNeeded + 4);
+  const summaryWidth = Math.min(desiredWidth, maxAvailableWidth);
+
+  // If even with the available width, the side-by-side total doesn't fit,
+  // we signal to stack the total so overlap is strictly impossible.
+  const shouldStackTotal = !total.isStacked && totalLabelW + minGap + totalValueW > summaryWidth;
+
+  const summaryValueX = rightX;
+  const summaryLabelX = summaryValueX - summaryWidth;
+
+  return {
+    summaryWidth,
+    summaryLabelX,
+    summaryValueX,
+    shouldStackTotal,
+    minGap,
+  };
+}

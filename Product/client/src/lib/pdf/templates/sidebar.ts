@@ -12,6 +12,7 @@ import {
   drawHomeIcon,
   getLastAutoTableFinalY,
   calculateItemColumnWidths,
+  calculateSummaryLayout,
 } from "@/lib/pdf/core";
 import { renderPaymentPdfSection } from "../payment";
 
@@ -263,20 +264,6 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
 
   yPos = getLastAutoTableFinalY(doc) + 10;
 
-  const summaryBlockHeight = 58;
-  if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
-    doc.addPage();
-    paintSidebar();
-    paintMain();
-    yPos = margin + 8;
-  }
-
-  const summaryLabelX = pageWidth - margin - 56;
-  const summaryValueX = pageWidth - margin;
-
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(9.5);
-
   const rows: Array<{ label: string; value: string }> = [
     { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
     { label: `Tax (${invoice.taxPercentage}%)`, value: formatCurrency(invoice.tax, currency, currencyCode) },
@@ -288,41 +275,84 @@ export function renderSidebarTemplate(ctx: TemplateContext) {
     });
   }
 
+  const grandTotalStr = formatCurrency(invoice.grandTotal, currency, currencyCode);
+
+  const summaryLayout = calculateSummaryLayout({
+    doc,
+    rows: rows.map((r) => ({
+      label: r.label,
+      value: r.value,
+      fontSize: 9.5,
+      fontFamily: FONT_FAMILY,
+    })),
+    total: {
+      label: "TOTAL DUE",
+      value: grandTotalStr,
+      labelFont: { family: FONT_FAMILY, style: "bold", size: 9 },
+      valueFont: { family: FONT_FAMILY, style: "bold", size: 14 },
+      isStacked: true,
+    },
+    rightX: pageWidth - margin,
+    maxAvailableWidth: mainWidth - 4,
+    minWidth: 68,
+    minGap: 8,
+    boxPadding: 8,
+  });
+
+  const { summaryLabelX, summaryValueX, summaryWidth, minGap } = summaryLayout;
+
+  const totalBoxHeight = 20;
+  const summaryBlockHeight = rows.length * 6.5 + totalBoxHeight + 25;
+  if (yPos + summaryBlockHeight > pageHeight - footerReserve) {
+    doc.addPage();
+    paintSidebar();
+    paintMain();
+    yPos = margin + 8;
+  }
+
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(9.5);
+
   rows.forEach((row) => {
+    const valW = doc.getTextWidth(row.value);
+    const maxLabelW = Math.max(20, summaryWidth - valW - minGap);
+    const labelLines = doc.splitTextToSize(row.label, maxLabelW);
+
     doc.setTextColor(...MUTED);
-    doc.text(row.label, summaryLabelX, yPos);
+    doc.text(labelLines, summaryLabelX, yPos);
     doc.setTextColor(...INK);
     doc.text(row.value, summaryValueX, yPos, { align: "right" });
-    yPos += 6.5;
+    yPos += Math.max(1, labelLines.length) * 6.5;
   });
 
   yPos += 3;
   doc.setFillColor(...SIDEBAR);
-  const totalBoxHeight = 20;
-  doc.roundedRect(summaryLabelX - 6, yPos, summaryValueX - (summaryLabelX - 6), totalBoxHeight, 2, 2, "F");
+  const boxLeftX = summaryLabelX - 6;
+  const boxWidth = summaryValueX - boxLeftX;
+  doc.roundedRect(boxLeftX, yPos, boxWidth, totalBoxHeight, 2, 2, "F");
   doc.setFont(FONT_FAMILY, "bold");
   doc.setFontSize(9);
   doc.setTextColor(...POP);
   doc.text("TOTAL DUE", summaryLabelX, yPos + 8);
   doc.setFontSize(14);
   doc.setTextColor(255, 255, 255);
-  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX - 4, yPos + 15.5, {
+  doc.text(grandTotalStr, summaryValueX - 4, yPos + 15.5, {
     align: "right",
   });
 
   yPos += totalBoxHeight + 9;
 
-  const wordsWidth = pageWidth - margin - (summaryLabelX - 6);
+  const wordsWidth = summaryValueX - boxLeftX;
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
-  doc.text("Invoice total in words", summaryLabelX - 6, yPos);
+  doc.text("Invoice total in words", boxLeftX, yPos);
   yPos += 4.5;
   doc.setFontSize(8.5);
   doc.setTextColor(...INK);
   const wordsText = amountToWords(invoice.grandTotal, currencyCode);
   const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
-  doc.text(wordsLines, summaryLabelX - 6, yPos);
+  doc.text(wordsLines, boxLeftX, yPos);
   yPos += wordsLines.length * 4 + 6;
 
   const CARD_BG_PAYMENT = ctx.isDark ? hexToRgb(SURFACES.surface) : ([255, 255, 255] as [number, number, number]);

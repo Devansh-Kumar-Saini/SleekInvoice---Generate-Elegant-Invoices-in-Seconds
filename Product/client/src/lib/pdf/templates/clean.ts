@@ -8,6 +8,7 @@ import {
   formatDateSlash,
   getLastAutoTableFinalY,
   calculateItemColumnWidths,
+  calculateSummaryLayout,
 } from "@/lib/pdf/core";
 import { renderPaymentPdfSection } from "../payment";
 
@@ -194,37 +195,10 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   doc.setLineWidth(0.2);
   doc.line(margin, yPos - 4.5, pageWidth - margin, yPos - 4.5);
 
-  const summaryLabelX = pageWidth - margin - 58;
-  const summaryValueX = pageWidth - margin;
-
   // Mirrors the reference invoice's per-item subtotal breakdown, but that
   // only reads cleanly with a single line item — with several items it
   // would just duplicate the items table, so it's limited to that case.
   const showPerItemBreakdown = ctx.validItems.length <= 1;
-  const rowCount =
-    1 + // subtotal
-    (showPerItemBreakdown ? ctx.validItems.length : 0) +
-    (invoice.tax > 0 ? 1 : 0) +
-    (invoice.discount > 0 ? 1 : 0);
-  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
-  const wordsLineEstimate = Math.ceil(wordsText.length / 42);
-  const summaryBlockHeight = rowCount * 5.5 + 14 + 14 + 5 + wordsLineEstimate * 4.5 + 8;
-
-  // The reference leaves a large empty gap between the items table and the
-  // totals block, which sit near the bottom of the page — reproduce that by
-  // pushing the summary down toward the footer rather than flowing tightly,
-  // as long as everything still fits above the footer.
-  const desiredSummaryTop = footerLimit - summaryBlockHeight;
-  yPos = Math.max(yPos + 10, Math.min(desiredSummaryTop, footerLimit - summaryBlockHeight));
-  if (yPos < itemsTopOfBlock) yPos = itemsTopOfBlock + 20;
-  if (yPos + summaryBlockHeight > footerLimit) {
-    doc.addPage();
-    paintBackground();
-    yPos = margin + 10;
-  }
-
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(9.5);
 
   const rows: Array<{ label: string; value: string }> = [
     { label: "Subtotal", value: formatCurrency(invoice.subtotal, currency, currencyCode) },
@@ -250,11 +224,60 @@ export function renderCleanTemplate(ctx: TemplateContext) {
     });
   }
 
+  const grandTotalStr = formatCurrency(invoice.grandTotal, currency, currencyCode);
+
+  const summaryLayout = calculateSummaryLayout({
+    doc,
+    rows: rows.map((r) => ({
+      label: r.label,
+      value: r.value,
+      fontSize: 9.5,
+      fontFamily: FONT_FAMILY,
+    })),
+    total: {
+      label: "Total",
+      value: grandTotalStr,
+      labelFont: { family: FONT_FAMILY, style: "normal", size: 10.5 },
+      valueFont: { family: FONT_FAMILY_MONO, style: "bold", size: 15 },
+      isStacked: false,
+    },
+    rightX: pageWidth - margin,
+    maxAvailableWidth: contentWidth * 0.75,
+    minWidth: 72,
+    minGap: 8,
+  });
+
+  const { summaryLabelX, summaryValueX, summaryWidth, shouldStackTotal, minGap } = summaryLayout;
+
+  const wordsText = amountToWords(invoice.grandTotal, currencyCode);
+  const wordsLineEstimate = Math.ceil(wordsText.length / 42);
+  const summaryBlockHeight = rows.length * 5.5 + (shouldStackTotal ? 22 : 14) + 14 + 5 + wordsLineEstimate * 4.5 + 8;
+
+  // The reference leaves a large empty gap between the items table and the
+  // totals block, which sit near the bottom of the page — reproduce that by
+  // pushing the summary down toward the footer rather than flowing tightly,
+  // as long as everything still fits above the footer.
+  const desiredSummaryTop = footerLimit - summaryBlockHeight;
+  yPos = Math.max(yPos + 10, Math.min(desiredSummaryTop, footerLimit - summaryBlockHeight));
+  if (yPos < itemsTopOfBlock) yPos = itemsTopOfBlock + 20;
+  if (yPos + summaryBlockHeight > footerLimit) {
+    doc.addPage();
+    paintBackground();
+    yPos = margin + 10;
+  }
+
   rows.forEach((row) => {
+    doc.setFont(FONT_FAMILY_MONO, "normal");
+    doc.setFontSize(9.5);
+    const valW = doc.getTextWidth(row.value);
+    const maxLabelW = Math.max(20, summaryWidth - valW - minGap);
+
     doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(9.5);
     doc.setTextColor(...GRAY);
-    const labelLines = doc.splitTextToSize(row.label, summaryValueX - summaryLabelX - 24);
+    const labelLines = doc.splitTextToSize(row.label, maxLabelW);
     doc.text(labelLines, summaryLabelX, yPos);
+
     doc.setFont(FONT_FAMILY_MONO, "normal");
     doc.setTextColor(...INK);
     doc.text(row.value, summaryValueX, yPos, { align: "right" });
@@ -267,20 +290,31 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   doc.line(summaryLabelX - 4, yPos - 3.5, summaryValueX, yPos - 3.5);
   yPos += 5;
 
-  doc.setFont(FONT_FAMILY, "normal");
-  doc.setFontSize(10.5);
-  doc.setTextColor(...GRAY);
-  doc.text("Total", summaryLabelX, yPos + 3);
-  doc.setFont(FONT_FAMILY_MONO, "bold");
-  doc.setFontSize(15);
-  doc.setTextColor(...INK);
-  doc.text(formatCurrency(invoice.grandTotal, currency, currencyCode), summaryValueX, yPos + 3.2, {
-    align: "right",
-  });
-
-  yPos += 14;
+  if (shouldStackTotal) {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(10.5);
+    doc.setTextColor(...GRAY);
+    doc.text("Total", summaryLabelX, yPos + 2);
+    yPos += 6;
+    doc.setFont(FONT_FAMILY_MONO, "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...INK);
+    doc.text(grandTotalStr, summaryValueX, yPos + 2, { align: "right" });
+    yPos += 8;
+  } else {
+    doc.setFont(FONT_FAMILY, "normal");
+    doc.setFontSize(10.5);
+    doc.setTextColor(...GRAY);
+    doc.text("Total", summaryLabelX, yPos + 3);
+    doc.setFont(FONT_FAMILY_MONO, "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...INK);
+    doc.text(grandTotalStr, summaryValueX, yPos + 3.2, { align: "right" });
+    yPos += 14;
+  }
 
   // --- Invoice Total (in words). ---
+  const wordsWidth = summaryValueX - (summaryLabelX - 4);
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
@@ -288,7 +322,7 @@ export function renderCleanTemplate(ctx: TemplateContext) {
   yPos += 5;
   doc.setFontSize(9.5);
   doc.setTextColor(...INK);
-  const wordsLines = doc.splitTextToSize(wordsText, pageWidth - margin - (summaryLabelX - 4));
+  const wordsLines = doc.splitTextToSize(wordsText, wordsWidth);
   doc.text(wordsLines, summaryLabelX - 4, yPos);
   yPos += wordsLines.length * 4.5;
 

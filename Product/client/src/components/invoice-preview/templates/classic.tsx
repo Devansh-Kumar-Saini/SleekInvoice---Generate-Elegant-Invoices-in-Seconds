@@ -223,39 +223,41 @@ export function ClassicPreview({
         </div>
 
         {/* Calculations */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: c.muted }}>Subtotal</span>
-            <span className="font-mono font-semibold" style={{ color: c.dark }} data-testid="preview-subtotal">
-              {formatCurrency(subtotal)}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: c.muted }}>Tax ({taxPercentage}%)</span>
-            <span className="font-mono font-semibold" style={{ color: c.dark }} data-testid="preview-tax">
-              {formatCurrency(tax)}
-            </span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm" style={{ color: c.muted }}>Discount</span>
-              <span className="font-mono font-semibold text-destructive" data-testid="preview-discount">
-                -{formatCurrency(discount)}
+        <div className="flex justify-end">
+          <div className="w-full sm:w-auto sm:min-w-[280px] sm:max-w-md space-y-3">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm shrink-0" style={{ color: c.muted }}>Subtotal</span>
+              <span className="font-mono font-semibold text-right" style={{ color: c.dark }} data-testid="preview-subtotal">
+                {formatCurrency(subtotal)}
               </span>
             </div>
-          )}
-          <div className="flex justify-between items-center pt-4" style={{ borderTop: `1px solid ${c.border}` }}>
-            <span className="text-lg font-semibold" style={{ color: c.dark }}>Total Due</span>
-            <span className="text-2xl font-mono font-bold" style={{ color: c.primary }} data-testid="preview-total">
-              {formatCurrency(grandTotal)}
-            </span>
-          </div>
-          <div className="pt-1">
-            <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: c.muted }}>
-              Invoice Total (in words)
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm shrink-0" style={{ color: c.muted }}>Tax ({taxPercentage}%)</span>
+              <span className="font-mono font-semibold text-right" style={{ color: c.dark }} data-testid="preview-tax">
+                {formatCurrency(tax)}
+              </span>
             </div>
-            <div className="text-sm capitalize" style={{ color: c.dark }} data-testid="preview-total-words">
-              {amountToWords(grandTotal, currency)}
+            {discount > 0 && (
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-sm shrink-0" style={{ color: c.muted }}>Discount</span>
+                <span className="font-mono font-semibold text-destructive text-right" data-testid="preview-discount">
+                  -{formatCurrency(discount)}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-center gap-4 pt-4" style={{ borderTop: `1px solid ${c.border}` }}>
+              <span className="text-lg font-semibold shrink-0" style={{ color: c.dark }}>Total Due</span>
+              <span className="text-2xl font-mono font-bold text-right shrink-0" style={{ color: c.primary }} data-testid="preview-total">
+                {formatCurrency(grandTotal)}
+              </span>
+            </div>
+            <div className="pt-1">
+              <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: c.muted }}>
+                Invoice Total (in words)
+              </div>
+              <div className="text-sm capitalize break-words" style={{ color: c.dark }} data-testid="preview-total-words">
+                {amountToWords(grandTotal, currency)}
+              </div>
             </div>
           </div>
         </div>

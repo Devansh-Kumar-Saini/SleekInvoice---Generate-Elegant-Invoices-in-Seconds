@@ -178,42 +178,42 @@ export function ElegantPreview({
 
         {/* Calculations */}
         <div className="flex justify-end">
-          <div className="w-full sm:w-72 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm" style={{ color: c.muted }}>Subtotal</span>
-              <span className="text-sm" style={{ color: c.ink }} data-testid="preview-subtotal">
+          <div className="w-full sm:w-auto sm:min-w-[280px] sm:max-w-md space-y-2">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm shrink-0" style={{ color: c.muted }}>Subtotal</span>
+              <span className="text-sm font-semibold text-right" style={{ color: c.ink }} data-testid="preview-subtotal">
                 {formatCurrency(subtotal)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm" style={{ color: c.muted }}>Tax ({taxPercentage}%)</span>
-              <span className="text-sm" style={{ color: c.ink }} data-testid="preview-tax">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm shrink-0" style={{ color: c.muted }}>Tax ({taxPercentage}%)</span>
+              <span className="text-sm font-semibold text-right" style={{ color: c.ink }} data-testid="preview-tax">
                 {formatCurrency(tax)}
               </span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm" style={{ color: c.muted }}>Discount</span>
-                <span className="text-sm" style={{ color: c.ink }} data-testid="preview-discount">
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-sm shrink-0" style={{ color: c.muted }}>Discount</span>
+                <span className="text-sm font-semibold text-right" style={{ color: c.ink }} data-testid="preview-discount">
                   -{formatCurrency(discount)}
                 </span>
               </div>
             )}
             {/* Bordered (not filled) total box — restrained, letterhead-style. */}
             <div
-              className="flex justify-between items-center rounded-sm px-4 py-3 mt-3"
+              className="flex justify-between items-center gap-4 rounded-sm px-4 py-3 mt-3"
               style={{ border: `2px solid ${c.gold}` }}
             >
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: c.gold }}>
+              <span className="text-xs font-bold uppercase tracking-widest shrink-0" style={{ color: c.gold }}>
                 Total Due
               </span>
-              <span className="text-xl font-semibold" style={{ color: c.ink }} data-testid="preview-total">
+              <span className="text-xl font-semibold text-right shrink-0" style={{ color: c.ink }} data-testid="preview-total">
                 {formatCurrency(grandTotal)}
               </span>
             </div>
             <div className="pt-1">
               <div className="text-[10px]" style={{ color: c.muted }}>Invoice total in words</div>
-              <div className="text-sm capitalize" style={{ color: c.ink }} data-testid="preview-total-words">
+              <div className="text-sm capitalize break-words" style={{ color: c.ink }} data-testid="preview-total-words">
                 {amountToWords(grandTotal, currency)}
               </div>
             </div>

@@ -157,10 +157,10 @@ export function CleanPreview({
 
         {/* Calculations */}
         <div className="flex justify-end">
-          <div className="w-full sm:w-72 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className={`text-xs ${muted}`}>Subtotal</span>
-              <span className="text-sm font-mono" data-testid="preview-subtotal">
+          <div className="w-full sm:w-auto sm:min-w-[280px] sm:max-w-md space-y-2">
+            <div className="flex justify-between items-center gap-4">
+              <span className={`text-xs ${muted} shrink-0`}>Subtotal</span>
+              <span className="text-sm font-mono text-right" data-testid="preview-subtotal">
                 {formatCurrency(subtotal)}
               </span>
             </div>
@@ -169,38 +169,38 @@ export function CleanPreview({
                 several items it would just duplicate the items table. */}
             {validItems.length <= 1 &&
               validItems.map((item, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className={`text-xs ${muted} break-words pr-2`}>{item.name}</span>
-                  <span className="text-sm font-mono whitespace-nowrap">
+                <div key={index} className="flex justify-between items-center gap-4">
+                  <span className={`text-xs ${muted} break-words pr-2 shrink-0`}>{item.name}</span>
+                  <span className="text-sm font-mono whitespace-nowrap text-right">
                     {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
                   </span>
                 </div>
               ))}
             {tax > 0 && (
-              <div className="flex justify-between items-center">
-                <span className={`text-xs ${muted}`}>Tax ({taxPercentage}%)</span>
-                <span className="text-sm font-mono" data-testid="preview-tax">
+              <div className="flex justify-between items-center gap-4">
+                <span className={`text-xs ${muted} shrink-0`}>Tax ({taxPercentage}%)</span>
+                <span className="text-sm font-mono text-right" data-testid="preview-tax">
                   {formatCurrency(tax)}
                 </span>
               </div>
             )}
             {discount > 0 && (
-              <div className="flex justify-between items-center">
-                <span className={`text-xs ${muted}`}>Discount</span>
-                <span className="text-sm font-mono" data-testid="preview-discount">
+              <div className="flex justify-between items-center gap-4">
+                <span className={`text-xs ${muted} shrink-0`}>Discount</span>
+                <span className="text-sm font-mono text-right" data-testid="preview-discount">
                   -{formatCurrency(discount)}
                 </span>
               </div>
             )}
-            <div className={`flex justify-between items-center pt-2 border-t ${border}`}>
-              <span className={`text-sm ${muted}`}>Total</span>
-              <span className="text-lg font-mono font-bold" data-testid="preview-total">
+            <div className={`flex justify-between items-center gap-4 pt-2 border-t ${border}`}>
+              <span className={`text-sm ${muted} shrink-0`}>Total</span>
+              <span className="text-lg font-mono font-bold text-right shrink-0" data-testid="preview-total">
                 {formatCurrency(grandTotal)}
               </span>
             </div>
             <div className="pt-2">
               <div className={`text-[10px] ${muted}`}>Invoice Total (in words)</div>
-              <div className="text-sm capitalize" data-testid="preview-total-words">
+              <div className="text-sm capitalize break-words" data-testid="preview-total-words">
                 {amountToWords(grandTotal, currency)}
               </div>
             </div>
