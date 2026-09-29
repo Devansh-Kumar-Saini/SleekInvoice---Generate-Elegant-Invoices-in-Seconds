@@ -1,31 +1,32 @@
-import React from 'react'
-import SectionHeading from './SectionHeading'
-import Reveal from './Reveal'
-import { GridIcon, DocIcon, GlobeIcon, UsersIcon, PaletteIcon } from './Icons'
-import '../styles/Features.css'
+import React from "react";
+import SectionHeading from "./SectionHeading";
+import Reveal from "./Reveal";
+import { GridIcon, DocIcon, GlobeIcon, UsersIcon, PaletteIcon } from "./Icons";
+import PaymentIllustration from "./PaymentIllustration";
+import "../styles/Features.css";
 
 const SMALL_FEATURES = [
   {
     Icon: DocIcon,
-    title: '1-Click PDF Export',
-    body: 'High-speed vector rendering with your own logo and brand colors baked in.',
+    title: "1-Click PDF Export",
+    body: "High-speed vector rendering with your own logo and brand colors baked in.",
   },
   {
     Icon: PaletteIcon,
-    title: 'Custom Accent Colors',
-    body: '5 templates, each with every color slot overridable — pick your brand hex per template and it’s remembered independently the next time you switch.',
+    title: "Custom Accent Colors",
+    body: "5 templates, each with every color slot overridable — pick your brand hex per template and it’s remembered independently the next time you switch.",
   },
   {
     Icon: GlobeIcon,
-    title: 'Multi-Currency & Tax Automation',
-    body: 'Auto-calculates VAT, GST, discounts, and line-item totals in 30+ currencies.',
+    title: "Multi-Currency & Tax Automation",
+    body: "Auto-calculates VAT, GST, discounts, and line-item totals in 30+ currencies.",
   },
   {
     Icon: UsersIcon,
-    title: 'Client Catalog & CRM',
-    body: 'Save frequent clients and products for instant auto-complete invoice building.',
+    title: "Client Catalog & CRM",
+    body: "Save frequent clients and products for instant auto-complete invoice building.",
   },
-]
+];
 
 export default function Features() {
   return (
@@ -43,7 +44,8 @@ export default function Features() {
           </div>
           <h3 className="features-hero-title">Live Real-Time Preview</h3>
           <p className="features-hero-desc">
-            Every field you type renders instantly into a print-ready invoice, split-screen — no refresh, no surprises at export time.
+            Every field you type renders instantly into a print-ready invoice,
+            split-screen — no refresh, no surprises at export time.
           </p>
         </div>
         <div aria-hidden="true" className="features-preview-grid">
@@ -75,6 +77,28 @@ export default function Features() {
           </div>
         ))}
       </Reveal>
+      <br />
+      <Reveal delay={1} className="features-hero-card">
+        <div>
+          <div aria-hidden="true" className="features-icon-box">
+            <GridIcon />
+          </div>
+          <h3 className="features-hero-title">Add Payment Information</h3>
+          <p className="features-hero-desc">
+            Add your payment information with ease - bank details, QR Codes,
+            Cancel Cheque Images, other documents.
+          </p>
+        </div>
+        <div aria-hidden="true" className="features-preview-grid">
+          <div className="features-mockup-card">
+            <div className="features-mockup-tag">Payment</div>
+            <div className="features-payment-row">
+              <PaymentIllustration />
+              <PaymentIllustration />
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </section>
-  )
+  );
 }

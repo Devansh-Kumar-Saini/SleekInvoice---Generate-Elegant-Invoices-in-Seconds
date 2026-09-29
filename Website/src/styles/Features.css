@@ -80,6 +80,29 @@
   border-color: var(--border-hair-strong);
 }
 
+.features-payment-svg {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  max-height: 180px;
+  margin: 0 auto;
+  display: block;
+}
+
+.features-payment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .features-payment-row {
+    gap: 8px;
+  }
+}
+
 .features-mockup-tag {
   font-size: 12.5px;
   font-weight: 600;
