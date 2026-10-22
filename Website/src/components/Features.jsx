@@ -86,7 +86,9 @@ export default function Features() {
           <h3 className="features-hero-title">Add Payment Information</h3>
           <p className="features-hero-desc">
             Add your payment information with ease - bank details, QR Codes,
-            Cancel Cheque Images, other documents.
+            Cancel Cheque Images, and other documents. Securely upload and
+            manage all your financial information in one place for quick
+            verification and seamless transactions.
           </p>
         </div>
         <div aria-hidden="true" className="features-preview-grid">
@@ -94,7 +96,7 @@ export default function Features() {
             <div className="features-mockup-tag">Payment</div>
             <div className="features-payment-row">
               <PaymentIllustration />
-              <PaymentIllustration />
+              {/* <PaymentIllustration /> */}
             </div>
           </div>
         </div>
